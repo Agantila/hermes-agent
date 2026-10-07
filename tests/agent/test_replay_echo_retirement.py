@@ -134,18 +134,26 @@ def test_placeholder_before_a_reply_is_dropped_and_exact_items_retired(tmp_path,
 
     # The dropped durable placeholder is retired onto the reply that replaces it (not left unnamed for an
     # in-place compaction to re-sequence), and the stored reply dict itself is untouched.
-    reply = {"role": "assistant", "content": "real answer", "_row_id": 12}
+    reply = {"role": "assistant", "content": "real answer", "_row_id": 12, "_absorbed_row_ids": [9]}
     stored = [{"role": "user", "content": "hi", "_row_id": 10}, {**_hidden_row(LEGACY), "_row_id": 11}, reply,
               {"role": "user", "content": "continue", "_row_id": 13}]
     out = _prepare(tmp_path, monkeypatch, stored)
     survivor = next(m for m in out if m.get("content") == "real answer")
-    assert 11 in survivor.get("_absorbed_row_ids", []) and "_absorbed_row_ids" not in reply, out
+    assert 11 in survivor.get("_absorbed_row_ids", []) and reply["_absorbed_row_ids"] == [9], out
 
     # A thinking-only follower never reaches the wire, so the placeholder stays as the tool tail's closer.
     thinking = {"role": "assistant", "content": "", "reasoning_content": "hmm"}
     out = _prepare(tmp_path, monkeypatch, [{"role": "user", "content": "hi"}, _hidden_row(LEGACY), thinking,
                                            {"role": "user", "content": "continue"}])
     assert any(m.get("display_kind") == "hidden" and m.get("role") == "assistant" for m in out), out
+
+    # A kept id-less durable echo records its loaded fields before its text changes (compaction coverage).
+    from agent.context_compressor import _DB_PERSISTED_MARKER
+    from agent.conversation_compression_archive import OWN_ROW, RETIRED_DURABLE_ROWS
+    durable = {"role": "assistant", "content": LEGACY, _DB_PERSISTED_MARKER: True}
+    out = _prepare(tmp_path, monkeypatch, [{"role": "user", "content": "a"}, durable, {"role": "user", "content": "b"}])
+    own = [r for r in out[1].get(RETIRED_DURABLE_ROWS, []) if r.get(OWN_ROW)]
+    assert own and own[0].get("content") == LEGACY and RETIRED_DURABLE_ROWS not in durable, out
 
     echoed = {"role": "assistant", "content": LEGACY, "bedrock_content_blocks": [{"text": LEGACY}],
               "codex_message_items": [{"type": "message", "content": [{"type": "output_text", "text": LEGACY}]}]}

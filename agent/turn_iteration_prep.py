@@ -130,7 +130,12 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
     # slack tolerates surrounding whitespace), so long replies are rejected before ``strip()`` copies
     # them, and the list is copied only once a row actually needs neutralising.
     max_len = max(map(len, hazards)) + 64
-    from agent.agent_runtime_helpers import _content_has_payload, _retire_leading_drops  # late: heavy facade
+    from agent.agent_runtime_helpers import (  # late: heavy facade
+        _content_has_payload, _remember_own_row, _retire_leading_drops)
+
+    def isolated(row: Dict[str, Any]) -> Dict[str, Any]:
+        # Copy with fresh retirement lists: the bookkeeping below must not reach the stored dict.
+        return {**row, **{k: list(row[k]) for k in ("_absorbed_row_ids", "_retired_durable_rows") if row.get(k)}}
 
     out: List[Dict[str, Any]] | None = None
     dropped: List[Dict[str, Any]] = []
@@ -140,7 +145,7 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
         if dropped and m.get("role") == "assistant":
             # The reply right after a dropped durable placeholder stands for its row, as repair's own
             # drops do; unnamed, an in-place compaction would re-sequence it behind the running turn.
-            m = dict(m)
+            m = isolated(m)
             _retire_leading_drops([m], dropped)
             dropped = []
         # Hidden placeholders AND the visible replies a model already echoed them into: either one
@@ -164,7 +169,9 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
             # The hidden placeholder shape, also for an echoed visible reply (content cleared, so it
             # is not rendered as an empty bubble). Provider-native text carriers (Responses message
             # items, Bedrock blocks) replace content at request build and would replay the legacy text.
-            row = {**m, **hidden_interrupt_row()}
+            row = isolated(m)
+            _remember_own_row(row)  # its text changes: an id-less reload still names its row
+            row.update(hidden_interrupt_row())
             row.pop("codex_message_items", None)
             row.pop("bedrock_content_blocks", None)
             out.append(row)
