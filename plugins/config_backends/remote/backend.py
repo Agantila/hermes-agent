@@ -16,13 +16,12 @@ import random
 import sys
 import threading
 import time
-from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Deque, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from hermes_cli.config_backend import (
-    Changes, ConfigBackendUnavailable, ConfigLockedError, ConfigValueError, ConfigWriteError, UserLayer)
+    Changes, ConfigBackendUnavailable, ConfigLockedError, ConfigValueError, ConfigWriteError, UserDoc, UserLayer)
 
 from . import client
 from .credentials import PLANE_CREDENTIAL_ENV_NAMES, PlaneCredentialError, credential_kind
@@ -63,7 +62,7 @@ class _FetchFailed(Exception):
         self.status = status
 
 
-_HISTORY = 4  # reader documents kept per profile for whole-document saves (_intent)
+_READ_BASES = 8  # diff bases kept per profile for whole-document saves from an older read (_intent)
 
 
 @dataclass
@@ -87,9 +86,9 @@ class _ProfileState:
     fetched_at: float = 0.0
     last_error: Optional[str] = None
     next_poll: float = 0.0
-    # The diff bases readers were recently handed (newest last), so a whole-document save made
-    # from an older read is diffed against the doc it came from, not a newer one (see _intent).
-    history: Deque[Dict[str, Any]] = field(default_factory=lambda: deque(maxlen=_HISTORY))
+    # The diff base of each recent generation readers were handed (UserDoc.read_version = gen), so a
+    # whole-document save is diffed against the doc its caller read, not a newer one (see _intent).
+    read_bases: Dict[int, Dict[str, Any]] = field(default_factory=dict)
     lock: threading.RLock = field(default_factory=threading.RLock)
 
 
@@ -290,7 +289,7 @@ class RemoteBackend:
         st.postprocessed = False
         st.fetched_at, st.last_error = time.time(), None
         st.next_poll = time.monotonic() + poll_interval() * random.uniform(0.9, 1.1)
-        st.history.append(_diff_base(st))
+        _record_read_base(st)
 
     _MAX_POSTPROCESS = 8  # passes when polls keep installing newer docs mid-migration
 
@@ -398,7 +397,7 @@ class RemoteBackend:
         st.base = base
         st.changed_ns = time.time_ns()
         st.gen += 1
-        st.history.append(_diff_base(st))
+        _record_read_base(st)
 
     # --- ConfigBackend: reads ---------------------------------------------------------------
 
@@ -419,8 +418,10 @@ class RemoteBackend:
 
         def take():
             m = _private_for(st)
-            return (copy.deepcopy(m.doc if m is not None else st.doc), self._version_of(st),
-                    {encode(p): level for p, level in st.locks})
+            # A migration's private copy is never saved as a document; the published one is tagged
+            # with its generation so a later whole-document save diffs against exactly this read.
+            doc = copy.deepcopy(m.doc) if m is not None else UserDoc(copy.deepcopy(st.doc), read_version=st.gen)
+            return doc, self._version_of(st), {encode(p): level for p, level in st.locks}
 
         doc, version, locks = self._snapshot(st, take)
         return UserLayer(doc=doc, version=version, locks=locks,
@@ -534,11 +535,13 @@ class RemoteBackend:
         new.pop("_config_version", None)
 
         if changes.document is not None:
-            # A whole document is the caller's last read plus its edits, and a poll or another
-            # write may have advanced the doc since that read. Diff it against the recent reader
-            # doc it differs from least (the newest on a tie): anything another writer changed
-            # meanwhile is then not part of this edit, and _patch_body applies only the edit.
-            base = min(reversed(st.history), key=lambda seen: _edit_size(seen, new), default=base)
+            # A whole document is the caller's read plus its edits, and a poll or another write may
+            # have advanced the doc since. Diff it against the doc that read returned: what another
+            # writer changed meanwhile is then not part of this edit, and _patch_body applies only
+            # the edit. An untagged or long-expired read falls back to the current doc.
+            read = st.read_bases.get(changes.document.read_version) if isinstance(changes.document, UserDoc) else None
+            if read is not None:
+                base = copy.deepcopy(read)
             base, new, dropped = strip_locked(base, new, st.locks)
             if dropped:
                 print(f"Note: {len(dropped)} setting(s) locked by Remote Config were not saved: "
@@ -783,9 +786,11 @@ def _diff_base(st: _ProfileState) -> Dict[str, Any]:
     return base
 
 
-def _edit_size(base: Dict[str, Any], new: Dict[str, Any]) -> int:
-    sets, unsets = diff(base, new)
-    return len(sets) + len(unsets)
+def _record_read_base(st: _ProfileState) -> None:
+    """Remember generation ``st.gen``'s diff base for saves made from a read of it (call under st.lock)."""
+    st.read_bases[st.gen] = _diff_base(st)
+    for gen in sorted(st.read_bases)[:-_READ_BASES]:
+        del st.read_bases[gen]
 
 
 def _home_is_live(home: Path) -> bool:

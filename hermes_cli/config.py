@@ -48,7 +48,7 @@ from hermes_constants import (  # noqa: F401
 from hermes_constants import get_hermes_home, get_process_hermes_home  # noqa: F401
 from utils import atomic_replace, fast_safe_load, file_signature, mkstemp_beside
 from hermes_cli.config_backend import (
-    ConfigWriteError, config_exists, config_version, get_config_backend, read_config_doc,
+    ConfigWriteError, UserDoc, config_exists, config_version, get_config_backend, read_config_doc,
     supports_file_tooling, write_config_document)
 from hermes_cli.config_read_errors import (
     _CONFIG_PARSE_FAILURES, _FIX_PERMS, _FIX_YAML, FailedConfigRead, _backups_dir_display,
@@ -2409,6 +2409,7 @@ def save_config(
 
         config_path = get_config_path()
         _refuse_failed_read(config_path, config)
+        read_version = config.read_version if isinstance(config, UserDoc) else None
         config = _strip_managed_keys_for_save(config)
 
         ensure_hermes_home()
@@ -2433,6 +2434,8 @@ def save_config(
             effective_preserve_keys = _explicit_config_paths(_raw_for_paths) | set(preserve_keys or ())
             normalized = _strip_default_values(normalized, DEFAULT_CONFIG, preserve_keys=effective_preserve_keys)
 
+        if read_version is not None:  # the normalizing copies above drop the read tag
+            normalized = UserDoc(normalized, read_version=read_version)
         atomic_config_replace(config_path, normalized, extra_content_on_create=_commented_sections_for_save(normalized))
         _secure_file(config_path)
         _RAW_CONFIG_CACHE.pop(str(config_path), None)

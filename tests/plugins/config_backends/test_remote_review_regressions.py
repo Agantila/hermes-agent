@@ -17,18 +17,29 @@ from .conftest import _config_cmd
 from .stub_plane import INSTANCE
 
 
-def test_document_save_from_an_older_read_keeps_a_newer_write(plane):
-    plane.profile("default").update(values={"display": {"personality": "a"}, "agent": {"max_turns": 10}}, version=1)
-    doc = read_config_doc(plane.home / "config.yaml")
-    plane.profile("default")["values"]["agent"]["max_turns"] = 99
-    plane.profile("default")["version"] = 2
+def test_document_save_sends_exactly_the_edit_made_to_its_own_read(plane):
+    from hermes_cli.config import read_raw_config, save_config
+    profile = plane.profile("default")
+    profile.update(values={"display": {"personality": "a"}, "agent": {"max_turns": 10}}, version=1)
     backend = get_config_backend()
-    backend.poll_one(backend._state(plane.home))
 
-    doc["display"]["personality"] = "b"
-    write_config_document(plane.home / "config.yaml", doc)
+    def land(path, value):  # another writer's change, picked up by the next poll
+        section, key = path
+        profile["values"].setdefault(section, {})[key] = value
+        profile["version"] += 1
+        backend.poll_one(backend._state(plane.home))
 
-    assert plane.profile("default")["values"] == {"display": {"personality": "b"}, "agent": {"max_turns": 99}}
+    stale = read_raw_config()
+    land(("agent", "max_turns"), 99)
+    stale["display"]["personality"] = "b"
+    save_config(stale)  # a read from before another writer's change keeps that change
+    assert profile["values"] == {"display": {"personality": "b"}, "agent": {"max_turns": 99}}
+
+    land(("display", "personality"), "c")
+    current = read_config_doc(plane.home / "config.yaml")
+    current["display"]["personality"] = "b"
+    write_config_document(plane.home / "config.yaml", current)  # setting an older value back is an edit too
+    assert profile["values"]["display"] == {"personality": "b"}
 
 
 def test_cloud_boot_in_a_fresh_interpreter_does_not_hang(plane, tmp_path):

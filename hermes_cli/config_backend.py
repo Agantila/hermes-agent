@@ -39,6 +39,19 @@ class UserLayer:
     provenance: str = ""        # where the doc came from, for diagnostics
 
 
+class UserDoc(dict):
+    """A user-layer document as a backend handed it to a reader, tagged with the read it came from.
+
+    A backend whose layer can change between a caller's read and its whole-document save (a remote
+    plane polled in the background) diffs the save against THAT read, so another writer's change
+    landed meanwhile is never sent back as the caller's edit. A dict subclass so the tag survives
+    the read -> deepcopy -> mutate -> save round trip; the file backend never creates one."""
+
+    def __init__(self, data: Any = (), *, read_version: int):
+        super().__init__(data)
+        self.read_version = read_version
+
+
 @dataclass(frozen=True)
 class Changes:
     """A write to one profile's user layer.
