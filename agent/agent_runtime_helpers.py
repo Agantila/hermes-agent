@@ -433,8 +433,6 @@ def _merge_assistant_into(prev: Dict, msg: Dict) -> bool:
         prev["content"] = new_content
         content_rewritten = new_content != prev_content
         text_kept = True
-    if not prev_content and content_rewritten and prev.get("display_kind") == "hidden" and not msg.get("display_kind"):
-        prev.pop("display_kind")  # real text folded into an empty hidden placeholder stays visible
     # Carry reasoning_content from the later turn only if the earlier lacks it (strict thinking
     # providers need one on the merged tool-call turn).
     reasoning_carried = False

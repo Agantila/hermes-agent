@@ -114,9 +114,10 @@ class IterationPrep:
 # Retire interrupt placeholders (hidden rows, and replies that already echoed one) whose text the model
 # echoes on replay (#81841 for the scaffold, #132949 for the placeholder). A hidden row still
 # reaches the provider as assistant content; a natural-language phrase in that
-# position is reproduced verbatim. The row is never dropped: removal can form
-# ``tool -> user`` (#48879) or ``user -> user``, which repair then merges —
-# losing the second row's checkpoint ``api_content``. Neutralise a copy instead.
+# position is reproduced verbatim. A row followed by another assistant row is dropped: its
+# neighbours alternate without it, and kept it would be folded into that reply and hide it.
+# Otherwise it is the only thing between ``tool -> user`` (#48879) or ``user -> user`` (which
+# repair merges, losing the second row's checkpoint ``api_content``), so a copy is neutralised.
 def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], int]:
     """(new list, neutralised); never mutates ``seq`` or its row dicts."""
     from agent.conversation_loop import _INTERRUPT_SCAFFOLD_MARKER  # late: conversation_loop imports this module
@@ -132,6 +133,7 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
     out: List[Dict[str, Any]] | None = None
     neutralised = 0
     for i, m in enumerate(seq):
+        nxt = seq[i + 1] if i + 1 < len(seq) else None
         # Hidden placeholders AND the visible replies a model already echoed them into: either one
         # replayed seeds the next echo. A row with tool calls is real model output, never a placeholder.
         if (
@@ -143,11 +145,15 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
         ):
             if out is None:
                 out = list(seq[:i])
-            # The hidden placeholder shape, also for an echoed visible reply: its content is cleared
-            # (an alternation merge drops ``api_content`` and would put the legacy text back on the
-            # wire), so it is hidden rather than rendered as an empty bubble.
-            out.append({**m, **hidden_interrupt_row()})
             neutralised += 1
+            if isinstance(nxt, dict) and nxt.get("role") == "assistant":
+                continue
+            # The hidden placeholder shape, also for an echoed visible reply (content cleared, so it
+            # is not rendered as an empty bubble). Exact Responses message items would otherwise be
+            # replayed in place of the new content, legacy text included.
+            row = {**m, **hidden_interrupt_row()}
+            row.pop("codex_message_items", None)
+            out.append(row)
         elif out is not None:
             out.append(m)
     return (seq if out is None else out), neutralised

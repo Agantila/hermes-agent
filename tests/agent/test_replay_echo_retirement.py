@@ -118,16 +118,21 @@ def test_visible_echoed_reply_is_neutralised_but_tool_call_rows_are_not(tmp_path
     assert any(m.get("tool_calls") and m.get("content") == LEGACY for m in out), out
 
 
-def test_real_reply_after_a_kept_placeholder_stays_visible(tmp_path, monkeypatch):
-    """The neutralised placeholder is kept, so repair folds a following real reply into it; the merged
-    row must not inherit the placeholder's hidden display_kind and vanish from rendered history."""
-    messages = [
-        {"role": "user", "content": "hi"},
-        _hidden_row(LEGACY),
-        {"role": "assistant", "content": "real answer"},
-        {"role": "user", "content": "continue"},
-    ]
-    out = _prepare(tmp_path, monkeypatch, messages)
-    visible = [m for m in out if m.get("role") == "assistant" and m.get("display_kind") != "hidden"]
-    assert [m.get("content") for m in visible] == ["real answer"], out
+def test_placeholder_before_a_reply_is_dropped_and_exact_items_retired(tmp_path, monkeypatch):
+    """A placeholder followed by another assistant row is dropped (repair would fold the reply into the
+    hidden row and hide it, text or tool calls alike); a kept one loses its exact Responses items."""
+    call = {"id": "c1", "type": "function", "function": {"name": "patch", "arguments": "{}"}}
+    for follower in ({"role": "assistant", "content": "real answer"},
+                     {"role": "assistant", "content": "", "tool_calls": [call]}):
+        messages = [{"role": "user", "content": "hi"}, _hidden_row(LEGACY), follower]
+        if follower.get("tool_calls"):
+            messages.append({"role": "tool", "tool_call_id": "c1", "content": "ok"})
+        messages.append({"role": "user", "content": "continue"})
+        out = _prepare(tmp_path, monkeypatch, messages)
+        assistants = [m for m in out if m.get("role") == "assistant"]
+        assert len(assistants) == 1 and assistants[0].get("display_kind") != "hidden", out
 
+    echoed = {"role": "assistant", "content": LEGACY,
+              "codex_message_items": [{"type": "message", "content": [{"type": "output_text", "text": LEGACY}]}]}
+    out = _prepare(tmp_path, monkeypatch, [{"role": "user", "content": "a"}, echoed, {"role": "user", "content": "b"}])
+    assert "codex_message_items" not in out[1] and LEGACY not in repr(out), out
