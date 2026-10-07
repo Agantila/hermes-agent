@@ -17,6 +17,9 @@ from pathlib import Path
 import dotenv  # noqa: F401
 from utils import atomic_replace, mkstemp_beside
 
+from hermes_cli.env_loader_dotenv import (
+    _DOTENV_LOCK, _DOTENV_PASSES, _dotenv_assignments, _peeled_environ, _publish_dotenv_value, _resolve_layer)
+
 logger = logging.getLogger(__name__)
 
 # The ONLY env vars sanitized on load: credentials must be pure ASCII (they become HTTP header values);
@@ -63,25 +66,6 @@ _SECRET_SOURCE_WRITES_BY_HOME: dict[str, dict[str, tuple[str, str, str | None]]]
 # re-parse + ASCII sweep re-run each time (Bitwarden's own cache only saves the network call).
 _APPLIED_HOMES: set[str] = set()
 _SECRET_SOURCE_CACHE_LOCK = threading.RLock()
-
-# What THIS process has published from dotenv files, per variable: (value before our first publish, or
-# None if absent; last value we published; load pass that published it). Reloads run per gateway turn and
-# per cron fire, and a line like ``PATH=/x:${PATH}`` interpolated against an environ that already holds the
-# previous reload's output grows by ``/x:`` every time until child spawns fail with E2BIG (#109902). A new
-# pass resolves against the baseline instead — but only where the environ still holds exactly what we
-# published, so a value the shell, config bridge, or an external secret source changed since is not frozen.
-# One process-wide record (not per home/project scope): the environ is process-wide, so alternating
-# callers (gateway with a project .env, cron without; home A then B) must peel each other's output too.
-_DOTENV_PUBLISHED: dict[str, tuple[str | None, str, int]] = {}
-_DOTENV_PASSES = itertools.count()
-_DOTENV_LOCK = threading.RLock()
-
-# Per-process credentials a parent mints and injects into the child's environment (the Desktop shell /
-# a link-style launcher spawns `hermes dashboard` with a fresh HERMES_DASHBOARD_SESSION_TOKEN and keeps
-# the same token for its own /api probes). They are never .env configuration, so a persisted value in
-# ~/.hermes/.env must not replace an injected one — the parent would then 401 against its own child
-# (#115955). A value an earlier dotenv pass published is still reloaded normally.
-_SPAWN_CREDENTIAL_KEYS: frozenset[str] = frozenset({"HERMES_DASHBOARD_SESSION_TOKEN"})
 
 # Behavioral routing keys a parent Hermes process injects into child env that silently redirect a profile
 # onto the wrong provider path; these — and ONLY these — are scrubbed at startup when absent from the
@@ -337,83 +321,26 @@ def _load_dotenv_with_fallback(
 ) -> None:
     """Load one dotenv file into ``os.environ`` like ``dotenv.load_dotenv`` — same parser, same
     ``${VAR}`` / ``${VAR:-default}`` / precedence rules — except that ``${VAR}`` resolves against the value
-    VAR had before this process's earlier passes published it (see ``_DOTENV_PUBLISHED``).
+    VAR had before this process's earlier passes published it (see ``env_loader_dotenv._DOTENV_PUBLISHED``).
 
     ``load_pass`` groups the layered files of one ``load_hermes_dotenv`` call: within a pass a later layer
     (project, managed) still sees the earlier layer's output, as it always did; only OTHER passes' output
     is peeled. A bare call (``hermes send``'s direct reload) is its own pass."""
-    from dotenv.variables import parse_variables
-
     assignments = _dotenv_assignments(path)
 
     with _DOTENV_LOCK:
         if load_pass is None:
             load_pass = next(_DOTENV_PASSES)
-        lookup_env = _peeled_environ(load_pass)
-        resolved: dict[str, str | None] = {}
-        for name, value in assignments:
-            if value is not None:  # mirrors dotenv.main.resolve_variables, minus the live os.environ
-                lookup = {**lookup_env, **resolved} if override else {**resolved, **lookup_env}
-                value = "".join(atom.resolve(lookup) for atom in parse_variables(value))
-            resolved[name] = value
-        for name, value in resolved.items():
-            # A gap is judged against the peeled view: a value an earlier pass published is not a
-            # gap-filler's competitor, so this layer re-publishes it under this pass and a later
-            # layer of the same load (managed ``${VAR}``) still sees it.
-            if value is None or (not override and name in lookup_env):
-                continue
+        # A gap is judged against the peeled view: a value an earlier pass published is not a
+        # gap-filler's competitor, so this layer re-publishes it under this pass and a later layer of
+        # the same load (managed ``${VAR}``) still sees it.
+        for name, value in _resolve_layer(assignments, _peeled_environ(load_pass), override=override).items():
             _publish_dotenv_value(name, value, load_pass)
     # Every key this file defines, for the launch-residue strip: dotenv never unsets, so a key later
     # removed from the launch .env stays in os.environ and a re-parse of the file no longer names it.
     # Managed keys are recorded separately: they are administrator policy, not launch-profile residue.
     (_MANAGED_DOTENV_KEYS if managed else _LOADED_DOTENV_KEYS).update(name for name, _value in assignments)
     _sanitize_loaded_credentials()  # httpx encodes headers as ASCII
-
-
-def _peeled_environ(load_pass: int) -> dict[str, str | None]:
-    """``os.environ`` with every value an OTHER pass published peeled back to the value it replaced,
-    so ``${VAR}`` resolves against the pre-dotenv value and a reload never expands a value twice.
-    Call under ``_DOTENV_LOCK``."""
-    env: dict[str, str | None] = dict(os.environ)
-    for name, (baseline, published, published_pass) in _DOTENV_PUBLISHED.items():
-        if published_pass != load_pass and env.get(name) == published:
-            if baseline is None:
-                del env[name]  # absent, so ``${VAR:-default}`` takes the default again
-            else:
-                env[name] = baseline
-    return env
-
-
-def _publish_dotenv_value(name: str, value: str, load_pass: int) -> None:
-    """Set one dotenv-derived value in ``os.environ`` and record it for :func:`_peeled_environ`.
-    Call under ``_DOTENV_LOCK``."""
-    current = os.environ.get(name)
-    record = _DOTENV_PUBLISHED.get(name)
-    ours = record is not None and current == record[1]
-    if name in _SPAWN_CREDENTIAL_KEYS and current and not ours:
-        return  # parent-minted per-process credential: .env must not split it from the parent
-    # Ours and untouched since → keep the original baseline; anything else is a newer outside value.
-    baseline = record[0] if ours else current
-    os.environ[name] = value
-    _DOTENV_PUBLISHED[name] = (baseline, value, load_pass)
-
-
-def _dotenv_assignments(path: Path) -> list:
-    """``(name, raw value)`` pairs of one dotenv file, parsed exactly as the loader parses it."""
-    raw = path.read_bytes()
-    try:
-        # utf-8-sig strips a leading BOM (PowerShell 5.1 / Notepad); plain utf-8 would keep U+FEFF on the
-        # first key name and silently drop it from os.environ under its canonical name.
-        text = raw.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        if raw.startswith(codecs.BOM_UTF8):  # strip the BOM by hand: utf-8-sig can't once we decode latin-1
-            raw = raw[len(codecs.BOM_UTF8) :]
-        text = raw.decode("latin-1")
-    # Imported here, not at module level: gateway tests stub ``sys.modules["dotenv"]`` with a bare module
-    # exposing only ``load_dotenv``, and ``gateway.run`` imports this module at import time.
-    from dotenv.main import DotEnv
-
-    return list(DotEnv(dotenv_path=None, stream=io.StringIO(text), interpolate=False).parse())
 
 
 def _bootstrap_env(home: Path | None = None, project_env: Path | None = None,
@@ -425,8 +352,6 @@ def _bootstrap_env(home: Path | None = None, project_env: Path | None = None,
     loader's parser. Read-only: nothing is published and no file is rewritten (sanitizing imports
     hermes_cli.config, whose import-time config read must not run before the backend is decided).
     *base* is the environment the layers resolve against (default: ``os.environ``)."""
-    from dotenv.variables import parse_variables
-
     home = Path(home) if home is not None else _process_hermes_home()
     env = dict(os.environ) if base is None else dict(base)
     user_env = home / ".env"
@@ -448,15 +373,7 @@ def _bootstrap_env(home: Path | None = None, project_env: Path | None = None,
             assignments = _dotenv_assignments(path)
         except OSError:
             continue
-        resolved: dict[str, str | None] = {}
-        for name, value in assignments:
-            if value is not None:
-                lookup = {**env, **resolved} if override else {**resolved, **env}
-                value = "".join(atom.resolve(lookup) for atom in parse_variables(value))
-            resolved[name] = value
-        for name, value in resolved.items():
-            if value is not None and (override or name not in env):
-                env[name] = value
+        env.update(_resolve_layer(assignments, env, override=override))
     return env
 
 
