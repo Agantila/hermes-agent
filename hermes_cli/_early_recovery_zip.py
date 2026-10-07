@@ -226,6 +226,17 @@ def _is_killed_backup_copy(tmp: Path, dst: Path, identity: str) -> bool:
             and dst.is_file() and not dst.is_symlink() and dst.read_bytes().startswith(tmp.read_bytes()))
 
 
+def _long_path_spelling():
+    """``pm.filesystem``'s extended-length spelling and its inverse. A killed swap may have moved
+    ``pm/`` itself aside; recovery then settles with ordinary paths, and an entry past MAX_PATH it
+    cannot remove keeps the journal, so the next launch (``pm/`` restored) finishes it."""
+    try:
+        from pm.filesystem import long_root, native
+    except ImportError:
+        return (lambda path: path), os.fspath
+    return long_root, native
+
+
 def restore_interrupted_zip_swap(project_root: Path | None = None) -> bool:
     """Finish or roll back a ZIP swap whose owner died; True when the tree changed (relaunch).
 
@@ -263,15 +274,17 @@ def restore_interrupted_zip_swap(project_root: Path | None = None) -> bool:
         changed = False
         failed = False
         kept: list[Path] = []
+        long_root, native = _long_path_spelling()
         for entry in reversed(entries):
             try:
-                changed = _settle_zip_entry(root, phase, gen, entry, temps, kept) or changed
+                # The staging/backup trees hold docs members past MAX_PATH (#129299).
+                changed = _settle_zip_entry(long_root(root), phase, gen, entry, temps, kept) or changed
             except OSError as exc:
                 failed = True
                 print(f"⚠ Could not settle {entry[0]} after an interrupted ZIP update: {exc}", file=sys.stderr)
         if kept:
             print("⚠ An interrupted ZIP update's recovery found entries it could not prove were its own and "
-                  f"kept them aside instead of deleting them: {', '.join(map(str, kept))}. Delete each once "
+                  f"kept them aside instead of deleting them: {', '.join(map(native, kept))}. Delete each once "
                   "you know it is not yours.", file=sys.stderr)
         # Retire the journal only on a verified terminal state, not an exception-free loop: no sibling
         # (staging copy, backup, backup temp) left that only this journal could still explain.

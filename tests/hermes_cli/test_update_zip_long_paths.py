@@ -1,10 +1,10 @@
-"""Native Windows ZIP updates must handle deep trees without an OS policy change."""
+"""ZIP extraction handles deep trees without an OS policy change and still refuses unsafe members.
+
+The full update under ``LongPathsEnabled = 0`` is proven by ``test_update_zip_long_paths_windows_live``."""
 import os
 from pathlib import Path
 import shutil
 import stat
-import sys
-from types import SimpleNamespace
 import zipfile
 
 import pytest
@@ -39,52 +39,6 @@ def test_deep_zip_extracts_without_long_path_policy(tmp_path):
         shutil.rmtree(_extended(destination), ignore_errors=True)
 
 
-@pytest.mark.platforms("windows")
-@pytest.mark.parametrize("fail_swap", [False, True])
-def test_deep_zip_download_stages_swaps_and_cleans(tmp_path, monkeypatch, fail_swap):
-    from hermes_cli import update_cmd
-
-    archive = tmp_path / "source.zip"
-    with zipfile.ZipFile(archive, "w") as zf:
-        zf.writestr(_member(), b"new documentation")
-    project = tmp_path / "install"
-    (project / "website").mkdir(parents=True)
-    (project / "website" / "old.md").write_text("old documentation")
-    download = tmp_path / "download"
-    download.mkdir()
-    monkeypatch.setattr(update_cmd, "_m", lambda: SimpleNamespace(PROJECT_ROOT=project, sys=sys))
-    monkeypatch.setattr("tempfile.mkdtemp", lambda **kwargs: str(download))
-    monkeypatch.setattr("urllib.request.urlretrieve", lambda url, dst: shutil.copyfile(archive, dst))
-    rename = os.rename
-
-    def rename_or_fail(src, dst):
-        if fail_swap and str(src).endswith(".hermes-update-staging"):
-            raise OSError("injected swap failure")
-        return rename(src, dst)
-
-    monkeypatch.setattr(os, "rename", rename_or_fail)
-    exit_code = 0
-    try:
-        try:
-            zip_update._download_and_swap_zip("main", "https://example.invalid/source.zip")
-        except SystemExit as exc:
-            exit_code = exc.code
-        assert exit_code == int(fail_swap), "deep ZIP must commit or report rollback"
-        relative = _member().split("/", 1)[1]
-        if fail_swap:
-            assert (project / "website" / "old.md").read_text() == "old documentation"
-            assert not Path(_extended(project / relative)).exists()
-        else:
-            assert Path(_extended(project / relative)).read_bytes() == b"new documentation"
-            assert not (project / "website" / "old.md").exists()
-        assert not (project / "website.hermes-update-old").exists()
-        assert not (project / "website.hermes-update-staging").exists()
-        assert not download.exists()
-    finally:
-        shutil.rmtree(_extended(project), ignore_errors=True)
-        shutil.rmtree(_extended(download), ignore_errors=True)
-
-
 @pytest.mark.parametrize("name", ["../outside.txt", "/outside.txt", "link"])
 def test_zip_still_rejects_unsafe_members_before_writing(tmp_path, name):
     archive = tmp_path / "unsafe.zip"
@@ -113,14 +67,3 @@ def test_empty_and_normal_archives(tmp_path, payload):
         assert not destination.exists()
     else:
         assert (destination / "hermes-agent-main" / "README.md").read_bytes() == payload
-
-
-@pytest.mark.platforms("windows")
-@pytest.mark.parametrize("path, expected", [
-    ("C:/docs/../tree", "\\\\?\\C:\\tree"),
-    ("\\\\server\\share\\tree", "\\\\?\\UNC\\server\\share\\tree"),
-    ("\\\\?\\C:\\tree", "\\\\?\\C:\\tree"),
-    ("\\\\?\\UNC\\server\\share\\tree", "\\\\?\\UNC\\server\\share\\tree"),
-])
-def test_windows_root_conversion(path, expected):
-    assert zip_update._zip_filesystem_path(path) == expected

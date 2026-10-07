@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Collection, Optional
 
 from hermes_cli._early_recovery import _keep_aside
+from pm.filesystem import long_root, native
 from hermes_cli._early_recovery_zip import (
     ZIP_SWAP_JOURNAL, restore_interrupted_zip_swap, write_zip_swap_journal, zip_entry_identity, zip_swap_owner_lock)
 
@@ -91,7 +92,7 @@ def _stage_replacement(src: str, dst: str, on_created=None) -> str:
     # never deleted (F78). Neither may stay: a backup would later be taken for this swap's own.
     for leftover in (staging, backup):
         if os.path.lexists(leftover):
-            print(f"  ⚠ Kept {leftover} aside as {_keep_aside(Path(leftover)).name}: nothing proves it is "
+            print(f"  ⚠ Kept {native(leftover)} aside as {_keep_aside(Path(leftover)).name}: nothing proves it is "
                   "this update's.")
     # Never through the reusable pathname: copy2 opens it following a symlink planted after the sweep
     # (review Z2). copytree's own os.mkdir is exclusive and never follows; a file is created the same way.
@@ -345,38 +346,23 @@ def _abort_zip_update_if_dirty_tree() -> None:
     _m().sys.exit(1)
 
 
-def _zip_filesystem_path(path: str) -> str:
-    """Keep the entire ZIP transaction usable beyond Win32's legacy path limit.
-
-    Convert roots, not archive member names: traversal/symlink validation still
-    runs unchanged, and recursive copy, rollback and cleanup inherit the prefix.
-    """
-    if os.name != "nt":
-        return path
-    path = os.path.abspath(path)
-    if path.startswith("\\\\?\\"):
-        return path
-    if path.startswith("\\\\"):
-        return "\\\\?\\UNC\\" + path[2:]
-    return "\\\\?\\" + path
-
-
 def _extract_zip_safely(zip_path: str, tmp_dir: str) -> None:
     """Extract, rejecting zip-slip AND symlink members: a source ZIP never legitimately contains
     symlinks, and a compromised mirror could use them to plant files anywhere."""
     import stat as _stat
     import zipfile
-    tmp_dir = _zip_filesystem_path(tmp_dir)
-    with zipfile.ZipFile(_zip_filesystem_path(zip_path), "r") as zf:
-        tmp_dir_real = os.path.realpath(tmp_dir)
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        # Judged lexically on the ordinary spelling: Windows never normalises a verbatim (\\?\) path, so a
+        # `..` member would survive realpath there; and the fresh extraction dir holds no symlink to resolve.
+        tmp_dir_real = os.path.realpath(native(tmp_dir))
         for member in zf.infolist():
-            member_path = os.path.realpath(os.path.join(tmp_dir, member.filename))
+            member_path = os.path.normpath(os.path.join(tmp_dir_real, member.filename))
             if not member_path.startswith(tmp_dir_real + os.sep) and member_path != tmp_dir_real:
                 raise ValueError(f"Zip-slip detected: {member.filename} escapes extraction directory")
             # Unix mode lives in the upper 16 bits of external_attr; mask to the file-type bits.
             if _stat.S_ISLNK((member.external_attr >> 16) & 0o170000):
                 raise ValueError(f"ZIP contains unsupported symlink member: {member.filename}")
-        zf.extractall(tmp_dir)
+        zf.extractall(long_root(Path(tmp_dir)))
 
 
 def _archive_commit(zip_path: str) -> Optional[str]:
@@ -486,6 +472,11 @@ def _journaled_stage_and_swap(extracted: str, entries: list[str], root: Path, ta
     from hermes_cli import update_cmd_commit as _commit
     from hermes_cli.update_cmd import _UPDATE_CRITICAL_FILES, _m
 
+    # Every copy, rename and removal below walks these two trees in extended-length spelling: a docs
+    # member ~160 chars deep under a ~105-char Desktop install root crosses MAX_PATH once the staging
+    # suffix goes on, and LongPathsEnabled is 0 by default (#129299). ``root`` itself stays ordinary
+    # for git, the journal and the commit obligation, whose records key on it.
+    extracted, fs_root = str(long_root(Path(extracted))), str(long_root(root))
     # A previous run killed mid-swap: settle it before staging over its leftovers. A journal it could
     # not settle is that swap's only record: never overwrite it with this run's.
     restore_interrupted_zip_swap(root)
@@ -514,7 +505,7 @@ def _journaled_stage_and_swap(extracted: str, entries: list[str], root: Path, ta
                 write_zip_swap_journal(root, "staging", journal_entries, gen)
 
         try:
-            staged = _stage_entries(extracted, entries, str(root), record_staged)
+            staged = _stage_entries(extracted, entries, fs_root, record_staged)
         except BaseException:
             _drop_journal_if_clean(root, entries)  # _stage_entries dropped its copies, if it could
             raise
@@ -574,7 +565,7 @@ def _download_and_swap_zip(branch: str, zip_url: str, target_sha: str | None = N
     import tempfile
     from urllib.request import urlretrieve
     print("→ Downloading latest version...")
-    tmp_dir = _zip_filesystem_path(tempfile.mkdtemp(prefix="hermes-update-"))
+    tmp_dir = str(long_root(Path(tempfile.mkdtemp(prefix="hermes-update-"))))  # extract + rmtree beyond MAX_PATH
     try:
         zip_path = os.path.join(tmp_dir, f"hermes-agent-{branch}.zip")
         urlretrieve(zip_url, zip_path)
@@ -589,7 +580,7 @@ def _download_and_swap_zip(branch: str, zip_url: str, target_sha: str | None = N
         target_sha = archived
         extracted = _extracted_root(tmp_dir, branch)
         entries = [i for i in os.listdir(extracted) if i not in _ZIP_PRESERVED_TOP_LEVEL]
-        project_root = _zip_filesystem_path(str(_m().PROJECT_ROOT))
+        project_root = str(_m().PROJECT_ROOT)
         _require_staging_space(extracted, entries, project_root)
         staged = _journaled_stage_and_swap(extracted, entries, Path(project_root), target_sha)
         print(f"✓ Updated {len(staged)} items from ZIP")
