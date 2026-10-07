@@ -78,12 +78,3 @@ def covering_lock(locks: Iterable[Tuple[Path, str]], path: Sequence[str]) -> Opt
         if covers(lock, path):
             return lock, level
     return None
-
-
-def from_dotted(dotted: str) -> Path:
-    """A dotted key as the CLI and in-tree callers spell it. Those callers never escape, so a key
-    that does not parse as an encoded path is split on every ``.`` (today's behaviour)."""
-    try:
-        return decode(dotted)
-    except PathError:
-        return tuple(dotted.split("."))

@@ -25,9 +25,9 @@ from hermes_cli.config_backend import (
 
 from . import client
 from .credentials import PLANE_CREDENTIAL_ENV_NAMES, PlaneCredentialError
-from .diff import _get_path, apply_intent, diff, encode_changes, intent_diff, json_equal, strip_locked, write_check
+from .diff import _get_path, _pop_path, _set_path, apply_intent, diff, encode_changes, intent_diff, json_equal, strip_locked, write_check
 from .paths import Path as KeyPath
-from .paths import PathError, decode, encode, from_dotted
+from .paths import PathError, decode, encode
 from .values import secret_literal_path, to_wire
 
 logger = logging.getLogger(__name__)
@@ -439,8 +439,9 @@ class RemoteBackend:
         return True  # the plane always resolves a document (an absent level is empty, contract R4)
 
     def locked(self, home: Path, dotted: str) -> Optional[str]:
-        path = from_dotted(dotted)
-        for lock, level in self._state(home).locks:
+        st = self._state(home)
+        path = _key_path(st.doc, dotted)
+        for lock, level in st.locks:
             if len(lock) <= len(path) and tuple(path[:len(lock)]) == lock:
                 return level
         return None
@@ -516,10 +517,10 @@ class RemoteBackend:
         else:
             new = copy.deepcopy(base)
         for key, value in changes.set.items():
-            path = from_dotted(key)
+            path = _key_path(new, key)
             _set_path(new, path, to_wire(value, path))
         for key in changes.unset:
-            _pop_path(new, from_dotted(key))
+            _pop_path(new, _key_path(new, key))
         new.pop("_config_version", None)
 
         if changes.document is not None:
@@ -772,18 +773,14 @@ def _first_change(path: KeyPath, sent: Any, found: bool, got: Any) -> Optional[K
         return path
 
 
-def _set_path(doc: Dict[str, Any], path: KeyPath, value: Any) -> None:
-    node = doc
-    for seg in path[:-1]:
-        if not isinstance(node.get(seg), dict):
-            node[seg] = {}
-        node = node[seg]
-    node[path[-1]] = value
-
-
-def _pop_path(doc: Dict[str, Any], path: KeyPath) -> None:
-    node: Any = doc
-    for seg in path[:-1]:
-        node = node.get(seg) if isinstance(node, dict) else None
-    if isinstance(node, dict):
-        node.pop(path[-1], None)
+def _key_path(doc: Any, dotted: str) -> KeyPath:
+    """``dotted`` as the file backend reads it (``utils.atomic_roundtrip_yaml_update``): ``\\.``
+    escapes a dot, and an existing literal dotted key (``grok-4.6``) wins over splitting it."""
+    from hermes_cli.config import _greedy_literal_match, _split_key_path
+    parts, path, i = _split_key_path(dotted), [], 0
+    while i < len(parts):
+        seg, consumed = _greedy_literal_match(doc, parts[i:]) or (parts[i], 1)
+        path.append(seg)
+        doc = doc.get(seg) if isinstance(doc, dict) else None
+        i += consumed
+    return tuple(path)
