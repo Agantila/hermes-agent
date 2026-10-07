@@ -14,6 +14,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Tuple
 
@@ -60,9 +61,35 @@ def plane_token(home: Path) -> str:
     return _idp_token() if credential_kind() == "idp" else _nous_token(home)
 
 
+def _stored_nous_token(home: Path) -> str:
+    """The profile's stored Nous access token while it is not near expiry, read straight from
+    ``auth.json`` (the profile's, then the root's, like ``hermes_cli.auth``), else ``""``.
+
+    Config-independent on purpose: importing ``hermes_cli.auth`` reads config (plugin discovery),
+    and in remote mode that read is this very fetch, so the boot fetch cannot need that module
+    while the token is still good. A token near expiry is refreshed through the full resolver."""
+    from hermes_cli.auth_constants import ACCESS_TOKEN_REFRESH_SKEW_SECONDS
+    from hermes_constants import get_default_hermes_root
+    for path in (Path(home) / "auth.json", get_default_hermes_root() / "auth.json"):
+        try:
+            state = json.loads(path.read_text(encoding="utf-8-sig"))["providers"]["nous"]
+            token, expires_at = state["access_token"], state["expires_at"]
+            expires = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            continue
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        fresh = expires.timestamp() > time.time() + ACCESS_TOKEN_REFRESH_SKEW_SECONDS
+        return token if fresh and isinstance(token, str) else ""
+    return ""
+
+
 def _nous_token(home: Path) -> str:
     from hermes_constants import reset_hermes_home_override, set_hermes_home_override
 
+    stored = _stored_nous_token(home)
+    if stored:
+        return stored
     try:
         from hermes_cli.auth import resolve_nous_access_token
     except Exception as exc:  # noqa: BLE001 — an import failure is a broken install, not transient

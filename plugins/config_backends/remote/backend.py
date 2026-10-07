@@ -24,7 +24,7 @@ from hermes_cli.config_backend import (
     Changes, ConfigBackendUnavailable, ConfigLockedError, ConfigValueError, ConfigWriteError, UserLayer)
 
 from . import client
-from .credentials import PLANE_CREDENTIAL_ENV_NAMES, PlaneCredentialError
+from .credentials import PLANE_CREDENTIAL_ENV_NAMES, PlaneCredentialError, credential_kind
 from .diff import _get_path, _pop_path, _set_path, apply_intent, diff, encode_changes, intent_diff, json_equal, strip_locked, write_check
 from .paths import Path as KeyPath
 from .paths import PathError, decode, encode
@@ -175,6 +175,12 @@ class RemoteBackend:
             if poller is None or self._poller_pid != os.getpid() or not poller.is_alive():
                 self._ensure_poller()
             return st
+        # The Cloud credential resolver (hermes_cli.auth) imports hermes_cli.config, whose import-time
+        # reads come back here for this same home. Import it before taking the fetch lock: those
+        # reads then fetch first, the resolver imports against a config module that is already
+        # loading, and the fetch below finds the state (a fetch lock taken first would deadlock).
+        if credential_kind() == "nous":
+            import hermes_cli.config  # noqa: F401
         with self._lock:
             fetch_lock = self._fetch_locks.setdefault(key, threading.Lock())
         with fetch_lock:
