@@ -29,7 +29,7 @@ from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Dict, Any, Literal, Optional, List, Tuple, Set
+from typing import Dict, Any, Iterable, Literal, Optional, List, Tuple, Set
 
 import hermes_yaml as yaml
 
@@ -3463,20 +3463,22 @@ def _legacy_gateway_platforms_key(requested_key: str) -> Optional[str]:
     return None
 
 
-def _exit_if_key_managed(key: str, action: str) -> None:
+def _exit_if_keys_managed(keys: Iterable[str], action: str) -> None:
     """A key pinned by the managed layer cannot be set/unset (the next load would reinstate it):
     hard-reject and name the source. Distinct from ``is_managed()``; env-shaped keys route to the
-    .env writers, which carry their own guard."""
-    if managed_scope.is_key_managed(key):
-        print(
-            f"Cannot {action} '{key}': it is managed by your administrator ({_managed_source('config.yaml')}) "
-            f"and cannot be changed. Contact your administrator to modify it.", file=sys.stderr)
-        sys.exit(1)
-    level = get_config_backend().locked(get_config_path().parent, key)  # remote locks, prefix-aware (D7)
-    if level:
-        print(f"Cannot {action} '{key}': it is locked by the {level} level of Remote Config and cannot be "
-              "changed from this agent.", file=sys.stderr)
-        sys.exit(1)
+    .env writers, which carry their own guard. Every key must be changeable or nothing changes: an
+    edit spanning several keys (a provider switch clearing its old route) is refused whole."""
+    for key in keys:
+        if managed_scope.is_key_managed(key):
+            print(
+                f"Cannot {action} '{key}': it is managed by your administrator ({_managed_source('config.yaml')}) "
+                f"and cannot be changed. Contact your administrator to modify it.", file=sys.stderr)
+            sys.exit(1)
+        level = get_config_backend().locked(get_config_path().parent, key)  # remote locks, prefix-aware (D7)
+        if level:
+            print(f"Cannot {action} '{key}': it is locked by the {level} level of Remote Config and cannot be "
+                  "changed from this agent.", file=sys.stderr)
+            sys.exit(1)
 
 
 def _touch_skin_file(key: str, value: Any) -> None:
@@ -3546,7 +3548,7 @@ def set_config_value(key: str, value: str, force: bool = False):
         _exit_invalid(
             f"✗ Invalid config key: {key!r} — contains an empty path segment "
             "(leading, trailing, or doubled '.').")
-    _exit_if_key_managed(key, "set")
+    _exit_if_keys_managed((key,), "set")
     if _is_env_config_key(key):
         from hermes_cli.credential_lifecycle import save_provider_env_credential
 
@@ -3620,6 +3622,7 @@ def set_config_value(key: str, value: str, force: bool = False):
     if key == "model.provider" and _old_provider.lower() != str(value).strip().lower():
         from hermes_cli.route_identity import drop_stale_model_route
         _popped, _unverified = drop_stale_model_route(user_config.get("model"), value, user_config)
+        _exit_if_keys_managed((f"model.{k}" for k in _popped), "clear")  # the switch and its route, or nothing
         if _popped:
             _route_notice = (
                 "  Cleared " + ", ".join(f"model.{k} ({v})" for k, v in _popped.items())
@@ -3724,7 +3727,7 @@ def unset_config_value(key: str):
     if is_managed():
         managed_error("unset configuration values")
         return
-    _exit_if_key_managed(key, "unset")
+    _exit_if_keys_managed((key,), "unset")
 
     if _is_env_config_key(key):
         # Unified lifecycle: also prunes env-seeded credential_pool entries and model-cache rows so

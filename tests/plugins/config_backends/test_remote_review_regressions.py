@@ -62,3 +62,14 @@ def test_reloading_dotenv_expands_a_plane_url_once(plane, monkeypatch):
         load_hermes_dotenv(hermes_home=plane.home, load_external_secrets=False)
 
     assert os.environ["HERMES_CONFIG_REMOTE_URL"] == plane.url + "/"
+
+
+def test_provider_switch_with_a_locked_route_changes_nothing(plane, capsys):
+    plane.profile("default").update(values={"model": {
+        "default": "m", "provider": "anthropic", "base_url": "https://api.anthropic.com"}}, version=1)
+    plane.upper_locks = [{"path": "model.base_url", "level": "tenant"}]
+
+    code, err = _config_cmd(capsys, "set", "model.provider", "openrouter")
+
+    assert code == 1 and "model.base_url" in err
+    assert plane.patches() == []
