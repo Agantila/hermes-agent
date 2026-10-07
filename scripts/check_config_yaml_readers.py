@@ -41,7 +41,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TREES = (
     "hermes_cli", "agent", "gateway", "tui_gateway", "cron", "plugins", "tools", "acp_adapter",
     "cli.py", "utils.py", "hermes_constants.py", "hermes_logging.py", "hermes_time.py", "run_agent.py",
-    "model_tools.py", "batch_runner.py")
+    "model_tools.py", "batch_runner.py", "providers")
 # The backend module itself, and the on-disk primitives it wraps.
 ALLOWED_FILES = {ROOT / "hermes_cli" / "config_backend.py", ROOT / "utils.py"}
 # Modules whose ``config_path`` / ``path`` names are their OWN config file, never a hermes

@@ -88,3 +88,14 @@ def test_deleted_profile_is_no_longer_polled(profile_plane):
 
     assert backend._key(gone) not in backend._states
     assert not any(r["profile"] == "gone" for r in profile_plane.requests[before:])
+
+
+def test_named_custom_provider_added_on_the_plane_is_seen_after_a_poll(plane):
+    from providers import get_provider_profile
+    assert get_provider_profile("my-gw") is None
+    plane.profile("default").update(values={"providers": {"my-gw": {
+        "base_url": "https://gw.example/v1", "api_key": "${MY_GW_KEY}"}}}, version=1)
+    backend = get_config_backend()
+    backend.poll_one(backend._state(plane.home))
+
+    assert get_provider_profile("my-gw") is not None
