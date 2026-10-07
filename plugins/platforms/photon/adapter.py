@@ -137,8 +137,8 @@ def _sidecar_pid_alive(pid: Any) -> bool:
     try:
         from gateway.status import _pid_exists  # psutil-backed, Windows-safe
         return bool(_pid_exists(pid_int))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if os.name != "posix":  # os.kill(pid, 0) is destructive on Windows — assume alive; the HTTP send arbitrates
         return True
     try:

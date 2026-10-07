@@ -288,8 +288,8 @@ def _spotify_interactive_setup(redirect_uri_hint: str) -> str:
     if not _is_remote_session():
         try:
             webbrowser.open(SPOTIFY_DASHBOARD_URL)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     from hermes_cli.cli_output import line_input
     try:

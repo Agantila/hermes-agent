@@ -59,8 +59,8 @@ def _plugins_path_entry() -> str:
         import plugins as plugins_pkg
         if pkg_file := getattr(plugins_pkg, "__file__", None):
             return os.path.dirname(os.path.dirname(os.path.abspath(pkg_file)))
-    except Exception:  # noqa: BLE001 — fall through to path-walk fallback
-        pass
+    except Exception as _exc:  # noqa: BLE001 — fall through to path-walk fallback
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return os.path.abspath(os.path.join(__file__, *([os.pardir] * 4)))
 
 
@@ -170,8 +170,8 @@ def _run_ddgs_search_bounded(query: str, safe_limit: int) -> list[dict[str, Any]
         if not fut.done():
             try:
                 raw = raw or fut.result(timeout=_TERMINATE_GRACE_SECS)[0] or ""
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as _exc:  # noqa: BLE001
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         pool.shutdown(wait=False, cancel_futures=True)
     if interrupted:
         raise _SearchInterrupted("DuckDuckGo search interrupted")

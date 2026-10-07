@@ -667,8 +667,8 @@ def normalize_skill_lookup_name(identifier: str) -> str:
     for getter in (get_project_skills_dirs, get_external_skills_dirs):
         try:
             trusted_roots.extend(getter())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Prefer the lexical path under a trusted root before resolving symlinks:
     # ~/.hermes/skills/<name> may be a symlink to a checkout elsewhere, and
     # resolving first would turn that trusted path into one skill_view rejects.
@@ -699,8 +699,8 @@ def is_external_skill_path(path) -> bool:
     roots: List[Path] = list(get_external_skills_dirs())
     try:
         roots.extend(get_project_skills_dirs())
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return any(candidate.is_relative_to(_resolve_for_skill_ownership(root)) for root in roots)
 
 

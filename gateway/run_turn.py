@@ -732,8 +732,8 @@ class GatewayTurnMixin:
                     )
                     if _hyg_custom_ctx:
                         hs.config_context_length = int(_hyg_custom_ctx)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return hs
 
     async def _hmwa_hygiene_plan(self, hs, history, session_entry, session_key):

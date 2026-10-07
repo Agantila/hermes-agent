@@ -9,6 +9,7 @@ close), and the RelayAdapter emitting going_idle from its existing drain
 
 from __future__ import annotations
 
+import logging
 import asyncio
 import json
 
@@ -70,8 +71,8 @@ class _IdleAwareServer:
                     frame = json.loads(line)
                     self.received.append(frame)
                     await self._on_frame(ws, frame)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     async def _on_frame(self, ws, frame):
         ftype = frame.get("type")

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import hermes_yaml as yaml
 
 
@@ -11,8 +12,8 @@ def _invalidate_config_cache():
 
         if hasattr(cfg_mod, "_invalidate_load_config_cache"):
             cfg_mod._invalidate_load_config_cache()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def test_storage_defaults_to_permanent_public_urls(tmp_path, monkeypatch):

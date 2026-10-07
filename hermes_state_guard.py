@@ -3,6 +3,7 @@ Every SessionDB construction resolves its path through _ensure_test_isolation
 so a pytest-context process (env OR ancestry) can never open a production
 state.db; env-based so subprocess children are protected too."""
 
+import logging
 import os
 import sys
 import threading
@@ -146,8 +147,8 @@ def _register_test_instance(db: Any) -> None:
     if os.environ.get(_TEST_ISOLATION_MARKER_ENV):
         try:
             _test_instance_registry.add(db)
-        except Exception:  # pragma: no cover — registry must never break init
-            pass
+        except Exception as _exc:  # pragma: no cover — registry must never break init
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # Last SessionDB() init error, per-process; surfaced by /resume-style slash

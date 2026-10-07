@@ -28,6 +28,7 @@ marker filter.)
 
 from __future__ import annotations
 
+import logging
 import asyncio
 import base64
 import json
@@ -113,12 +114,12 @@ def chrome_cdp(tmp_path):
         except (subprocess.TimeoutExpired, AssertionError, Exception):
             try:
                 proc.kill()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             try:
                 proc.wait(timeout=2)
-            except (AssertionError, Exception):
-                pass
+            except (AssertionError, Exception) as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         shutil.rmtree(profile, ignore_errors=True)
         stderr.seek(0)
         diagnostic = stderr.read().decode("utf-8", errors="replace")
@@ -136,19 +137,19 @@ def chrome_cdp(tmp_path):
     # hangs, then always reap so we don't leak a zombie.
     try:
         proc.terminate()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         proc.wait(timeout=3)
     except (subprocess.TimeoutExpired, AssertionError, Exception):
         try:
             proc.kill()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             proc.wait(timeout=2)
-        except (AssertionError, Exception):
-            pass
+        except (AssertionError, Exception) as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     shutil.rmtree(profile, ignore_errors=True)
     stderr.close()
 

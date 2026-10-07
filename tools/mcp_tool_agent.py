@@ -129,8 +129,8 @@ def refresh_agent_mcp_tools(
     if preserve_prefix:
         try:
             prefix_registered = {entry.name for entry in registry.get_all_entries()}
-        except Exception:  # noqa: BLE001
-            pass  # fail open to the plain rebuild
+        except Exception as _exc:  # noqa: BLE001
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # fail open to the plain rebuild
     added = _publish_tool_snapshot(
         agent, new_defs, new_names, snapshot_generation=snapshot_generation,
         staged_engine_names=staged_engine_names, content_aware=content_aware, prefix_registered=prefix_registered)

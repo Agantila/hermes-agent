@@ -115,8 +115,8 @@ def web_provider_capabilities(backend: str) -> list:
         if provider is not None:
             return [cap for cap, supported in (("search", provider.supports_search()),
                                                ("extract", provider.supports_extract())) if supported]
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return ["search", "extract"]
 
 
@@ -273,8 +273,8 @@ def _any_plugin_provider_available(registry_module: str) -> bool:
                     return True
             except Exception:
                 continue
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 
@@ -306,8 +306,8 @@ def _configure_tool_category(ts_key: str, cat: dict, config: dict, *, force_fres
     if not reconfigure:
         try:
             _nous_logged_in = bool(get_nous_subscription_features(config, force_fresh=force_fresh).nous_auth_present)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     provider_choices = []  # plain text labels only (no ANSI codes in menu items)
     for p in providers:
@@ -459,8 +459,8 @@ def _browser_use_default_active(config: dict) -> bool:
 
             if is_camofox_mode():
                 return False
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return _find_cli() is not None
     except Exception:
         return False
@@ -911,8 +911,8 @@ def _show_portal_hint(provider: dict, config: dict, managed_feature, force_fresh
             _providers = _cat.get("providers", [])
             if provider in _providers and any(sib.get("managed_nous_feature") for sib in _providers):
                 return not get_nous_subscription_features(config, force_fresh=force_fresh).nous_auth_present
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 

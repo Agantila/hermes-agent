@@ -10,6 +10,7 @@ event, lease, reaper and approval path is the production one.
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import re
@@ -299,8 +300,8 @@ class WSClient:
         self._reading.set()
         try:
             self._ws.close()
-        except Exception:  # noqa: BLE001 - already dropped
-            pass
+        except Exception as _exc:  # noqa: BLE001 - already dropped
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def etype(frame: dict) -> str:

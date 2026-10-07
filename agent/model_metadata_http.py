@@ -1,6 +1,7 @@
 """Model probes share chat's TLS policy, with scoped redirect credentials."""
 from __future__ import annotations
 
+import logging
 from contextlib import contextmanager
 
 
@@ -13,8 +14,8 @@ def resolve_verify(base_url: str = ""):
             from hermes_cli.config import get_custom_provider_tls_settings
 
             settings = get_custom_provider_tls_settings(base_url)
-        except Exception:
-            pass  # Metadata remains optional when config discovery fails.
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # Metadata remains optional when config discovery fails.
     return resolve_httpx_verify(
         ca_bundle=settings.get("ssl_ca_cert"),
         ssl_verify=settings.get("ssl_verify"),

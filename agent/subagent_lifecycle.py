@@ -3,6 +3,7 @@ objects. Plugins obtain it via ``PluginContext.subagent_lifecycle``."""
 
 from __future__ import annotations
 
+import logging
 import contextvars
 import dataclasses
 import enum
@@ -295,8 +296,8 @@ class SubagentLifecycleService:
                 record.future.result(timeout=timeout_seconds)
         except TimeoutError:
             return SubagentTerminalState(record.handle, record.state, False, True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         with _REGISTRY.lock:
             return SubagentTerminalState(record.handle, record.state, record.result is not None)
 

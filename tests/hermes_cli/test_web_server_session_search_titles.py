@@ -14,6 +14,7 @@ DB) so the title lane is exercised end to end, including the SQLite
 read-only connection the endpoint opens.
 """
 
+import logging
 import asyncio
 import threading
 
@@ -41,8 +42,8 @@ def real_db(tmp_path):
     yield db
     try:
         db.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @pytest.fixture

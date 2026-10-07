@@ -514,8 +514,8 @@ def _opencode_family_for_custom(requested_provider: str, base_url: str) -> Optio
     try:
         if base_url_hostname(base_url).lower() == "opencode.ai":
             return "opencode-go" if "/zen/go" in base_url.lower() else "opencode-zen"
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 

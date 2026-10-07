@@ -1,6 +1,7 @@
 """Managed-files policy for the dashboard file browser: root resolution, path containment, entry metadata.
 """
 
+import logging
 import mimetypes
 import os
 import stat
@@ -136,8 +137,8 @@ def _dashboard_local_update_managed_externally() -> bool:
     try:
         if detect_install_method(PROJECT_ROOT) == "git":
             return False
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return True
 
 

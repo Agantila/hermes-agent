@@ -752,8 +752,8 @@ def resolve_runtime_pool_key(provider: Optional[str], base_url: Optional[str]) -
                 for candidate in _pool_keys_for_custom_entry(normalized_name, entry):
                     if _accepts(candidate):
                         return candidate
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return provider_norm
 
 
@@ -3057,8 +3057,8 @@ def _seed_custom_pool(pool_key: str, entries: List[PooledCredential]) -> Tuple[b
                         "base_url": model_base_url,
                         "label": "model_config",
                     })
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return seed.result
 

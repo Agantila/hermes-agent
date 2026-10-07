@@ -226,8 +226,8 @@ def _hermes_call_output_screen_diff(
     try:
         if previous_screen is not None and hasattr(previous_screen, "height") and previous_screen.height < screen.height:
             previous_screen.height = screen.height
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     common = (app, output, screen, current_pos, color_depth)
     tail = (is_done, full_screen, attrs_for_style_string, style_string_has_style, size)
@@ -408,8 +408,8 @@ def _enable_extended_enter_keys(output=None, env: Optional[Mapping[str, str]] = 
             sys.stdout.write(seq)
             sys.stdout.flush()
             return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 

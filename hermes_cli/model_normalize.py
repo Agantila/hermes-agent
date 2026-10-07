@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Optional
 
@@ -236,8 +237,8 @@ def normalize_model_for_provider(model_input: str, target_provider: str) -> str:
             normalized = normalize_copilot_model_id(name)
             if normalized:
                 return normalized
-        except Exception:
-            pass  # fall through to the generic strip-vendor behaviour
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # fall through to the generic strip-vendor behaviour
 
     if provider in _STRIP_VENDOR_ONLY_PROVIDERS:
         stripped = _strip_matching_provider_prefix(name, provider)

@@ -1,5 +1,6 @@
 """Regression guard for Telegram bot-origin authorization (#32188)."""
 
+import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -119,10 +120,10 @@ def _capture_build_source_is_bot(is_bot: bool):
     with patch.object(adapter, "build_source", side_effect=fake_build_source):
         try:
             adapter._build_message_event(message, MessageType.TEXT, update_id=1)
-        except Exception:
+        except Exception as _exc:
             # The method may continue into PTB-specific optional fields after
             # source construction; this test only pins the source kwarg.
-            pass
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return captured.get("is_bot")
 

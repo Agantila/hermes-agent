@@ -14,6 +14,7 @@ the ``platform_registry``.
 
 from __future__ import annotations
 
+import logging
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -159,8 +160,8 @@ class TestConnect:
         adapter._stream_task.cancel()
         try:
             _run(adapter._stream_task)
-        except (asyncio.CancelledError, Exception):
-            pass
+        except (asyncio.CancelledError, Exception) as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
     def test_disconnect_cancels_stream_task(self):

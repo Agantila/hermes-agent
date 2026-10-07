@@ -231,8 +231,8 @@ def _write_usage_file(path: Optional[str], result: dict, failure: Optional[str] 
         out = Path(path).expanduser()
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def run_oneshot(

@@ -1,5 +1,6 @@
 """Tests for hermes_cli.doctor."""
 
+import logging
 import importlib.util
 import os
 import subprocess
@@ -386,8 +387,8 @@ class TestDoctorMemoryProviderSection:
             monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {})
             monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
             monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Keep doctor from probing the AMBIENT gh CLI. A PATH lookup that
         # resolves (any dev box has gh) makes doctor shell out to
@@ -489,8 +490,8 @@ def test_run_doctor_accepts_named_provider_from_providers_section(monkeypatch, t
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -533,8 +534,8 @@ def test_run_doctor_accepts_stable_key_when_provider_name_differs(
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -575,8 +576,8 @@ def test_run_doctor_accepts_bare_custom_provider(monkeypatch, tmp_path):
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -616,8 +617,8 @@ def test_run_doctor_flags_missing_credentials_for_active_openrouter_provider(mon
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_minimax_oauth_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_gemini_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -666,8 +667,8 @@ def test_run_doctor_accepts_hermes_provider_ids_that_catalog_aliases(
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -713,8 +714,8 @@ def test_run_doctor_accepts_vendor_slugs_for_named_custom_provider(monkeypatch, 
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -769,8 +770,8 @@ def test_run_doctor_vendor_slug_policy_for_openai_api_endpoint(
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -813,8 +814,8 @@ def test_run_doctor_accepts_kimi_coding_cn_provider(monkeypatch, tmp_path):
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_auth_status", lambda provider: {"logged_in": True})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -854,8 +855,8 @@ def _doctor_env_for_agent_browser(monkeypatch, tmp_path):
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def test_run_doctor_reports_installed_agent_browser(monkeypatch, tmp_path):
@@ -939,8 +940,8 @@ def test_run_doctor_kimi_cn_env_is_detected_and_probe_is_null_safe(monkeypatch, 
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: {})
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     calls = []
 

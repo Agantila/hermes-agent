@@ -11,6 +11,7 @@ Flattening uses pypdf appearance merging; verify visually for exotic widgets.
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import sys
@@ -20,8 +21,8 @@ def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     parser = argparse.ArgumentParser(description="Fill PDF AcroForm fields from JSON (pypdf).")
     parser.add_argument("pdf", help="Input form PDF")
     parser.add_argument("--fields-json", required=True, help="UTF-8 JSON file of field values")

@@ -28,6 +28,7 @@ main-checkout install):
 Uses a throwaway HERMES_HOME so it never touches ~/.hermes. No real names.
 """
 
+import logging
 import os
 import sys
 import tempfile
@@ -128,8 +129,8 @@ def _brief_in_transcript(store, sid):
         for m in msgs:
             if "PRs need review" in str(m.get("content", "")):
                 return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Fallback: scan the JSONL transcript file.
     for p in (HOME / "sessions").glob("*.json*"):
         try:

@@ -6,6 +6,7 @@ knobs _SESSION_TTL_S, _REAPER_SCAN_S, _EXIT_FLUSH_BUDGET_S and _INCREMENTAL_FLUS
 
 from __future__ import annotations
 
+import logging
 import contextlib
 import secrets
 import threading
@@ -391,8 +392,8 @@ def _session_orphan_reaper_enabled() -> bool:
         dashboard_cfg = (_load_cfg() or {}).get("dashboard") or {}
         if isinstance(dashboard_cfg, dict) and "startup_orphan_sweep" in dashboard_cfg:
             return is_truthy_value(dashboard_cfg.get("startup_orphan_sweep"), default=True)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return True
 
 

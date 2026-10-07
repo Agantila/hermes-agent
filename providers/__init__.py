@@ -403,8 +403,8 @@ def _declares_model_provider_kind(plugin_dir: Path) -> bool:
             data = fast_safe_load(text)
             if isinstance(data, dict):
                 return str(data.get("kind", "")).strip() == "model-provider"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         for line in text.splitlines():
             stripped = line.strip()
             if stripped.startswith("#") or ":" not in stripped:
@@ -699,8 +699,8 @@ def _run_discovery_steps() -> None:
                 logger.warning(
                     "Failed to import legacy provider module %s: %s", modname, exc
                 )
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # (Pip entry-point providers are discovered in step 0, before the
     # filesystem plugins, so first-party profiles always win on name

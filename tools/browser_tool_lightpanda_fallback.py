@@ -4,6 +4,7 @@ that Lightpanda cannot serve (screenshots, empty snapshots, failed commands).
 Facade-owned state is read through ``_bt`` (``tools.browser_tool``, resolved per call) — no import cycle.
 """
 
+import logging
 import json
 import os
 import shutil
@@ -186,8 +187,8 @@ def _run_chrome_fallback_command(task_id: str, command: str, args: List[str], ti
         # 5. Tear down the temporary Chrome session and its socket directory.
         try:
             _run_tmp("close", [])
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         shutil.rmtree(task_socket_dir, ignore_errors=True)
 
 

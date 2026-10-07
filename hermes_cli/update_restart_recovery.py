@@ -45,6 +45,7 @@ in the receipt.
 
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import os
@@ -184,8 +185,8 @@ def _pid_is_live(pid: int) -> bool:
         import psutil
 
         return bool(psutil.pid_exists(pid))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     if os.name == "nt":
         return False
     try:

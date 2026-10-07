@@ -2,6 +2,7 @@
 Origin helpers (``_row``, ``_first_env_value``, ...) are resolved through the ``hermes_cli.status``
 module object so tests that monkeypatch that module keep working."""
 
+import logging
 from datetime import datetime, timezone
 
 from hermes_cli.auth import AuthError
@@ -118,8 +119,8 @@ def _render_auth_providers(ctx):
                                         "inference_credential_present", "error_code")):
         try:
             info = get_nous_portal_account_info()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     ctx.nous_account_info = info
     ctx.nous_logged_in = logged_in = bool(nous_status.get("logged_in") or (info and info.logged_in))
     ctx.nous_inference_present = inference = bool(

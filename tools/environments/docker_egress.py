@@ -242,8 +242,8 @@ def check_docker_env_collisions(user_env: dict[str, str], egress_env: dict[str, 
     try:
         from agent.proxy_sources import iron_proxy as ip
         provider_keys = {m.real_env_name for m in ip.load_mappings()}
-    except Exception:  # best-effort
-        pass
+    except Exception as _exc:  # best-effort
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _collides(k: str) -> bool:
         if k not in user_env:

@@ -10,6 +10,7 @@ parity across every registered verb.
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 from pathlib import Path
@@ -661,8 +662,8 @@ def test_pid_alive_detects_zombie(kanban_home):
     finally:
         try:
             proc.wait(timeout=1)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 

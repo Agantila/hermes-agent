@@ -118,8 +118,8 @@ def _run_async(coro):
                         t.cancel()
                     if pending:
                         worker_loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 worker_loop.close()
 
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
@@ -592,8 +592,8 @@ def _resolve_active_context_length() -> int:
                 cached_ctx = get_cached_context_length(model_id, base_url)
                 if isinstance(cached_ctx, int) and cached_ctx > 0:
                     return cached_ctx
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return int(get_model_context_length(model_id, base_url=base_url, api_key=api_key,
                                             config_context_length=config_ctx, provider=provider) or 0)
     except Exception as e:
@@ -661,15 +661,15 @@ def _tool_result_observer_fields(tool_name: str, result: Any) -> tuple[str, Opti
         parsed_result = json.loads(result) if isinstance(result, str) else result
         if isinstance(parsed_result, dict) and parsed_result.get("error"):
             return "error", "tool_error", str(parsed_result.get("error"))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from agent.display import _detect_tool_failure
         failed, suffix = _detect_tool_failure(tool_name, result)
         if failed:
             return "error", "tool_error", suffix.strip().strip("[]") or None
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return "ok", None, None
 
 
@@ -815,8 +815,8 @@ def _approval_observability(ids: _CallIds):
     finally:
         try:
             reset_current_observability_context(tokens)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _execute_tool(function_name: str, function_args: Dict[str, Any], original_args: Dict[str, Any], ids: _CallIds,
@@ -947,8 +947,8 @@ def handle_function_call(
             try:
                 from tools.file_tools_read_tracking import notify_other_tool_call
                 notify_other_tool_call(task_id or "default")
-            except Exception:
-                pass  # file_tools may not be loaded yet
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # file_tools may not be loaded yet
 
         # duration_ms (monotonic) is exposed to post_tool_call / transform_tool_result.
         start = time.monotonic()

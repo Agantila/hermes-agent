@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import List, Set
 
 from hermes_cli.cli_output import (
@@ -232,9 +233,9 @@ def _known_tool_platforms() -> set[str]:
         from gateway.platform_registry import platform_registry
         discover_plugins()  # idempotent
         known.update(platform_registry.registered_names())
-    except Exception:
+    except Exception as _exc:
         # Plugin discovery is optional: keep the built-in path when a plugin is malformed or deps are missing.
-        pass
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return known
 
 

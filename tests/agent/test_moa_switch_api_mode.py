@@ -16,6 +16,7 @@ same so the primary call always routes through ``MoAClient.chat.completions``.
 
 from __future__ import annotations
 
+import logging
 import types
 
 import pytest
@@ -72,12 +73,12 @@ def test_switch_to_moa_pins_chat_completions(monkeypatch, incoming_api_mode):
             base_url="moa://local",
             api_mode=incoming_api_mode,
         )
-    except Exception:
+    except Exception as _exc:
         # switch_model does post-swap work (compressor, pool, runtime) that may
         # raise against a fake agent. The runtime-field swap — including the
         # api_mode pin in the moa branch — happens before any of that, so the
         # invariant we care about is already set even if a later step blew up.
-        pass
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     assert agent.provider == "moa"
     assert agent.base_url == "moa://local"

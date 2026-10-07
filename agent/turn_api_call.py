@@ -243,8 +243,8 @@ def nous_rate_limit_guard(
         try:
             from hermes_cli.anon_auth import apply_model_switch
             apply_model_switch(agent)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             from agent.nous_rate_guard import (
                 nous_rate_limit_remaining, format_remaining as _fmt_nous_remaining
@@ -284,6 +284,6 @@ def nous_rate_limit_guard(
                     **({"free_tier": {"kind": "rate_limited", "message": anon_auth.FREE_TIER_RATE_LIMIT_CARD.format(
                         reset=anon_auth.friendly_wait(_nous_remaining))}} if _anonymous else {}),
                 }, FailoverReason.rate_limit.value, True))
-        except Exception:
-            pass  # Never let rate guard break the agent loop
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Never let rate guard break the agent loop
     return _verdict("fallthrough")

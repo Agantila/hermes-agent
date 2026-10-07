@@ -7,6 +7,7 @@ never imports ``cli`` at module load time (import cycle).
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import re
@@ -151,8 +152,8 @@ class CLIVoiceMixin:
             try:
                 from tools.voice_mode import play_beep
                 play_beep(frequency=frequency, count=count)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _voice_stt_model(self) -> Optional[str]:
         """STT model override from config, or None for the provider default.
@@ -251,8 +252,8 @@ class CLIVoiceMixin:
                         _cprint(f"{_DIM}{t('cli.voice.recording_preserved', path=wav_path)}{_RST}")
                     else:
                         os.unlink(wav_path)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
             # Three consecutive no-speech cycles end continuous mode (no infinite restart
             # loop). While the agent is mid-turn or TTS is speaking the user is CORRECTLY
@@ -574,8 +575,8 @@ class CLIVoiceMixin:
             def _bg_shutdown(rec=recorder):
                 try:
                     rec.shutdown()
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             threading.Thread(target=_bg_shutdown, daemon=True).start()
             self._voice_recorder = None
         # Stop any active TTS playback (file player + streaming pipeline)
@@ -585,8 +586,8 @@ class CLIVoiceMixin:
                 self._voice_tts_stop.set()
             from tools.voice_mode import stop_playback
             stop_playback()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._voice_tts_done.set()
         _cprint(f"\n{_DIM}{t('cli.voice.disabled')}{_RST}")
 
@@ -654,8 +655,8 @@ class CLIVoiceMixin:
         try:
             from tools.wake_word import stop_listening
             stop_listening(owner=self)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if _cli._cli_wake_owner is self:
             _cli._cli_wake_owner = None
         if announce:
@@ -699,8 +700,8 @@ class CLIVoiceMixin:
         if getattr(self, "_app", None):
             try:
                 self._app.invalidate()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         if getattr(self, "_wake_start_new_session", True):
             try:

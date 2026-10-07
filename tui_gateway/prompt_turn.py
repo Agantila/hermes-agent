@@ -9,6 +9,7 @@ post-turn follow-ups (queued prompt, goal continuation, notifications).
 
 from __future__ import annotations
 
+import logging
 import dataclasses
 
 from .method_ctx import HandlerRegistry, bind_module
@@ -405,8 +406,8 @@ def _after_complete_turn(sid: str, session: dict, st: _TurnRun, raw: Any) -> Non
             # Invalid/duplicate title — non-retryable, drop it; auto-title takes over.
             session["pending_title"] = None
             logger.info("Dropping pending title for session %s: %s", _session_key, exc)
-        except Exception:
-            pass  # transient DB failure — keep pending_title for retry
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # transient DB failure — keep pending_title for retry
     # Voice fallback when the streaming pipeline couldn't start (tts_queue already spoke
     # everything otherwise); barge-aware.
     if st.tts_queue is None and isinstance(raw, str) and raw.strip() and _voice_tts_enabled():

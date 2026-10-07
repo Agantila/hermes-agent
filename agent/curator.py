@@ -552,8 +552,8 @@ def _parse_structured_summary(llm_final: str) -> Dict[str, List[Dict[str, str]]]
         try:
             import hermes_yaml as yaml
             data = yaml.safe_load(match.group(1))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if not isinstance(data, dict):
         return {"consolidations": [], "prunings": []}
 

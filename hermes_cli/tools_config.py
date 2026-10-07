@@ -121,8 +121,8 @@ def _xai_credentials_present() -> bool:
         from hermes_cli.auth import _read_xai_oauth_tokens
         _read_xai_oauth_tokens()
         return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if str(get_env_value("XAI_API_KEY") or "").strip():
         return True
     try:
@@ -150,8 +150,8 @@ def _get_effective_configurable_toolsets():
             if entry[0] not in seen:
                 seen.add(entry[0])
                 result.append(entry)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return result
 
 

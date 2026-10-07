@@ -1,6 +1,7 @@
 """Abstract service manager interface + systemd/launchd/Windows/s6 backends."""
 from __future__ import annotations
 
+import logging
 import json
 import os
 import re
@@ -569,8 +570,8 @@ class S6ServiceManager:
             try:
                 from gateway.status import write_planned_stop_marker
                 write_planned_stop_marker(pid)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._run_svc("-d", "stop", name)
         _write_gateway_desired_state(name, "stopped")
 

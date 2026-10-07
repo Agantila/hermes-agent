@@ -13,6 +13,7 @@ Hermes runs for real in child processes with HOME=<tmp>/home and HERMES_HOME=<tm
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import secrets
@@ -524,8 +525,8 @@ class ServeBackend(TuiBackend):
     def close(self) -> None:
         try:
             self.ws.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         kill_group(self.proc, signal.SIGTERM)
         try:
             self.proc.wait(timeout=60)

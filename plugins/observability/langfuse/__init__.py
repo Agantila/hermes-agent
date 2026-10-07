@@ -534,8 +534,8 @@ def _canonical_usage_and_cost(canonical: Any, *, provider: str, model: str,
             tokens = getattr(canonical, attr)
             if rate is not None and tokens:
                 cost_details[key] = float(Decimal(tokens) * rate / Decimal("1000000"))
-    except Exception:  # pragma: no cover - canonical total remains usable
-        pass
+    except Exception as _exc:  # pragma: no cover - canonical total remains usable
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return usage_details, cost_details
 

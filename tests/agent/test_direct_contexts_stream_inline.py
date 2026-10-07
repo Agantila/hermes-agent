@@ -13,6 +13,7 @@ path, issue ``stream=True`` on the calling thread (no worker), and keep the
 stale detector + cross-thread interrupt abort working from the monitor thread.
 """
 
+import logging
 import json
 import threading
 import time
@@ -73,8 +74,8 @@ class _Wire:
                             time.sleep(0.05)
                             self.wfile.write(b": keepalive\n\n")
                             self.wfile.flush()
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                     return
                 second = {
                     "id": "c1", "object": "chat.completion.chunk", "created": 1, "model": "m",

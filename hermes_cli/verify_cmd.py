@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import sys
@@ -101,8 +102,8 @@ def _record_evidence(root: Path, recipe, result, *, partial: bool) -> None:
             scope="targeted" if partial else "full",
             output="\n".join(tails),
         )
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _readiness_status(r) -> str:

@@ -239,8 +239,8 @@ def _get_approval_mode() -> str:
         from gateway.hosted_room_execution_policy import current_room_execution_policy
         if (room_policy := current_room_execution_policy()) is not None:
             return room_policy.approval_mode
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _normalize_approval_mode(_get_approval_config().get("mode", "manual"))
 
 

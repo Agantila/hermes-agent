@@ -2,6 +2,7 @@
 """Extract page ranges from a PDF, optionally rotating and/or compressing pages."""
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import sys
@@ -30,8 +31,8 @@ def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     parser = argparse.ArgumentParser(
         description="Split/extract pages from a PDF (pypdf). Pages are 1-based: '1-3,5,9-'.")
     parser.add_argument("pdf", help="Input PDF path")

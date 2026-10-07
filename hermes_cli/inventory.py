@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import logging
 from contextvars import copy_context
 from dataclasses import dataclass, replace
 from threading import Lock, Thread, current_thread
@@ -759,8 +760,8 @@ def _anthropic_oauth_credentials_present() -> bool:
             if (isinstance(entry, dict) and entry.get("auth_type") == AUTH_TYPE_OAUTH
                     and str(entry.get("access_token") or "").strip()):
                 return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 

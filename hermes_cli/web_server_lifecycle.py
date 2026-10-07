@@ -157,8 +157,8 @@ def _warm_gateway_module() -> None:
     ):
         try:
             __import__(mod)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _resolve_restart_drain_timeout() -> float:
@@ -248,8 +248,8 @@ def _maybe_open_browser(host: str, actual_port: int, open_browser: bool, initial
         try:
             time.sleep(1.0)
             webbrowser.open(_open_url)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     threading.Thread(target=_open, daemon=True).start()
 
@@ -370,8 +370,8 @@ def _start_parent_death_watchdog() -> None:
                 desktop_pid,
                 start_marker,
             )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         _request_orphan_shutdown()
 
     threading.Thread(target=_loop, daemon=True, name="serve-parent-watchdog").start()
@@ -445,8 +445,8 @@ def _write_machine_sentinel_line(line: str) -> None:
     except OSError:
         try:
             print(line, flush=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _report_port_in_use(host: str, port: int) -> None:

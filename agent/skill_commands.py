@@ -289,8 +289,8 @@ def _inject_skill_config(loaded_skill: dict[str, Any], parts: list[str]) -> None
         parts.append(f"[Skill config (from {display_hermes_home()}/config.yaml):")
         parts.extend(f"  {key} = {str(value) if value else '(not set)'}" for key, value in resolved.items())
         parts.append("]")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 _SKILL_DIR_NOTE = (
@@ -389,8 +389,8 @@ def _render_skill_block(
         # Track active usage for Curator lifecycle management (#17782)
         from tools.skill_usage import bump_use
         bump_use(skill_name, task_id=task_id)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _build_skill_message(loaded_skill, skill_dir, activation_note, session_id=task_id, **message_kwargs)
 
 

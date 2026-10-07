@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import datetime
 import json
 import os
@@ -220,8 +221,8 @@ def resolve_xai_http_credentials(
         base_url = auth_mod._xai_validate_inference_base_url(_xai_base_url_override(), fallback=fallback_base_url)
         if str(access_token).strip():
             return {"provider": "xai-oauth", "api_key": str(access_token).strip(), "base_url": base_url}
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     from hermes_cli.config import get_env_value
     api_key = _resolve_explicit_xai_api_key()

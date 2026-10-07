@@ -146,8 +146,8 @@ def _json_loads_maybe(value: Optional[str]) -> Any:
         return value
     try:
         return json.loads(value)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         return json.JSONDecoder().raw_decode(value.lstrip())[0]
     except Exception:
@@ -685,8 +685,8 @@ def _build_tool_complete_content(
                 diff_content = _parse_unified_diff_content(diff_text)
                 if diff_content:
                     return diff_content
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if (formatter := _COMPLETION_FORMATTERS.get(tool_name)) is not None:
         text = formatter(tool_name, result, function_args)
     else:

@@ -334,8 +334,8 @@ async def _lifespan(app: "FastAPI"):
             from hermes_cli.local_runtime.bootstrap import shutdown_local_runtime
 
             shutdown_local_runtime()
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as _exc:  # noqa: BLE001
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if desktop_owned:
             _terminate_desktop_managed_gateway()
         eager_reconcile_thread.join()
@@ -1084,8 +1084,8 @@ def _no_auth_provider_message(host: str) -> str:
 
         if _nous_plugin.LAST_SKIP_REASON:
             skip_reasons.append(f"  • nous: {_nous_plugin.LAST_SKIP_REASON}")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     if host in _LOOPBACK_HOST_VALUES:
         public_url = ""
@@ -1093,8 +1093,8 @@ def _no_auth_provider_message(host: str) -> str:
             from hermes_cli.dashboard_auth.prefix import resolve_public_url
 
             public_url = resolve_public_url()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         gate_reason = (
             f"dashboard.public_url is set to "
             f"{public_url or '<a non-loopback URL>'} — an "
@@ -1144,8 +1144,8 @@ def _no_auth_provider_message(host: str) -> str:
                 "`hermes plugins enable basic`), then restart the "
                 "dashboard.\n\n"
             ) + fix_hint
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     msg = (
         f"Refusing to bind dashboard to {host} — {gate_reason}, "
         f"but no auth providers are registered.\n\n"
@@ -1312,8 +1312,8 @@ def _reclaim_host_from_orphaned_owner(role: str) -> bool:
         return False
     try:
         hr.discard_dead_record(role)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return True
 
 
@@ -1569,8 +1569,8 @@ def _run_serve(serve, config, host: str, port: int) -> None:
                 asyncio.set_event_loop_policy(
                     asyncio.WindowsSelectorEventLoopPolicy()  # type: ignore[attr-defined]
                 )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # ``capture_signals()`` re-raises the captured signal after graceful
     # shutdown; console Ctrl+C lands as KeyboardInterrupt = clean exit.

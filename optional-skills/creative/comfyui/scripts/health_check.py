@@ -18,6 +18,7 @@ Usage:
 
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import shutil
@@ -127,8 +128,8 @@ def smoke_test(host: str, headers: dict, ckpt_name: str | None) -> dict:
     cancelled = False
     try:
         cancelled = runner.cancel(pid)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return {
         "ran": True, "submitted": True, "prompt_id": pid,

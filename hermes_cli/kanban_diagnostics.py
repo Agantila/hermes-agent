@@ -10,6 +10,7 @@ recovery action and auto-clears when the failure mode resolves.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Iterable, Optional
 import json
@@ -73,8 +74,8 @@ def _task_field(task, name, default=None):
     try:
         if hasattr(task, "keys") and name in task.keys():
             return task[name]
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     if isinstance(task, dict):
         return task.get(name, default)
     return getattr(task, name, default)

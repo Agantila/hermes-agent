@@ -14,6 +14,7 @@ The TUI/Desktop ``command.dispatch`` boundary is covered in
 
 from __future__ import annotations
 
+import logging
 import queue
 import uuid
 from pathlib import Path
@@ -53,8 +54,8 @@ def hermes_home(tmp_path, monkeypatch):
     yield home
     try:
         reset_hermes_home_override(token)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     goals._DB_CACHE.clear()
 
 

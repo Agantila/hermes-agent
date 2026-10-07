@@ -9,6 +9,7 @@ provider credential should route through :func:`save_provider_env_credential` /
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List
 
 __all__ = [
@@ -42,8 +43,8 @@ def _for_each_provider(providers: List[str], import_path: str, *args: Any) -> No
         fn = getattr(importlib.import_module(module_name), fn_name)
         for provider in providers:
             fn(provider, *args)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _prune_env_pool_entries(env_var: str) -> List[str]:

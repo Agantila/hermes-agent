@@ -617,8 +617,8 @@ class CLILoopsMixin:
             from hermes_cli.loops import goal_blocks_loop_tick
             if goal_blocks_loop_tick(mgr.session_id):
                 return
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         wakeup = mgr.fire_tick()
         if not wakeup:
             return
@@ -631,8 +631,8 @@ class CLILoopsMixin:
             logging.debug("loop tick injection failed: %s", exc)
             try:
                 mgr.abandon_tick()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             return
         # A slash-command loop (`/loop 10m /recap`) is dispatched via process_command and
         # never reaches chat()'s post-turn finally, so its tick would never complete and
@@ -641,8 +641,8 @@ class CLILoopsMixin:
         if wakeup.lstrip().startswith("/"):
             try:
                 _print_decision_message(mgr.complete_tick(""))
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _last_assistant_response_text(self) -> str:
         """Text of the most recent assistant message ("" when none); multimodal parts are flattened."""
@@ -657,8 +657,8 @@ class CLILoopsMixin:
                             if isinstance(p, dict) and p.get("type") in {"text", "output_text"}]
                         return "\n".join(t for t in parts if t)
                     return str(content or "")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return ""
 
     def _maybe_complete_loop_tick_after_turn(self) -> None:
@@ -681,8 +681,8 @@ class CLILoopsMixin:
         if getattr(self, "_last_turn_interrupted", False):
             try:
                 mgr.pause(reason="user-interrupted (Ctrl+C)")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             _cprint(f"  {_DIM}{t('cli.loop.paused_interrupted')}{_RST}")
             return
         decision = mgr.complete_tick(self._last_assistant_response_text())
@@ -717,8 +717,8 @@ class CLILoopsMixin:
                     has_real_message = True  # can't introspect — defer to be safe
                 if has_real_message:
                     return
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if getattr(self, "_last_turn_interrupted", False):
             try:
                 mgr.pause(reason="user-interrupted (Ctrl+C)")

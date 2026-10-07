@@ -64,8 +64,8 @@ def _save_discovered_models_to_config(
         if changed:
             cfg["custom_providers"] = providers
             save_config(cfg)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _discovered_catalog_stale(entry: dict, model_ids: list[str]) -> bool:
@@ -178,8 +178,8 @@ def _credential_pool_is_usable(provider: str, *, raw_pool_present: bool = False,
         pool = load_pool(provider)
         if pool.has_credentials():
             return for_picker or pool.has_available()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return raw_pool_present
 
 
@@ -252,8 +252,8 @@ def _prefetch_provider_models_parallel(provider_slugs: list[str]) -> None:
             if models:
                 from hermes_cli.models import update_provider_cache_entry
                 update_provider_cache_entry(slug, models)
-        except Exception:
-            pass  # best-effort; picker falls back to curated list
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort; picker falls back to curated list
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=min(8, len(stale_slugs)), thread_name_prefix="model-cache-prefetch",
@@ -291,8 +291,8 @@ def _iter_builtin_candidates(models_dev_data: dict, excluded: set, seen: set):
             prof = get_provider_profile(hermes_id)
             if prof is not None and prof.name != hermes_id:
                 continue
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if hermes_id.lower() in seen:
             continue
         if hermes_id.lower() in excluded or mdev_id.lower() in excluded:
@@ -327,8 +327,8 @@ def _raw_pool_usable(hermes_id: str, *, for_picker: bool = False) -> bool:
         store = _load_auth_store()
         if store and store.get("credential_pool", {}).get(hermes_id):
             return _credential_pool_is_usable(hermes_id, raw_pool_present=True, for_picker=for_picker)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 
@@ -476,13 +476,13 @@ def _nous_picker_model_ids(curated: dict, force_fresh_nous_tier: bool) -> list:
         else:
             model_ids, _ = union_with_portal_paid_recommendations(model_ids, pricing, portal)
             model_ids = union_with_nous_on_sale_models(model_ids, pricing)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from hermes_cli.models_pricing import nous_policy_allowed_ids, restrict_to_nous_policy
         model_ids = restrict_to_nous_policy(model_ids, nous_policy_allowed_ids(), rescue_empty=True)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return model_ids
 
 
@@ -627,8 +627,8 @@ def _discover_endpoint_models(
                 return None, False
             if live_models is not None and (live_models or not has_explicit_models or is_native):
                 return live_models, (is_native and not live_models)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     elif discovery_allowed:
         try:
             from hermes_cli.models import cached_fetch_api_models
@@ -1064,8 +1064,8 @@ def _lap_bare_custom_row(b: _PickerBuild, custom_providers: list | None) -> None
             fast_custom_probe=b.resolved_fast_custom_probe)
         if discovered is not None:
             models = discovered
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     b.add_endpoint_row(
         "custom", "Custom endpoint", api_url, models, True, native_catalog_empty,
         source="model-config", shown=_cap_models(models, b.max_models))
@@ -1146,8 +1146,8 @@ def _lap_custom_provider_rows(b: _PickerBuild, custom_providers: list) -> None:
                     _save_discovered_models_to_config(
                         api_url, discovered, api_mode=grp.get("api_mode"), headers=grp.get("extra_headers") or None,
                         credential_identity=grp["credential_identity"])
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         b.add_endpoint_row(slug, grp["name"], grp["api_url"], grp["models"], is_current, native_catalog_empty)
         section4_slugs.add(slug.lower())
 
@@ -1231,8 +1231,8 @@ def list_authenticated_providers(
         try:
             from hermes_cli.models import clear_provider_models_cache
             clear_provider_models_cache()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # YAML parses unquoted numeric names (`provider: 2070`) as int.
     # seen_slugs: set = set()  # lowercase-normalized to catch case variants (#9545)
@@ -1263,8 +1263,8 @@ def list_authenticated_providers(
     if len(prefetch_slugs) > 3:
         try:
             _prefetch_provider_models_parallel(prefetch_slugs)
-        except Exception:
-            pass  # best-effort; serial path still works
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort; serial path still works
 
     _lap_lmstudio_row(b, user_providers if isinstance(user_providers, dict) else {})
     _lap_builtin_rows(b, data, user_providers)
@@ -1294,8 +1294,8 @@ def _finalize_picker_rows(results: list, user_providers, current_model: str) -> 
                     r for r in results
                     if str(r.get("provider_id", "")).strip().lower() not in disabled
                     and str(r.get("slug", "")).strip().lower() not in disabled]
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # A custom/uncurated model set via `/model <provider>/<name>` would be invisible in every
     # picker (main and MoA slot pickers read these rows); inject it at the front of the current

@@ -7,6 +7,7 @@ long-lived one), so the kill never returned. Once killed, the session's output s
 kill reported it. Real PTY, real processes: a fake PTY cannot hold the lock.
 """
 
+import logging
 import shutil
 import sys
 import threading
@@ -46,8 +47,8 @@ def _terminate_owned(session):
     if not session.exited and session._pty is not None:
         try:
             session._pty.terminate(force=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _spawn_with_escapee(registry, tmp_path, late_output=""):

@@ -4,6 +4,7 @@ prompt_toolkit-free for the gateway."""
 
 from __future__ import annotations
 
+import logging
 import functools
 import os
 import shutil
@@ -462,8 +463,8 @@ class SlashCommandCompleter(Completer):
                 if cmd_name.startswith(word):
                     yield _cmd_completion(
                         cmd_name, f"🔌 {cmd_info.get('description', 'Plugin command')}")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class SlashCommandAutoSuggest(AutoSuggest):

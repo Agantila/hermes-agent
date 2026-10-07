@@ -4,6 +4,7 @@ falls back to latest-session. Gated by ``session.terminal_continue`` (default tr
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import re
@@ -90,8 +91,8 @@ def write_breadcrumb(session_id: str, cwd: Optional[str] = None) -> None:
         payload = {"session_id": session_id, "cwd": cwd or os.getcwd(), "ts": now}
         atomic_json_write(directory / terminal_id, payload, indent=None)
         _prune_stale(directory, now)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def read_breadcrumb() -> Optional[dict]:
@@ -142,5 +143,5 @@ def resolve_breadcrumb_session() -> Optional[str]:
     finally:
         try:
             db.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)

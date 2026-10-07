@@ -175,8 +175,8 @@ def _redact_probe_exception(exc: BaseException) -> Exception:
         rebuilt = type(root)(safe)
         if str(rebuilt) == safe and isinstance(rebuilt, Exception):
             return rebuilt
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return RuntimeError(safe)
 
 
@@ -407,8 +407,8 @@ def _resolve_mcp_server_config(config: dict) -> dict:
         try:
             from hermes_cli.env_loader import load_hermes_dotenv
             load_hermes_dotenv()
-        except Exception:  # pragma: no cover — defensive
-            pass
+        except Exception as _exc:  # pragma: no cover — defensive
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _interpolate_env_vars(config)
 
 
@@ -484,8 +484,8 @@ def _probe_single_server(
                         t.name: len(_json.dumps(_convert_mcp_schema(name, t), separators=(",", ":"), default=str))
                         for t in server._tools
                     }
-                except Exception:  # pragma: no cover — display-only extra
-                    pass
+                except Exception as _exc:  # pragma: no cover — display-only extra
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 # Gate capability probes like runtime registration (_select_utility_schemas):
                 # honour tools.prompts / tools.resources config AND only call a family the server
                 # advertises — some servers hard-error on unknown prompts/list.
@@ -502,13 +502,13 @@ def _probe_single_server(
                 if _wanted("prompts"):
                     try:
                         details["prompts"] = len((await server.session.list_prompts()).prompts)
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 if _wanted("resources"):
                     try:
                         details["resources"] = len((await server.session.list_resources()).resources)
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         finally:
             await server.shutdown()
 
@@ -737,8 +737,8 @@ def cmd_mcp_remove(args):
         from tools.mcp_oauth_manager import get_manager
         get_manager().remove(name)
         _success("Cleaned up OAuth tokens")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def cmd_mcp_list(args=None):

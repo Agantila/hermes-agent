@@ -4,6 +4,7 @@ onto server.py's globals (method_ctx.bind_module) and reference them bare."""
 
 from __future__ import annotations
 
+import logging
 import contextlib
 
 from utils import is_truthy_value
@@ -68,8 +69,8 @@ def _derived_default_threshold_percent(agent: Any, compression: dict) -> float:
             pct, _compression_threshold_for_model(model, provider, allow_codex_gpt55_autoraise=autoraise_enabled),
             model=model, is_codex_autoraise=_is_codex_gpt54_or_gpt55(model, provider) or _is_codex_spark(model, provider),
         )
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return pct
 
 

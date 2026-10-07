@@ -246,8 +246,8 @@ def _load_direct_aliases() -> dict[str, DirectAlias]:
                     provider, model = val.split("/", 1) if "/" in val else (current_provider, val)
                     merged[key] = DirectAlias(
                         model=model.strip(), provider=provider.strip() or current_provider, base_url="")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return merged
 
 
@@ -414,8 +414,8 @@ def resolve_startup_model_route(
                 from hermes_cli.models import _find_openrouter_slug
                 if _find_openrouter_slug(raw):
                     return None
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     configured = {str(name).strip().lower() for name in (user_providers or {}) if str(name).strip()}
     configured.update(
@@ -793,8 +793,8 @@ def resolve_alias(raw_input: str, current_provider: str, user_providers: Optiona
         from hermes_cli.models import _PROVIDER_MODELS
         seen = {m.lower() for m in catalog}
         catalog.extend(m for m in _PROVIDER_MODELS.get(current_provider, []) if m.lower() not in seen)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     prefix = f"{vendor}/{family}" if is_aggregator(current_provider) else family
     matches = [mid for mid in catalog if mid.lower().startswith(prefix.lower())]
@@ -892,8 +892,8 @@ def resolve_display_context_length(
             custom_providers=custom_providers, config_context_length=config_context_length)
         if ctx:
             return int(ctx)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if model_info is not None and model_info.context_window:
         return int(model_info.context_window)
     return None
@@ -1049,8 +1049,8 @@ def _unknown_provider_message(explicit_provider: str) -> str:
         issues = validate_config_structure()
         if issues:
             msg += "\n\nRun 'hermes doctor' — config issues detected:" + "".join(f"\n  • {ci.message}" for ci in issues[:3])
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return msg
 
 
@@ -1504,8 +1504,8 @@ def _creds_for_current_provider(st: _Switch) -> None:
     else:
         try:
             st.resolve_runtime(requested=st.current_provider)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         # Bare ``custom``/``local`` sessions whose base_url is session-only (not a trusted config
         # ``model.base_url``) re-resolve to the OpenRouter DEFAULT — a host the user never picked
         # (#74143). Keep the session endpoint + key then (also when the resolver came back empty,

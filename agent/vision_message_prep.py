@@ -151,8 +151,8 @@ class VisionMessagePrepMixin:
                 (getattr(self, "provider", "") or "").strip(),
                 (getattr(self, "model", "") or "").strip(),
             )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return True  # default: assume compatible
 
     def _preprocess_anthropic_content(self, content: Any, role: str) -> Any:

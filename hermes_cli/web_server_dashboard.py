@@ -628,8 +628,8 @@ def _schedule_check_fn_probe(fn) -> Optional[threading.Thread]:
             from tools.registry import _check_fn_cached
 
             _check_fn_cached(fn)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         finally:
             with _plugins_hub_probe_lock:
                 _plugins_hub_probe_inflight.discard(fn)
@@ -656,8 +656,8 @@ def _plugin_auth_hint(name: str, provides_tools: list) -> tuple:
                 _schedule_check_fn_probe(entry.check_fn)
             elif cached_result is False:
                 return True, f"hermes auth {name}"
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False, ""
 
 

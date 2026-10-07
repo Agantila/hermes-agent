@@ -11,6 +11,7 @@ to the python process, sleep 300 survived with PPID=1 for the full 300 s
 because _wait_for_process never got to call _kill_process before python
 died.  See commit message for full context.
 """
+import logging
 import contextlib
 import os
 import signal
@@ -201,8 +202,8 @@ def test_wait_for_process_kills_subprocess_on_keyboardinterrupt():
     finally:
         try:
             env.cleanup()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _descendant_running(marker: str):

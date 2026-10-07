@@ -69,8 +69,8 @@ def read_streaming_error_body(
     # Closing cancels any in-flight socket read so the worker unwinds. No join (daemon, may be blocked in C).
     try:
         response.close()
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as _exc:  # noqa: BLE001
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     if state["truncated"]:
         logger.debug(

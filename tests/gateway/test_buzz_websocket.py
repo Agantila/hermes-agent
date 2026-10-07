@@ -6,6 +6,7 @@ tests cover the crypto (against the official BIP-340 vector) and the WS
 lifecycle as wired into BuzzAdapter.
 """
 
+import logging
 import asyncio
 import json
 import time
@@ -448,8 +449,8 @@ async def test_websocket_loop_drops_restricted_channel_without_reconnect():
     task.cancel()
     try:
         await task
-    except (asyncio.CancelledError, Exception):
-        pass
+    except (asyncio.CancelledError, Exception) as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @pytest.mark.asyncio
@@ -517,8 +518,8 @@ async def test_websocket_loop_reconnects_on_non_restricted_closed():
     task.cancel()
     try:
         await task
-    except (asyncio.CancelledError, Exception):
-        pass
+    except (asyncio.CancelledError, Exception) as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def test_restricted_channels_skipped_during_subscribe():
@@ -677,8 +678,8 @@ async def test_closed_membership_phrases_prune_without_reconnect(detail):
     task.cancel()
     try:
         await task
-    except (asyncio.CancelledError, Exception):
-        pass
+    except (asyncio.CancelledError, Exception) as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @pytest.mark.asyncio

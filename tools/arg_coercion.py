@@ -32,8 +32,8 @@ def coerce_tool_args(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
     try:
         from tools.schema_sanitizer import unrename_tool_args
         args = unrename_tool_args(schema.get("parameters"), args)
-    except Exception:  # pragma: no cover — never break dispatch
-        pass
+    except Exception as _exc:  # pragma: no cover — never break dispatch
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     for key, value in list(args.items()):
         prop_schema = properties.get(key)

@@ -11,6 +11,7 @@ Note: the Google libraries may not be installed in the test environment.
 We shim the imports at module load so collection doesn't fail.
 """
 
+import logging
 import asyncio
 import json
 import os
@@ -182,8 +183,8 @@ def adapter(tmp_path):
     yield a
     try:
         a._loop.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _make_pubsub_message(data: dict, *, attributes=None):
@@ -1635,8 +1636,8 @@ class TestCronSchedulerRegistry:
         try:
             from hermes_cli.plugins import discover_plugins
             discover_plugins()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if platform_registry.get("google_chat") is not None:
             return
         # Fallback: construct a minimal ctx and call register directly.

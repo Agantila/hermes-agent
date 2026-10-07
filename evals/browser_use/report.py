@@ -7,6 +7,7 @@ Groups by (model, arm): ok-rate, token mean/median, tool calls, wall clock,
 and token delta vs the ``base`` arm of the same model when present.
 """
 
+import logging
 import json
 import statistics
 import sys
@@ -19,8 +20,8 @@ def main(paths):
         for line in open(p, encoding="utf-8"):
             try:
                 rows.append(json.loads(line))
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     if not rows:
         print("no rows")
         return

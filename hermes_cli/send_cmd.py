@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import sys
@@ -102,8 +103,8 @@ def _list_targets(platform_filter: Optional[str], *, json_mode: bool) -> int:
             plat_name = getattr(plat, "value", str(plat))
             if plat_name not in ("local", "api_server", "webhook"):
                 platforms.setdefault(plat_name, [])
-    except Exception:
-        pass  # directory contents alone are still useful; don't fail --list on a config problem
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # directory contents alone are still useful; don't fail --list on a config problem
     if platform_filter:
         key = platform_filter.strip().lower()
         filtered = {k: v for k, v in platforms.items() if k.lower() == key}
@@ -173,8 +174,8 @@ def _load_hermes_env() -> None:
             try:
                 from hermes_cli.env_loader import _load_dotenv_with_fallback
                 _load_dotenv_with_fallback(env_path, override=True)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Bridge top-level scalars the user (or the managed layer) actually wrote — never DEFAULT_CONFIG —
     # into the environment, without overriding existing values.

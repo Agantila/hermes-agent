@@ -476,8 +476,8 @@ def get_preferred_silent_default_model(provider: str = "openrouter") -> str:
         labeled = get_default_model_from_cache(provider)
         if labeled:
             return labeled
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return PREFERRED_SILENT_DEFAULT_MODEL
 
 
@@ -906,8 +906,8 @@ def _get_model_config_dict() -> dict[str, Any]:
         model_cfg = load_config().get("model", {})
         if isinstance(model_cfg, dict):
             return model_cfg
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return {}
 
 
@@ -1396,8 +1396,8 @@ def _openai_discovery_base_url(provider: str) -> str:
             cfg_url = str(model_cfg.get("base_url") or "").strip().rstrip("/")
             if cfg_url:
                 return cfg_url
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return "https://api.openai.com/v1"
 
 
@@ -1458,8 +1458,8 @@ def _copilot_catalog(normalized: str, force_refresh: bool) -> Optional[list[str]
         live = _fetch_github_models(_resolve_copilot_catalog_api_key())
         if live:
             return live
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return CuratedFallbackModels(_PROVIDER_MODELS.get("copilot", []))
 
 
@@ -1472,8 +1472,8 @@ def _nous_catalog(normalized: str, force_refresh: bool) -> Optional[list[str]]:
             live = fetch_nous_models(api_key=creds.get("api_key", ""), inference_base_url=creds.get("base_url", ""))
             if live:
                 return live
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Live failed / no creds: the docs-hosted manifest — NOT the in-repo snapshot — so newly added
     # Portal models still surface without a Hermes release.
     return get_curated_nous_model_ids() or None
@@ -1969,8 +1969,8 @@ def _credential_fingerprint(provider: str) -> str:
             bev = getattr(pcfg, "base_url_env_var", "") or ""
             if bev:
                 parts.append(f"{bev}={os.environ.get(bev, '')}")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # External-process providers discover models through the launched program, so the command /
     # argv env overrides identify the catalog the way an API key identifies an HTTP catalog.
@@ -1981,16 +1981,16 @@ def _credential_fingerprint(provider: str) -> str:
             for ev in (*profile.process_command_env_vars, profile.process_args_env_var):
                 if ev:
                     parts.append(f"{ev}={os.environ.get(ev, '')}")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # config.yaml's model.base_url changes the endpoint discovery probes (data-residency hosts)
     # without touching any env var, so it must change the fingerprint too.
     if provider in ("openai", "openai-api"):
         try:
             parts.append(f"effective_base={_openai_discovery_base_url(provider)}")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Azure Foundry deployments are per-resource and the wizard writes only model.base_url, so a
     # resource switch under the same key must not serve the previous resource's catalog (#27989).
@@ -1998,8 +1998,8 @@ def _credential_fingerprint(provider: str) -> str:
         try:
             from hermes_cli.runtime_provider import _config_base_url_for_provider
             parts.append(f"effective_base={_config_base_url_for_provider(_get_model_config_dict(), 'azure-foundry')}")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     if provider == "ollama":
         provider_cfg = _get_provider_config_dict("ollama")
@@ -2025,8 +2025,8 @@ def _credential_fingerprint(provider: str) -> str:
             parts.append(f"{label}@{os.stat(path).st_mtime_ns}")
         except FileNotFoundError:
             parts.append(f"{label}@missing")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     if provider == "openai-codex":
         from hermes_cli.codex_models import codex_catalog_credential_identity
@@ -2037,8 +2037,8 @@ def _credential_fingerprint(provider: str) -> str:
             from hermes_constants import get_hermes_home
             for rel in ("auth.json", "credentials.json"):
                 _mtime_part(rel, get_hermes_home() / rel)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         for rel in ("~/.codex/auth.json", "~/.claude/.credentials.json",
                     "~/.config/github-copilot/hosts.json", "~/.minimax/credentials.json"):
             path = os.path.expanduser(rel)
@@ -2065,8 +2065,8 @@ def _save_provider_models_cache(data: dict) -> None:
     """Persist the cache dict. Best-effort — silent on any error."""
     try:
         _write_json_cache(_provider_models_cache_path(), data, indent=None)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _store_cache_entry(cache_key: str, entry: dict, cache: Optional[dict] = None) -> None:
@@ -2087,8 +2087,8 @@ def update_provider_cache_entry(provider: str, models: list[str]) -> None:
         fp = _credential_fingerprint(normalized)
         with _cache_write_lock:
             _store_cache_entry(normalized, _cache_entry(fp, models))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _normalized_cache_slug(provider: Optional[str]) -> str:
@@ -2192,8 +2192,8 @@ def clear_provider_models_cache(provider: Optional[str] = None) -> None:
         if normalized in cache:
             del cache[normalized]
             _save_provider_models_cache(cache)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _resolve_anthropic_pool_catalog_credentials() -> tuple[str, str]:
@@ -2209,8 +2209,8 @@ def _resolve_anthropic_pool_catalog_credentials() -> tuple[str, str]:
             token = str(entry.get("access_token") or "").strip()
             if token:
                 return token, str(entry.get("base_url") or entry.get("inference_base_url") or "").strip()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return "", ""
 
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 # CSI-letter) registration therefore needs lock-offset twins, or those events leak into the prompt
 # as literal text. The xterm modifyOtherKeys ``ESC[27;N;CP~`` encoding never carries lock bits.
 # See #88221, #89651.
+import logging
 _LOCK_BIT_OFFSETS = (0, 64, 128, 192)
 
 
@@ -29,8 +30,8 @@ def _clear_vt100_prefix_cache() -> None:
     try:
         from prompt_toolkit.input.vt100_parser import _IS_PREFIX_OF_LONGER_MATCH_CACHE
         _IS_PREFIX_OF_LONGER_MATCH_CACHE.clear()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _install(build, *, overwrite: bool) -> int:

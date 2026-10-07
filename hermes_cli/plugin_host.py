@@ -189,8 +189,8 @@ class PluginHost:
         if channel is not None and channel.closed_reason is None:
             try:
                 channel.call("shutdown", {}, timeout=_SHUTDOWN_GRACE_SECS)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             channel.close("shutdown")
         if proc is not None:
             try:

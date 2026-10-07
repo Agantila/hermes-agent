@@ -4,7 +4,7 @@ LAZILY inside each method (``from cli import ...``) — never at module load (im
 
 from __future__ import annotations
 
-import errno
+import logging, errno
 import json
 import os
 import queue
@@ -286,8 +286,8 @@ class CLITuiMixin:
             profile = get_active_profile_name()
             if profile not in {"default", "custom"}:
                 symbol = f"{profile} {symbol}"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         stripped = symbol.rstrip()
         if not stripped:
             return "❯ ", "❯ "
@@ -362,8 +362,8 @@ class CLITuiMixin:
         try:
             from hermes_cli.skin_engine import get_prompt_toolkit_style_overrides
             style_dict.update(get_prompt_toolkit_style_overrides())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             if _detect_light_mode():
                 def _remap_value(v: str) -> str:
@@ -374,8 +374,8 @@ class CLITuiMixin:
                         return v
                     return " ".join(_maybe_remap_for_light_mode(t) if t.startswith("#") else t for t in tokens)
                 style_dict = {k: _remap_value(v or "") for k, v in style_dict.items()}
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return style_dict
 
     def _apply_tui_skin_style(self) -> bool:
@@ -881,8 +881,8 @@ class CLITuiMixin:
                 from tools.voice_mode import stop_playback
                 stop_playback()
                 self._voice_tts_done.set()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         with self._voice_lock:
             self._voice_continuous = True
 
@@ -1099,8 +1099,8 @@ class CLITuiMixin:
                 if getattr(press, "data", None) == "\x1b[I":
                     self._schedule_focus_regain_redraw()
                     break
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return None
 
     def _tui_handle_escape_modal(self, event):
@@ -1554,8 +1554,8 @@ class CLITuiMixin:
                         _f.write(
                             f"{time.strftime('%H:%M:%S')} ENTER: queued interrupt msg={str(payload)[:60]!r}, "
                             f"agent_running={self._agent_running}\n")
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         # First-touch onboarding: one-line tip about the /busy knob on the first busy-while-
         # running event for this install; the flag persists to config.yaml. Guarded so
         # onboarding can never break the input loop.
@@ -1566,8 +1566,8 @@ class CLITuiMixin:
                 _cprint(f"  {_DIM}{busy_input_hint_cli(_hint_mode)}{_RST}")
                 mark_seen(_hermes_home / "config.yaml", BUSY_INPUT_FLAG)
                 CLI_CONFIG.setdefault("onboarding", {}).setdefault("seen", {})[BUSY_INPUT_FLAG] = True
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _tui_enter_overlay(self, event) -> bool:
         """Enter while a modal overlay is up: submit it. True when handled."""

@@ -653,8 +653,8 @@ def _save_ollama_cloud_cache(models: list[str]) -> None:
 
     try:
         _write_json_cache(_ollama_cloud_cache_path(), {"models": models, "cached_at": time.time()}, indent=None)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def fetch_ollama_cloud_models(
@@ -683,8 +683,8 @@ def fetch_ollama_cloud_models(
     try:
         from agent.models_dev import list_agentic_models
         mdev_models = list_agentic_models("ollama-cloud")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     merged: list[str] = []
     for m in [*live_models, *(_strip_ollama_cloud_suffix(m) for m in mdev_models)]:

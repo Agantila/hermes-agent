@@ -463,8 +463,8 @@ def _codex_refresh_failure_error(response: "httpx.Response") -> AuthError:
                 err_desc = err.get("error_description") or err.get("message")
                 if _nonempty_str(err_desc):
                     message = f"Codex token refresh failed: {err_desc.strip()}"
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if code == "refresh_token_reused":
         message = (
             "Codex refresh token was already consumed by another client "

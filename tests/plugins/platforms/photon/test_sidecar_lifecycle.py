@@ -8,6 +8,7 @@ spawning Node or binding ports.
 """
 from __future__ import annotations
 
+import logging
 import subprocess
 from typing import Any, Dict, List, Tuple
 
@@ -201,10 +202,10 @@ async def test_spectrum_patch_runs_off_the_event_loop(
 
     try:
         await adapter._start_sidecar()
-    except Exception:
+    except Exception as _exc:
         # Readiness/handshake past the patch run may fail under the fakes —
         # irrelevant here; we only assert where the patch run executed.
-        pass
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     assert seen.get("thread") is not None, "patch run never executed"
     assert seen["thread"] is not main_thread, (

@@ -1,5 +1,6 @@
 """SQLite-backed fact store with entity resolution and trust scoring (single-user Hermes memory plugin)."""
 
+import logging
 import os
 import re
 import sqlite3
@@ -280,8 +281,8 @@ class MemoryStore:
                 try:
                     with entry["lock"]:
                         entry["conn"].close()
-                except Exception:
-                    pass  # an already-closed/broken connection must not abort releasing siblings
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # an already-closed/broken connection must not abort releasing siblings
         return len(doomed)
 
     def close(self) -> None:

@@ -1,5 +1,6 @@
 """Tests for MCP stability fixes — event loop handler, PID tracking, shutdown robustness."""
 
+import logging
 import asyncio
 import os
 import signal
@@ -161,8 +162,8 @@ class TestStdioPidTracking:
                      patch("tools.mcp_tool.time.sleep"):
                     try:
                         await server._run_stdio(config)
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         asyncio.run(_run())
 

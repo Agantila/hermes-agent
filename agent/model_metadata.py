@@ -462,8 +462,8 @@ try:
         _host = _pp.get_hostname()
         if _host and _host not in _URL_TO_PROVIDER:
             _URL_TO_PROVIDER[_host] = _pp.name
-except Exception:
-    pass
+except Exception as _exc:
+    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _infer_provider_from_url(base_url: str) -> Optional[str]:
@@ -763,8 +763,8 @@ def detect_local_server_type(base_url: str, api_key: str = "") -> Optional[str]:
                     if _is_connect_timeout(exc):
                         _note_endpoint_blackholed(server_url)
                         raise
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Negative verdict in memory only (never on disk — failures are often transient).
     _endpoint_probe_path_cache[server_url] = (result, time.monotonic())
     if result is not None:

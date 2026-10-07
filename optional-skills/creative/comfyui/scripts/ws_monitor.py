@@ -27,6 +27,7 @@ Falls back to a clear error message when not installed.
 
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import struct
@@ -259,8 +260,8 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         try:
             ws.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 if __name__ == "__main__":

@@ -173,8 +173,8 @@ def connect_tracked(
                 # Close via sqlite3 directly: the tracking entry was either never made or is
                 # being unwound here.
                 sqlite3.Connection.close(conn)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             raise
 
 

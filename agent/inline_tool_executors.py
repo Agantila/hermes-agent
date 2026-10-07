@@ -9,6 +9,7 @@ lazily at call time so ``patch("tools.x.y")`` in tests keeps working.
 
 from __future__ import annotations
 
+import logging
 import json
 from dataclasses import dataclass
 from importlib import import_module
@@ -56,8 +57,8 @@ def emit_terminal_post_tool_call(
             error_message=error_message,
             middleware_trace=list(middleware_trace or []),
         )
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def apply_transform_tool_result(

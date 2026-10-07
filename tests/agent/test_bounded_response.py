@@ -11,6 +11,7 @@ body) or hang forever (body opens then stalls).
 
 from __future__ import annotations
 
+import logging
 import http.server
 import json
 import socketserver
@@ -43,8 +44,8 @@ def _make_handler():
                     for _ in range(2000):
                         self.wfile.write(b"x" * 65536)
                         self.wfile.flush()
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             elif self.path == "/stall":
                 # Send a little, then stall forever (no further bytes).
                 self.send_response(500)

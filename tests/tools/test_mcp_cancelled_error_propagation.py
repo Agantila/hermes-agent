@@ -17,6 +17,7 @@ without hanging the reconnect loop.
 
 from __future__ import annotations
 
+import logging
 import asyncio
 from unittest.mock import patch
 
@@ -55,8 +56,8 @@ class TestCancelledErrorPropagation:
                     task.cancel()
                     try:
                         await task
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                     return "wedged"
                 return "clean_return"
 

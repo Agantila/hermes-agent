@@ -276,8 +276,8 @@ def check_fn_cache_scope() -> Optional[str]:
             from gateway.browser_control_broker import browser_control_enabled
             if browser_control_enabled():
                 return CHECK_FN_CACHE_BYPASS
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from agent.secret_scope import serves_routed_profile
         from hermes_constants import get_hermes_home_override

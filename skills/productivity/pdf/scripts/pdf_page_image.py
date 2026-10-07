@@ -10,6 +10,7 @@ image-only (scanned) pages for hand-off to the references/ocr-extraction.md in t
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import sys
@@ -40,8 +41,8 @@ def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     parser = argparse.ArgumentParser(description="Export PDF pages as PNG images.")
     parser.add_argument("pdf", help="Input PDF path")
     parser.add_argument("--pages", default="1-", help="1-based ranges, e.g. '1-3,5' (default: all)")

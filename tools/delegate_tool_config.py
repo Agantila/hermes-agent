@@ -450,8 +450,8 @@ def _load_config() -> dict:
             cfg = load_config_readonly().get("delegation") or {}
             if isinstance(cfg, dict):
                 return cfg
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from cli import CLI_CONFIG
         cfg = CLI_CONFIG.get("delegation") or {}

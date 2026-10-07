@@ -5,6 +5,7 @@ Stdlib only. ``extract_text`` stays tolerant of v0.3 peers."""
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import threading
@@ -442,8 +443,8 @@ def persist_message(context_id: str, role: str, text: str, task_id: str = "") ->
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps({"ts": time.time(), "role": role, "text": text, "task_id": task_id}, ensure_ascii=False) + "\n")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def load_conversation(context_id: str, limit: int = 50) -> list[dict]:

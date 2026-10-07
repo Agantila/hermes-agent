@@ -15,6 +15,7 @@ Covers the pieces added when boards became a first-class concept:
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import subprocess
@@ -59,8 +60,8 @@ def fresh_home(tmp_path, monkeypatch):
     try:
         import hermes_constants
         hermes_constants._cached_default_hermes_root = None  # type: ignore[attr-defined]
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Kanban module-level init cache must not leak between tests.
     kb._INITIALIZED_PATHS.clear()
     return home

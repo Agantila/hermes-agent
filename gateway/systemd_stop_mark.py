@@ -15,6 +15,7 @@ never blocking: any failure returns 0 so the stop/restart proceeds.
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
 
@@ -47,8 +48,8 @@ def main(argv: list[str] | tuple[str, ...] | None = None) -> int:
         from gateway.status import write_planned_stop_marker
 
         write_planned_stop_marker(pid)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return 0
 
 

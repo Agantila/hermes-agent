@@ -405,8 +405,8 @@ def _rewrite_known_bang_command(text: str) -> str:
         cmd_name = first_token.split("@", 1)[0].lower()
         if cmd_name and "/" not in cmd_name and is_gateway_known_command(cmd_name):
             return "/" + text[1:]
-    except Exception:  # pragma: no cover - defensive
-        pass
+    except Exception as _exc:  # pragma: no cover - defensive
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return text
 
 
@@ -1571,8 +1571,8 @@ class SlackAdapter(BasePlatformAdapter):
                     "subscriptions, then REINSTALL the app to the workspace. Regenerating the app "
                     "from `hermes slack` produces a manifest with these already included.",
                     team_key or "this workspace")
-        except Exception:  # pragma: no cover - diagnostics must never break connect
-            pass
+        except Exception as _exc:  # pragma: no cover - diagnostics must never break connect
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _warn_if_not_bot_token(self, auth_response, team_name: str) -> None:
         """Warn once per workspace when the token authenticates as a human: ``auth.test`` on an
@@ -1605,8 +1605,8 @@ class SlackAdapter(BasePlatformAdapter):
                     "messages merely addressed to them). Use the 'Bot User OAuth Token' "
                     "(xoxb-...) from your Slack app's 'OAuth & Permissions' page in "
                     "SLACK_BOT_TOKEN.", team_key or "this workspace", user_id)
-        except Exception:  # pragma: no cover - diagnostics must never break connect
-            pass
+        except Exception as _exc:  # pragma: no cover - diagnostics must never break connect
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _register_bolt_handlers(self) -> None:
         """Wire every Bolt listener onto ``self._app``; must run before Socket Mode starts."""
@@ -1722,8 +1722,8 @@ class SlackAdapter(BasePlatformAdapter):
                     # Best-effort ack so Slack doesn't retry the click.
                     try:
                         await ack()
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
             return _wrapped
 
@@ -2843,8 +2843,8 @@ class SlackAdapter(BasePlatformAdapter):
                     "back to a threaded continuation (\u2248 default behaviour), not the flat "
                     "channel session you asked for. Set platforms.slack.extra.reply_in_thread: "
                     "false to pair them.", team_name)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _slack_allow_bots(self) -> str:
         """Return normalized Slack bot-message policy (scoped ``SLACK_ALLOW_BOTS`` → YAML → none)."""
@@ -3087,8 +3087,8 @@ class SlackAdapter(BasePlatformAdapter):
             try:
                 if response_get("error") in recoverable_codes:
                     return True
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return any(code in str(error) for code in recoverable_codes)
 
     def _extra_flag(self, key: str, default: bool = False) -> bool:
@@ -6279,8 +6279,8 @@ class SlackAdapter(BasePlatformAdapter):
             m = re.search(r"/files-pri/(T[A-Z0-9]+)-", url or "")
             if m and m.group(1) in self._team_clients:
                 return self._team_clients[m.group(1)].token
-        except Exception:  # pragma: no cover - defensive
-            pass
+        except Exception as _exc:  # pragma: no cover - defensive
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return self.config.token or ""
 
     async def _download_slack_file_bytes(

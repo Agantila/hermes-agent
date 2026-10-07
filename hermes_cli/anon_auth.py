@@ -523,8 +523,8 @@ def classify_mint_exception(exc: BaseException) -> AuthError:
     transport = (TimeoutError, ConnectionError, OSError)
     try:
         transport = transport + (httpx.TimeoutException, httpx.TransportError)
-    except Exception:  # httpx unavailable (lazy proxy): the stdlib set stands
-        pass
+    except Exception as _exc:  # httpx unavailable (lazy proxy): the stdlib set stands
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     code = ANON_UNREACHABLE if isinstance(exc, transport) else ANON_SERVER_ERROR
     wrapped = _anon_err(ANON_FAILURE_COPY[code], code, retry_after=getattr(exc, "retry_after", None))
     wrapped.__cause__ = exc
@@ -869,8 +869,8 @@ def apply_model_switch(agent: Any) -> Optional[str]:
     if callable(status):
         try:
             status(f"Model is now {backing} (your account's model; {requested} is the free tier's).")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return backing
 
 

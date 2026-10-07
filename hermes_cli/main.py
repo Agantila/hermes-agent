@@ -35,6 +35,7 @@ from hermes_cli._subprocess_compat import suppress_platform_ver_console
 
 suppress_platform_ver_console()
 
+import logging
 import os
 import re
 import sys
@@ -69,8 +70,8 @@ if _argv_is_gateway_run(sys.argv[1:]):
 
         _arm_sw()
         del _arm_sw
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _exit_after_oneshot(rc: object) -> None:
@@ -87,12 +88,12 @@ def _exit_after_oneshot(rc: object) -> None:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.flush()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         logging.shutdown()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     os._exit(rc if isinstance(rc, int) else (0 if rc is None else 1))
 
 
@@ -172,8 +173,8 @@ def _run_and_exit_oneshot(
         import traceback
         try:
             traceback.print_exc()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         rc = 1
     try:
         _cleanup_oneshot_runtime()
@@ -232,8 +233,8 @@ def _set_process_title() -> None:
         elif system == "Darwin":
             libc = ctypes.CDLL("libc.dylib", use_errno=True)
             libc.pthread_setname_np(b"hermes")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # Cheap read of `display.interface` for the earliest hot-path decisions
@@ -669,8 +670,8 @@ try:
     from hermes_constants import export_scratch_tmp_env as _export_scratch_tmp_env
 
     _export_scratch_tmp_env()
-except Exception:
-    pass  # an unwritable home leaves the system temp dir in place; never block startup
+except Exception as _exc:
+    logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # an unwritable home leaves the system temp dir in place; never block startup
 
 # PM runs after profile resolution but before application dependency imports.
 if sys.argv[1:2] == ["pm"]:
@@ -698,8 +699,8 @@ if sys.platform == "win32":
         from hermes_cli import _install_repair as _install_repair_mod
 
         _install_repair_mod.ensure_windows_bin_launchers(_bootstrap_root)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 # Load .env from ~/.hermes/.env first, then project root as dev fallback.
 # User-managed env files should override stale shell exports on restart.
@@ -736,8 +737,8 @@ try:
             _FORCE_IPV4_EARLY = True
         del _early_cfg_raw
     del _cfg_path
-except Exception:
-    pass  # best-effort — redaction stays at default (enabled) on config errors
+except Exception as _exc:
+    logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort — redaction stays at default (enabled) on config errors
 
 # Centralized file logging for every subcommand (agent.log + errors.log).
 # Dashboard entrypoints use GUI mode so gui.log captures pre-dispatch failures.
@@ -752,8 +753,8 @@ try:
             else "cli"
         )
     )
-except Exception:
-    pass  # best-effort — don't crash the CLI if logging setup fails
+except Exception as _exc:
+    logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort — don't crash the CLI if logging setup fails
 
 # Apply IPv4 preference before any HTTP client is created.
 if _FORCE_IPV4_EARLY:
@@ -761,10 +762,9 @@ if _FORCE_IPV4_EARLY:
         from hermes_constants import apply_ipv4_preference as _apply_ipv4
 
         _apply_ipv4(force=True)
-    except Exception:
-        pass  # best-effort — don't crash if hermes_constants not importable yet
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort — don't crash if hermes_constants not importable yet
 
-import logging
 import threading
 from datetime import datetime
 
@@ -1065,8 +1065,8 @@ def _dotenv_has_provider_key(env_file: Path, provider_env_vars: set) -> bool:
             key, _, val = line.partition("=")
             if key.strip() in provider_env_vars and val.strip().strip("'\""):
                 return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 
@@ -1084,8 +1084,8 @@ def _auth_store_logged_in(auth_file: Path, registry, strict_profile_scope: bool)
             strict_profile_scope and active_config and active_config.auth_type == "api_key"
         ):
             return bool(get_auth_status(active).get("logged_in"))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 
@@ -1160,8 +1160,8 @@ def _has_any_provider_configured(*, strict_profile_scope: bool = False) -> bool:
                 if pconfig.auth_type == "api_key"
             ):
                 return True
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Claude Code OAuth credentials count only once Hermes is explicitly
     # configured — having Claude Code installed isn't consent to use its tokens.
@@ -1174,8 +1174,8 @@ def _has_any_provider_configured(*, strict_profile_scope: bool = False) -> bool:
                 is_claude_code_token_valid(creds) or creds.get("refreshToken")
             ):
                 return True
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Nothing explicit anywhere: an existing Nous free-tier identity counts while the tier is on.
     try:
@@ -1286,8 +1286,8 @@ def _resolve_workspace_key() -> Optional[str]:
         )
         if result.returncode == 0 and result.stdout.strip():
             return os.path.abspath(result.stdout.strip())
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         return os.getcwd()
     except Exception:
@@ -1306,18 +1306,18 @@ def _session_db():
         from hermes_state import SessionDB
 
         db = SessionDB(read_only=True)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         yield db  # body errors (incl. AttributeError on a None db) are swallowed
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     finally:
         if db is not None:
             try:
                 db.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _latest_session_id(use_tui: bool) -> Optional[str]:
@@ -1367,8 +1367,8 @@ def _resolve_session_by_name_or_id(name_or_id: str) -> Optional[str]:
             # the live tip instead of a dead compressed parent.
             try:
                 resolved_id = db.get_compression_tip(resolved_id) or resolved_id
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return resolved_id
     return None
 
@@ -1406,8 +1406,8 @@ def _create_titled_session(title: str) -> Optional[str]:
         if db is not None:
             try:
                 db.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _resolve_continue_arg(args, *, use_tui: bool) -> None:
@@ -1604,8 +1604,8 @@ def _warn_retired_xai_models() -> None:
                 sys.stderr.write(f"  \033[33m⚠\033[0m {format_issue(_ref)}\n")
             sys.stderr.write(f"  \033[2mMigration guide: {MIGRATION_GUIDE_URL}\033[0m\n")
             sys.stderr.write("  \033[2mRun 'hermes doctor' for details.\033[0m\n\n")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _start_chat_background_prefetch() -> None:
@@ -1626,8 +1626,8 @@ def _start_chat_background_prefetch() -> None:
 
             prefetch_update_check()
             prefetch_banner_data()  # git banner state + skills index off-thread
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _skills_dir_is_unseeded() -> bool:
         try:
@@ -1642,8 +1642,8 @@ def _start_chat_background_prefetch() -> None:
     def _skills_sync_bg() -> None:
         try:
             _sync_bundled_skills_for_startup()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     if _skills_dir_is_unseeded():
         _skills_sync_bg()
@@ -1651,8 +1651,8 @@ def _start_chat_background_prefetch() -> None:
         try:
             import hermes_cli.banner as _banner_mod
             _banner_mod._available_skills_cache = None
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     else:
         threading.Thread(
             target=_skills_sync_bg, name="bundled-skills-sync", daemon=True
@@ -1900,8 +1900,8 @@ def cmd_model(args):
             from hermes_cli.models import clear_provider_models_cache
             clear_provider_models_cache()
             print("  Cleared model picker cache.")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     from hermes_cli.observability.shared_metrics_setup import provider_setup_surface
     from hermes_cli.setup import run_setup_action_with_navigation
 
@@ -2316,8 +2316,8 @@ def _finalize_update_receipt(code: int, reason: str) -> None:
         from hermes_cli.update_receipt import finalize_pending_update_receipt
 
         finalize_pending_update_receipt(code, reason)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _update_preflight_handled(args) -> bool:
@@ -2632,8 +2632,8 @@ def _dashboard_prepare_runtime(args, headless_backend) -> bool:
     try:
         from hermes_logging import setup_logging as _setup_logging_gui
         _setup_logging_gui(mode="gui")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     _require_dashboard_web_deps()
 
@@ -3526,8 +3526,8 @@ def main():
     try:
         from hermes_cli.stdio import configure_windows_stdio
         configure_windows_stdio()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     # A non-UTF-8 locale that the package import had to repair would crash Python children the
     # same way. Only on that host, so a healthy UTF-8 locale keeps its children untouched.
     from hermes_cli import _stdio_repaired
@@ -3545,8 +3545,8 @@ def main():
     # updates. No-op elsewhere.
     try:
         _cleanup_quarantined_exes()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Checkout changed since last launch → sweep stale __pycache__ once so no
     # process resolves fresh source against old bytecode. Never raises.

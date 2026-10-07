@@ -29,6 +29,7 @@ running from is off-limits.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import shlex
@@ -82,8 +83,8 @@ def _normalize_path(raw: str) -> str:
     except Exception:
         try:
             path = os.path.expanduser(path)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     if os.name == "nt":
         m = _WIN_DRIVE_FROM_POSIX_RE.match(path)
         if m:

@@ -5,6 +5,7 @@ duck type, the SDK adapter ``_ThreadedProcessHandle``, stdin piping, and the
 stdout drain thread used by ``BaseEnvironment._wait_for_process``.
 """
 
+import logging
 import codecs
 import os
 import select
@@ -240,8 +241,8 @@ def _pipe_stdin(proc: subprocess.Popen, data: str) -> None:
         finally:
             try:
                 target.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     thread = threading.Thread(target=_write, daemon=True)
     proc._hermes_stdin_thread = thread
@@ -330,8 +331,8 @@ class _ThreadedProcessHandle:
         if self._cancel_fn:
             try:
                 self._cancel_fn()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def wait(self, timeout: float | None = None) -> int:
         self._done.wait(timeout=timeout)
@@ -382,16 +383,16 @@ def _drain_stdout(proc: ProcessHandle, output: _BoundedOutputCollector, stop: "t
             _drain_fd_windows(proc, fd, output, decoder, stop)
         else:
             _drain_fd_select(proc, fd, output, decoder, stop)
-    except Exception:
-        pass  # closed fd / broken stream: keep what was captured
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # closed fd / broken stream: keep what was captured
     finally:
         # With errors="replace" this emits U+FFFD for a final incomplete sequence.
         try:
             tail = decoder.decode(b"", final=True)
             if tail:
                 output.append(tail)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _drain_fd_select(proc, fd: int, output: _BoundedOutputCollector, decoder, stop=None) -> None:

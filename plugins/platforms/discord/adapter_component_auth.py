@@ -1,6 +1,7 @@
 """Shared user-or-role authorization for Discord component (button) clicks."""
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable, Optional
 
 from gateway.platforms._shared import platform_gate_env as _scoped_gate_env
@@ -65,6 +66,6 @@ def _component_check_auth(
             store = PairingStore()
             if store.is_approved("discord", uid):
                 return True
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False

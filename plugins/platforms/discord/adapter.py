@@ -850,8 +850,8 @@ class VoiceReceiver:
         self._running = False
         try:
             self._vc._connection.remove_socket_listener(self._on_packet)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         with self._lock:
             self._buffers.clear()
             self._last_packet_time.clear()
@@ -1122,8 +1122,8 @@ class VoiceReceiver:
                 self._ssrc_to_user[ssrc] = uid
                 logger.info("Auto-mapped ssrc=%d -> user=%d (sole allowed member)", ssrc, uid)
                 return uid
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return 0
 
     def check_silence(self) -> list:
@@ -1959,8 +1959,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
             self._bot_task.cancel()
             try:
                 await self._bot_task
-            except (asyncio.CancelledError, Exception):
-                pass
+            except (asyncio.CancelledError, Exception) as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._bot_task = None
 
     def _start_liveness_probe(self) -> None:
@@ -2235,8 +2235,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
         directory = get_hermes_home() / _DISCORD_COMMAND_SYNC_STATE_SUBDIR
         try:
             directory.mkdir(parents=True, exist_ok=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return directory / _DISCORD_COMMAND_SYNC_STATE_FILENAME
 
     def _read_command_sync_state(self) -> dict:
@@ -3698,8 +3698,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
             length = getattr(getattr(audio, "info", None), "length", None)
             if length:
                 return float(length)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             proc = subprocess.run(
                 [
@@ -3716,8 +3716,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
                 raw = (proc.stdout or "").strip()
                 if raw:
                     return float(raw)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return None
 
     async def _playback_timeout_for_audio(self, audio_path: str) -> float:
@@ -3890,8 +3890,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
                 try:
                     if vc.is_playing():
                         vc.stop()
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 await vc.disconnect()
             task = self._voice_timeout_tasks.pop(guild_id, None)
             if task:
@@ -4017,22 +4017,22 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
             try:
                 if _mode_getter(str(text_ch_id)) == "off":
                     return
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         await self.leave_voice_channel(guild_id)
         # Notify the runner so it can clean up voice_mode state
         if self._on_voice_disconnect and text_ch_id:
             try:
                 self._on_voice_disconnect(str(text_ch_id))
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if text_ch_id and self._client:
             ch = self._client.get_channel(text_ch_id)
             if ch:
                 try:
                     await ch.send(t("platform.discord.voice.left_inactivity"))
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def is_in_voice_channel(self, guild_id: int) -> bool:
         """Check if the bot is connected to a voice channel in this guild."""
@@ -4067,8 +4067,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
                         vc = self._voice_clients.get(guild_id)
                         if vc and vc.is_connected():
                             vc._connection.send_packet(b'\xf8\xff\xfe')
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 completed = receiver.check_silence()
                 # Each utterance keeps the binding it was collected under, not one set during an earlier STT.
                 captured_for = self._voice_text_channels.get(guild_id)
@@ -4424,8 +4424,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
             task.cancel()
             try:
                 await task
-            except (asyncio.CancelledError, Exception):
-                pass
+            except (asyncio.CancelledError, Exception) as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     async def get_chat_info(self, chat_id: str) -> Dict[str, Any]:
         """Get information about a Discord channel."""
@@ -4557,8 +4557,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
                 getattr(_user, "name", "?"), getattr(_user, "id", "?"), _chan_id,
                 getattr(interaction, "guild_id", None),
             )
-        except Exception:
-            pass  # logging must never block command dispatch
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # logging must never block command dispatch
         # Auth gate must precede defer() so the ephemeral rejection can still be sent.
         if not await self._check_slash_authorization(interaction, command_text):
             return
@@ -4658,15 +4658,15 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
             try:
                 tree.add_command(auto_cmd)
                 already_registered.add(discord_name)
-            except Exception:
+            except Exception as _exc:
                 # e.g. name conflict with a subcommand group.
-                pass
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             from hermes_cli.commands import COMMAND_REGISTRY, _is_gateway_available, _resolve_config_gates
             try:
                 already_registered = {cmd.name for cmd in tree.get_commands()}
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             config_overrides = _resolve_config_gates()
             for cmd_def in COMMAND_REGISTRY:
                 if _is_gateway_available(cmd_def, config_overrides):
@@ -4740,8 +4740,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
             existing_names = set()
             try:
                 existing_names = {cmd.name for cmd in tree.get_commands()}
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             # Instance-level state so the callbacks always read the freshest entries.
             self._skill_entries: list[tuple[str, str, str]] = []
             self._skill_lookup: dict[str, tuple[str, str]] = {}
@@ -5521,8 +5521,8 @@ class DiscordAdapter(DiscordMediaMixin, DiscordThreadTitlesMixin, DiscordVoiceIn
         """Remember the placeholder name so the semantic rename can verify it wasn't changed by a human."""
         try:
             setattr(thread, "_hermes_auto_thread_initial_name", thread_name)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return thread
 
     async def _auto_create_thread(self, message: 'DiscordMessage') -> Optional[Any]:
@@ -6447,8 +6447,8 @@ def _define_discord_view_classes() -> None:
                         embed.color = discord.Color.greyple()
                         embed.set_footer(text=footer)
                     await msg.edit(embed=embed, view=self)
-                except Exception:
-                    pass  # message deleted or too old to edit
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # message deleted or too old to edit
 
         async def _finalize_embed(self, interaction: discord.Interaction, color, footer: str) -> None:
             """Mark resolved, stamp the embed (color + footer), disable buttons, edit in place."""
@@ -6838,8 +6838,8 @@ def _define_discord_view_classes() -> None:
                 try:
                     embed = self._config_embed(t("platform.discord.picker.expired"), color=discord.Color.greyple())
                     await msg.edit(embed=embed, view=self)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     class ChoicePickerView(_HermesView):
         """Flat single-select picker for finite-choice commands (/reasoning, /fast); 2-minute timeout."""
@@ -6891,8 +6891,8 @@ def _define_discord_view_classes() -> None:
                     embed = discord.Embed(description=t("platform.discord.picker.choice_expired"), color=discord.Color.greyple())
                     self.clear_items()
                     await msg.edit(embed=embed, view=self)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     class ClarifyChoiceView(_HermesView):
         """One button per clarify choice (max 24) plus ``✏️ Other``. A numeric click resolves the
@@ -6959,8 +6959,8 @@ def _define_discord_view_classes() -> None:
                     logger.debug("Discord clarify edit_message failed for %s", self.clarify_id, exc_info=True)
                 try:
                     await interaction.response.defer()
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         async def _resolve_choice(self, interaction: "discord.Interaction", index: int, choice: str) -> None:
             """Resolve the clarify with a chosen option."""
@@ -7133,8 +7133,8 @@ async def _standalone_is_forum(aiohttp, chat_id: str, json_headers: dict, sess_k
     try:
         from gateway.channel_directory import lookup_channel_type
         _channel_type = lookup_channel_type("discord", chat_id)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if _channel_type is not None:
         return _channel_type == "forum"
     cached = _probe_is_forum_cached(chat_id)

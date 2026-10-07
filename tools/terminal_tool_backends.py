@@ -165,8 +165,8 @@ def _build_modal_env(*, image, cwd, timeout, cc, task_id, **_):
             import modal
             if "ephemeral_disk" in inspect.signature(modal.Sandbox.create).parameters:
                 sandbox_kwargs["ephemeral_disk"] = res["disk"]
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     modal_state = _get_modal_backend_state(cc.get("modal_mode"))
     selected = modal_state["selected_backend"]
     if selected not in ("managed", "direct"):
@@ -254,8 +254,8 @@ def _create_environment(env_type: str, image: str, cwd: str, timeout: int,
     # live cached envs); __slots__ plugin providers simply keep going untagged.
     try:
         env.env_type = env_type
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return env
 
 

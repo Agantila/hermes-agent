@@ -147,8 +147,8 @@ def check_photon_token_valid(token: str) -> bool:
         validate_photon_token(token)
     except PhotonDashboardAuthError:
         return False
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return True
 
 

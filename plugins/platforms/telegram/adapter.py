@@ -233,15 +233,15 @@ def _probe_voice_duration_seconds(path: str) -> Optional[int]:
                 secs = _coerce_duration_seconds(wf.getnframes() / float(rate)) if rate else None
             if secs is not None:
                 return secs
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         import mutagen
         secs = _coerce_duration_seconds(getattr(getattr(mutagen.File(path), "info", None), "length", None))
         if secs is not None:
             return secs
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         import shutil
         import subprocess
@@ -251,8 +251,8 @@ def _probe_voice_duration_seconds(path: str) -> Optional[int]:
                 stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5)
             if proc.returncode == 0:
                 return _coerce_duration_seconds(proc.stdout.strip())
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 
@@ -1475,8 +1475,8 @@ class TelegramAdapter(TelegramHeldInboundMixin, BasePlatformAdapter):
         try:
             from gateway import rich_sent_store
             await rich_sent_store.record_async(str(chat_id), str(message_id), content)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     async def _try_send_rich(
         self, chat_id: str, content: str, reply_to: Optional[str], metadata: Optional[Dict[str, Any]]) -> Optional[SendResult]:
@@ -1655,8 +1655,8 @@ class TelegramAdapter(TelegramHeldInboundMixin, BasePlatformAdapter):
             self._background_tasks.add(task)
             task.add_done_callback(self._background_tasks.discard)
             task.add_done_callback(_consume_abandoned_task)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _fence_polling(self) -> None:
         """Mark polling closed: no progress accepted, send path degraded."""
@@ -2013,8 +2013,8 @@ class TelegramAdapter(TelegramHeldInboundMixin, BasePlatformAdapter):
                         "rebuilding the adapter instead of reusing an Updater whose lifecycle lock may still be held.")
                     await self._go_fatal_network(message, "[%s] %s (likely CLOSE-WAIT socket)", self.name, message)
                     return False
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return True
 
     def _restart_polling_in_task(self, coro) -> None:
@@ -7184,8 +7184,8 @@ def _resolve_notifications_mode() -> str:
             _raw = cfg_get(load_gateway_config(), "display", "platforms", "telegram", "notifications")
             if _raw not in {None, ""}:
                 mode = str(_raw).strip().lower()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     mode = mode or "important"
     if mode not in {"all", "important"}:
         logger.warning("Unknown telegram notifications mode '%s', defaulting to 'important' (valid: all, important)", mode)

@@ -347,8 +347,8 @@ def _plugin_terminal_backend_rows() -> List[Dict[str, str]]:
     try:
         from hermes_cli.plugins import discover_plugins
         discover_plugins()  # idempotent — plugin state may not be loaded yet
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from agent.terminal_env_registry import list_providers
         for provider in list_providers():

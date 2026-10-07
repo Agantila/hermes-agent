@@ -35,8 +35,8 @@ def _get_rss_mb() -> Optional[int]:
 
         # ru_maxrss is KB on Linux but bytes on macOS.
         return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (_BYTES_TO_MB if sys.platform == "darwin" else 1024))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         import psutil  # type: ignore
 

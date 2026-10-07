@@ -145,8 +145,8 @@ def _resolve_profile_from_cfg(cfg: dict, key: str, *, fallback: Optional[str] = 
             try:
                 if profiles_mod.profile_exists(candidate):
                     return candidate
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         return profiles_mod.get_active_profile_name() or "default"
     except Exception:

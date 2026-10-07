@@ -9,6 +9,7 @@ settle) is paid once per column, not once per property.
 
 from __future__ import annotations
 
+import logging
 import contextlib
 import datetime as dt
 import json
@@ -246,8 +247,8 @@ class WorkerSampler:
         while not self._stop.is_set():
             try:
                 self._sample()
-            except Exception:  # a probe racing sandbox teardown; the next sample decides
-                pass
+            except Exception as _exc:  # a probe racing sandbox teardown; the next sample decides
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             self._stop.wait(self.interval)
 
     def __enter__(self) -> "WorkerSampler":

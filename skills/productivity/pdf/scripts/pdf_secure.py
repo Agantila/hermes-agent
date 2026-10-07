@@ -6,6 +6,7 @@ them, but any PDF library can strip them. Only the user password gates content.
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import sys
@@ -15,8 +16,8 @@ def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     parser = argparse.ArgumentParser(description="Encrypt/decrypt PDFs (pypdf, AES-256).")
     parser.add_argument("pdf", help="Input PDF path")
     parser.add_argument("-o", "--output", required=True, help="Output PDF path")

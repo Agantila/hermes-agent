@@ -40,8 +40,8 @@ def _iter_sshd_config_lines() -> list[str]:
     paths: list[Path] = [Path("/etc/ssh/sshd_config")]
     try:
         paths.extend(sorted(Path("/etc/ssh/sshd_config.d").glob("*.conf")))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     for p in paths:
         try:
             raw_lines = p.read_text(encoding="utf-8-sig", errors="replace").splitlines()

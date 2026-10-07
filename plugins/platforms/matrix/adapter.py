@@ -1358,8 +1358,8 @@ class MatrixAdapter(BasePlatformAdapter):
             self._sync_task.cancel()
             try:
                 await self._sync_task
-            except (asyncio.CancelledError, Exception):
-                pass
+            except (asyncio.CancelledError, Exception) as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         for tasks in (self._invite_join_tasks.values(), self._reaction_redaction_tasks):
             pending = list(tasks)
             for task in pending:

@@ -611,8 +611,8 @@ def _release_session_db(db) -> None:
     from hermes_state_registry import release_or_close
     try:
         release_or_close(db)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _registry_tore_down(db) -> bool:
@@ -723,8 +723,8 @@ def _pid_alive(pid: int) -> bool:
         from gateway.status import _pid_exists
 
         return bool(_pid_exists(int(pid)))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         import psutil  # type: ignore
 
@@ -758,8 +758,8 @@ def _goal_judge_setting(key: str, default, cast):
         value = cast((load_config().get("auxiliary") or {}).get("goal_judge", {}).get(key, default))
         if value > 0:
             return value
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return default
 
 
@@ -1645,8 +1645,8 @@ def run_kanban_goal_loop(
         if log is not None:
             try:
                 log(msg)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _block(message: str) -> None:
         try:

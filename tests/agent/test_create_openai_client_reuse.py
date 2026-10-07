@@ -16,6 +16,7 @@ with ``APIConnectionError('Connection error.')`` whose cause was
 That is the exact scenario this test reproduces at object level without a
 network, so it runs in CI on every PR.
 """
+import logging
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -56,8 +57,8 @@ def _make_fake_openai_factory(constructed):
             if hc is not None and hasattr(hc, "close"):
                 try:
                     hc.close()
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return _FakeOpenAI
 

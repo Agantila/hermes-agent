@@ -16,6 +16,7 @@ Covers:
 
 from __future__ import annotations
 
+import logging
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -275,8 +276,8 @@ class TestSSEClientCert:
                         }),
                         timeout=2.0,
                     )
-                except (asyncio.TimeoutError, StopAsyncIteration, Exception):
-                    pass
+                except (asyncio.TimeoutError, StopAsyncIteration, Exception) as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         asyncio.run(drive())
         factory = patch_sse_client.get("httpx_client_factory")
@@ -321,8 +322,8 @@ class TestSSEClientCert:
                         }),
                         timeout=2.0,
                     )
-                except (asyncio.TimeoutError, StopAsyncIteration, Exception):
-                    pass
+                except (asyncio.TimeoutError, StopAsyncIteration, Exception) as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         asyncio.run(drive())
 
@@ -372,8 +373,8 @@ class TestSSEClientCert:
                         }),
                         timeout=2.0,
                     )
-                except (asyncio.TimeoutError, StopAsyncIteration, Exception):
-                    pass
+                except (asyncio.TimeoutError, StopAsyncIteration, Exception) as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         asyncio.run(drive())
 

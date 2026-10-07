@@ -17,6 +17,7 @@ Covers the three ownership invariants the PR review demanded:
    every state.db in the process).
 """
 
+import logging
 import os
 import shutil
 import threading
@@ -326,8 +327,8 @@ class TestTeardownOutsideLock:
                 if acquired:
                     lock_released_during_teardown.set()
                     registry._lock.release()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             original_teardown(target)
 
         monkeypatch.setattr(registry, "_teardown", _slow_teardown)

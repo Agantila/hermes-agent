@@ -8,6 +8,7 @@ Covers:
 """
 from __future__ import annotations
 
+import logging
 import json
 from typing import Any, Dict
 
@@ -129,8 +130,8 @@ class TestWebSearchUsesSearchBackend:
         # need to verify _get_search_backend was called
         try:
             web_tools.web_search_tool("test", 1)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         assert len(called_with) > 0
         assert called_with[0][0] == "search"

@@ -111,8 +111,8 @@ def _write_stderr_log_header(server_name: str) -> None:
     try:
         fh.write(f"\n{timestamp()} ===== starting MCP server '{server_name}' =====\n")
         fh.flush()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _tail_server_stderr(server_name: str, *, max_bytes: int = 8192, max_lines: int = 8) -> str:
@@ -549,8 +549,8 @@ def _load_mcp_config() -> Dict[str, dict]:
         try:  # ensure .env vars are available for interpolation
             from hermes_cli.env_loader import load_hermes_dotenv
             load_hermes_dotenv()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         safe_servers: Dict[str, dict] = {}
         for name, cfg in _filter_suspicious_mcp_servers(servers if isinstance(servers, dict) else {}).items():
             interpolated = _interpolate_env_vars(cfg)

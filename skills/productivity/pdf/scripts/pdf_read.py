@@ -2,6 +2,7 @@
 """Read a PDF: per-page text, tables, metadata, or form fields. JSON to stdout."""
 from __future__ import annotations
 
+import logging
 import argparse
 import csv
 import json
@@ -13,8 +14,8 @@ def _reconfigure_stdio() -> None:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _need(module: str, package: str):

@@ -118,8 +118,8 @@ def _ic_signal_tool_workers(agent, active: bool, **kw) -> None:
     for tid in worker_tids:
         try:
             _set_interrupt(active, tid, **kw)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class InterruptControlMixin:

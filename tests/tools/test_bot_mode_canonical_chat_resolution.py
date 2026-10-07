@@ -31,6 +31,7 @@ those flows depend on, including a Python re-enactment of the #90005 and
 
 from __future__ import annotations
 
+import logging
 import threading
 
 import pytest
@@ -73,8 +74,8 @@ def home(tmp_path, monkeypatch):
     for database in handles:
         try:
             database.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _db(home):

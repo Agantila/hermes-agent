@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from math import isfinite
 from typing import Any
 
@@ -1535,8 +1536,8 @@ def execution_surface(kwargs: dict[str, Any]) -> str:
 
         if value in get_all_platforms():
             return "gateway"
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return "gateway" if value in _KNOWN_GATEWAY_PLATFORMS else "other"
 
 

@@ -4,6 +4,7 @@ desktop UI wiring, HUD surface note. Bodies are rebound onto server.py's globals
 
 from __future__ import annotations
 
+import logging
 import contextlib
 
 from .method_ctx import bind_module
@@ -197,8 +198,8 @@ def _notif_slash_loop_tick(rid: str, sid: str, session: dict, mgr, wakeup: str) 
             # Releases the claim on failure: the swallow below would otherwise leave the session busy for good.
             _notif_submit(rid, sid, session, payload["message"], "loop wakeup send failed")
             return
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     decision = mgr.complete_tick("")
     if decision.get("message"):
         _notif_loop_status(sid, decision["message"])

@@ -147,8 +147,8 @@ def slice_search_response(response: dict, limit: int) -> dict:
             out = _deep_copy(response)
             out["data"]["web"] = out["data"]["web"][:limit]
             return out
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as _exc:  # noqa: BLE001
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return response
 
 

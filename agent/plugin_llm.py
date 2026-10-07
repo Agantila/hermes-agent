@@ -194,13 +194,13 @@ def _resolve_task_ownership(plugin_id: str) -> tuple[frozenset, frozenset]:
         from hermes_cli.plugins import get_plugin_auxiliary_tasks
         owned = {e.get("key") for e in get_plugin_auxiliary_tasks()
                  if e.get("plugin") == plugin_id and isinstance(e.get("key"), str) and e.get("key")}
-    except Exception:  # pragma: no cover — registry unavailable
-        pass
+    except Exception as _exc:  # pragma: no cover — registry unavailable
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from hermes_cli.main_provider_setup import _AUX_TASKS
         builtin = {k for k, _name, _desc in _AUX_TASKS}
-    except Exception:  # pragma: no cover — main import failure
-        pass
+    except Exception as _exc:  # pragma: no cover — main import failure
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return frozenset(owned), frozenset(builtin)
 
 

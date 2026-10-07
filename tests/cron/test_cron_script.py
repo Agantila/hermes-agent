@@ -7,6 +7,7 @@ Tests cover:
 - Path resolution (absolute, relative to HERMES_HOME/scripts/)
 """
 
+import logging
 import json
 import os
 import re
@@ -660,8 +661,8 @@ class TestRunJobEnvVarCleanup:
         # Expect it to fail (no model/API key), but env vars must be cleaned
         try:
             run_job(job)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Verify env vars were cleaned up by the finally block
         assert os.environ.get("HERMES_SESSION_PLATFORM") is None

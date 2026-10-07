@@ -11,6 +11,7 @@ it as ``X-Hermes-Session-Token`` on REST and ``?token=`` on WebSocket upgrades, 
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import re
@@ -300,8 +301,8 @@ class Dashboard:
     def close(self) -> None:
         try:
             self.http.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         kill_group(self.proc, signal.SIGTERM)
         try:
             self.proc.wait(timeout=30)

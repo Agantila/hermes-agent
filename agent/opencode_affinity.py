@@ -24,6 +24,7 @@ Every request — main turn on any transport, auxiliary calls — goes through
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Any, Optional
 
@@ -68,8 +69,8 @@ def is_opencode_target(provider: Optional[str], base_url: Optional[str]) -> bool
 
         if opencode_provider_family(provider) is not None:
             return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from agent.anthropic_endpoints import _is_opencode_endpoint
 

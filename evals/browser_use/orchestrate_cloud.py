@@ -15,6 +15,7 @@ Per cell: provision a session, export its CDP endpoint via BENCH_CDP_URL /
 BU_CDP_WS, run single_run.py (pr arm), close the session. Resume-safe.
 """
 
+import logging
 import argparse
 import itertools
 import json
@@ -52,8 +53,8 @@ if os.path.exists(RESULTS):
         try:
             r = json.loads(line)
             done.add((r["task"], r["model"], r["rep"]))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class NousCloud:

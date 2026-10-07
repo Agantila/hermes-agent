@@ -10,6 +10,7 @@ Usage: reconstruct_lineage.py <state_db_copy> <root_session_id> <out_json>
 
 ALWAYS run against a COPY of state.db, never the live file.
 """
+import logging
 import hashlib
 import json
 import sqlite3
@@ -73,8 +74,8 @@ for sid in chain:
         if r["tool_calls"]:
             try:
                 m["tool_calls"] = json.loads(r["tool_calls"])
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if r["tool_call_id"]:
             m["tool_call_id"] = r["tool_call_id"]
         if r["tool_name"]:

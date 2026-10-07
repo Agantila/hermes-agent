@@ -5,6 +5,7 @@ The toolset/terminal catalogs and helpers stay in web_server (some are defined
 monkeypatching on web_server stays authoritative.
 """
 
+import logging
 import asyncio
 import shutil
 import subprocess
@@ -106,8 +107,8 @@ def _probe_modal_backend(_cfg) -> tuple:
 
         if has_direct_modal_credentials():
             return ("ready", "")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     if _env_value("MODAL_TOKEN_ID") and _env_value("MODAL_TOKEN_SECRET"):
         return ("ready", "")
     return (
@@ -144,8 +145,8 @@ def _probe_terminal_backend(name: str, terminal_cfg: dict) -> tuple:
             provider = get_provider(name)
             if provider is not None:
                 return provider.probe()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return ("unavailable", f"Unknown backend: {name}")
     except Exception as exc:  # pragma: no cover — belt-and-braces guard
         return ("unavailable", f"Probe failed: {exc}")

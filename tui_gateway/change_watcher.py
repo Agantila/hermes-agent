@@ -4,6 +4,7 @@ rebound onto server.py's globals at install time (method_ctx.bind_module)."""
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from .method_ctx import HandlerRegistry, bind_module
@@ -102,8 +103,8 @@ def _pet_sig() -> tuple:
         if active := _active_pet():
             pet, scale = active
             return (pet.slug, _pet_sheet_revision(pet.spritesheet), scale)
-    except Exception:  # noqa: BLE001 - cosmetic, never break the watcher
-        pass
+    except Exception as _exc:  # noqa: BLE001 - cosmetic, never break the watcher
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return ("off",)
 
 
@@ -114,8 +115,8 @@ def _pet_changed_payload() -> dict:
             pet, scale = active
             return {"enabled": True, "slug": pet.slug, "displayName": pet.display_name,
                     "scale": scale, "spritesheetRevision": _pet_sheet_revision(pet.spritesheet)}
-    except Exception:  # noqa: BLE001 - cosmetic, never break the watcher
-        pass
+    except Exception as _exc:  # noqa: BLE001 - cosmetic, never break the watcher
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return {"enabled": False}
 
 

@@ -1488,8 +1488,8 @@ class ShellFileOperations(LintMixin, SearchMixin, FileOperations):
                         "write did not persist correctly — re-read the file "
                         "and retry."))
                 return True, None
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return None, None
 
     def write_file(self, path: str, content: str, pre_content: Optional[str] = None) -> WriteResult:
@@ -1576,8 +1576,8 @@ class ShellFileOperations(LintMixin, SearchMixin, FileOperations):
         err_msg = error or f"Could not find match for old_string in {path}"
         try:
             err_msg += format_no_match_hint(err_msg, match_count, old_string, content)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return PatchResult(error=err_msg)
 
     def _verify_patch_persisted(self, path: str, new_content: str) -> Optional[PatchResult]:

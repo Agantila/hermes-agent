@@ -3,6 +3,7 @@ Split out of ``hermes_cli/doctor.py``, which re-exports every name so ``hermes_c
 
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 from pathlib import Path
@@ -187,8 +188,8 @@ def _check_directory_structure(should_fix: bool, f: Finding) -> None:
     """HERMES_HOME, expected subdirs, SOUL.md, and the enabled built-in memory files."""
     try:
         check_legacy_desktop_checkout()
-    except Exception:
-        pass  # best-effort report; must never break the directory check
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort report; must never break the directory check
     from hermes_cli.doctor import HERMES_HOME, _DHH
     hermes_home = HERMES_HOME
     ensure_dir(f, should_fix, hermes_home, f"{_DHH} directory exists", f"Created {_DHH} directory", f"{_DHH} not found")

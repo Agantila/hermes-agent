@@ -28,6 +28,7 @@ so lint the layout first, then build.
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import sys
@@ -37,8 +38,8 @@ def _reconfigure_stdio() -> None:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _page_size(spec: dict):

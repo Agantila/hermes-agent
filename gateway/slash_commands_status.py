@@ -293,8 +293,8 @@ class GatewayStatusCommandsMixin:
             free_tier_active = await self._run_in_executor_with_context(free_tier_route)
             if free_tier_active:
                 lines.append(t("gateway.status.free_tier"))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         from agent.context_breakdown import context_display_source
         mark = "~" if context_display_source(getattr(status_agent, "context_compressor", None)) != "provider_usage" else ""
         if context_total:

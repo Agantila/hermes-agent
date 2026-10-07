@@ -24,6 +24,7 @@ path-keyed, so this is hermetic) — no live server, no hand-set flag.
 
 from __future__ import annotations
 
+import logging
 from hermes_cli.runtime_provider import resolve_runtime_provider
 from agent.agent_runtime_helpers import copy_reasoning_content_for_api
 from run_agent import AIAgent
@@ -54,8 +55,8 @@ def _write_home(tmp_path, monkeypatch, reasoning_echo: bool):
         for name in ("_CONFIG_CACHE", "_config_cache"):
             if hasattr(_cfg, name):
                 getattr(_cfg, name).clear()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _agent_with_init_flag() -> AIAgent:

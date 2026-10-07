@@ -7,6 +7,7 @@ network call: dummy credentials force ``AIAgent.__init__`` down the direct-const
 
 from __future__ import annotations
 
+import logging
 import json
 import re
 from pathlib import Path
@@ -173,8 +174,8 @@ def compute_prompt_breakdown(platform: str = "cli") -> Dict[str, Any]:
                 memory_block = store.format_for_system_prompt("memory") or ""
             if getattr(agent, "_user_profile_enabled", True):
                 user_block = store.format_for_system_prompt("user") or ""
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     tools = getattr(agent, "tools", None) or []
     sections: List[Tuple[str, int, int]] = [

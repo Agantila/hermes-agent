@@ -389,8 +389,8 @@ def _resolve_api_key_provider_secret(provider_id: str, pconfig: ProviderConfig) 
                 return api_token, source
         except ValueError as exc:
             logger.warning("Copilot token validation failed: %s", exc)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return "", ""
 
     # Prefer ~/.hermes/.env over os.environ so a deliberate key rotation in .env isn't shadowed by
@@ -427,15 +427,15 @@ def _resolve_api_key_provider_secret(provider_id: str, pconfig: ProviderConfig) 
                 for extra in pool.entries():
                     if extra is not None and all(extra is not c for c in candidates):
                         candidates.append(extra)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             for entry in candidates:
                 key = getattr(entry, "access_token", "") or getattr(entry, "runtime_api_key", "")
                 val = _usable_declared_secret(provider_id, key, pool_source)
                 if val:
                     return val, pool_source
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return "", ""
 
 
@@ -540,8 +540,8 @@ def _load_global_auth_store() -> Dict[str, Any]:
             if os.path.normcase(os.path.abspath(global_path)) == os.path.normcase(os.path.abspath(real_root)):
                 _global_auth_store_cache = None
                 return {}
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         store = _load_auth_store(global_path)
     except Exception:
@@ -1493,8 +1493,8 @@ def _plugin_aliases() -> Dict[str, str]:
         for _pp in _lp():
             for _alias in _pp.aliases:
                 aliases.setdefault(_alias, _pp.name)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return aliases
 
 

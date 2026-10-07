@@ -308,8 +308,8 @@ def verify_jwt(
             details = (
                 f" [token iss={unverified.get('iss')!r} aud={unverified.get('aud')!r}; "
                 f"expected iss={issuer!r} aud={audience!r}]")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         raise ProviderError(f"{label} verification failed: {exc}{details}") from exc
 
 

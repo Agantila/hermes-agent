@@ -256,8 +256,8 @@ def _write_to_sandbox(content: str, remote_path: str, env) -> bool:
                    remote_path, persisted_size, expected)
     try:
         env.execute(f"rm -f {shlex.quote(remote_path)}", timeout=15)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 

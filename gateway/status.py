@@ -954,8 +954,8 @@ def _pid_exists(pid: int) -> bool:
                 return False
         except getattr(psutil, "NoSuchProcess", ()):
             return False
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return bool(psutil.pid_exists(pid))
     except ImportError:
         pass  # Fall through to stdlib fallback.

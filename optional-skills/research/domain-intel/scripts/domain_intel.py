@@ -14,6 +14,7 @@ All output is structured JSON. No dependencies beyond Python stdlib.
 Works on Linux, macOS, and Windows.
 """
 
+import logging
 import json
 import re
 import socket
@@ -278,8 +279,8 @@ def check_available(domain):
         with socket.create_connection((domain, 443), timeout=3) as s:
             with ctx.wrap_socket(s, server_hostname=domain):
                 ssl_up = True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     signals["ssl_reachable"] = ssl_up
 
     # WHOIS (quick check)

@@ -168,8 +168,8 @@ def _resolve_allow_private_urls() -> bool:
             block = cfg.get(section, {})
             if isinstance(block, dict) and is_truthy_value(block.get("allow_private_urls"), default=False):
                 return True
-    except Exception:
-        pass  # config unavailable (tests, early import) — keep default
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # config unavailable (tests, early import) — keep default
     return False
 
 

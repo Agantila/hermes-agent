@@ -13,6 +13,7 @@ terminal). Never raises.
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import re
@@ -36,8 +37,8 @@ def write_tty(seq: str) -> None:
     try:
         sys.stdout.write(seq)
         sys.stdout.flush()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def osc9(body: str) -> str:

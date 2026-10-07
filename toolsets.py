@@ -1,5 +1,6 @@
 """Toolset helpers: get/resolve/validate named tool groups (static TOOLSETS + registry-registered)."""
 
+import logging
 from typing import Dict, List, Any, Set, Optional, Tuple
 
 
@@ -361,8 +362,8 @@ def _plugin_platform_bundle(name: str) -> List[str]:
     tools = set(_HERMES_CORE_TOOLS)
     try:
         tools.update(e.name for e in _registry_call("get_all_entries", ()) if e.toolset == platform_name)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return list(tools)
 
 

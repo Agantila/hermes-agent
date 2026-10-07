@@ -6,6 +6,7 @@ bodies in methods_tools resolve it.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Mapping
 
 
@@ -24,8 +25,8 @@ def server_configs_with_sources(config_servers: Mapping[str, dict]) -> tuple[Dic
             if name not in servers:
                 servers[name] = dict(cfg)
                 plugins[name] = owners.get(name)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return servers, plugins
 
 

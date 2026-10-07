@@ -34,8 +34,8 @@ def _resolve_origin() -> Optional[Dict[str, Any]]:
     try:
         from tools.cronjob_job_args import _origin_from_env
         return _origin_from_env()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 

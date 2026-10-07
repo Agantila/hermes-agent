@@ -201,8 +201,8 @@ def _safe_restore_db(src: Path, dst: Path) -> bool:
             # Force a WAL checkpoint so the backup starts from a clean
             # state rather than writing on top of a deep WAL.
             dst_conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         src_conn = sqlite3.connect(read_only_db_uri(src), uri=True)
         try:
             src_conn.backup(dst_conn)
@@ -213,8 +213,8 @@ def _safe_restore_db(src: Path, dst: Path) -> bool:
         try:
             mode = src.stat().st_mode
             dst.chmod(mode)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return True
     except Exception as exc:
         logger.warning("SQLite safe restore failed for %s -> %s: %s", src, dst, exc)
@@ -224,8 +224,8 @@ def _safe_restore_db(src: Path, dst: Path) -> bool:
         if dst_conn is not None:
             try:
                 dst_conn.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         # Fallback: unlink+move (the old approach).  This still works for
         # the common case where no other process holds the DB open.
         from hermes_cli.sqlite_safe_read import (

@@ -4,6 +4,7 @@ imported lazily inside each method (import cycle)."""
 
 from __future__ import annotations
 
+import logging
 import sys
 
 from rich.markup import escape as _escape
@@ -324,8 +325,8 @@ class CLIAgentSetupMixin:
                     logger.info(
                         "No model configured — defaulting to %s for provider %s",
                         _default, resolved_provider)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Normalize model for the resolved provider (e.g. swap non-Codex models on openai-codex).
         # Fixes #651.
@@ -535,8 +536,8 @@ class CLIAgentSetupMixin:
             try:
                 overrides = resolve_fast_mode_overrides(
                     route["model"], provider=runtime["provider"], base_url=runtime["base_url"], tier=tier)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         route["request_overrides"] = overrides
         return route
 
@@ -560,8 +561,8 @@ class CLIAgentSetupMixin:
         """Clear ended_at so the resumed session is active again (best effort)."""
         try:
             self._session_db.reopen_session(self.session_id)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _load_resumed_history_late(self) -> bool:
         """Late resume path: validate the session and load its history from the DB when
@@ -721,8 +722,8 @@ class CLIAgentSetupMixin:
             try:
                 from agent.credits_tracker import seed_credits_at_session_start
                 seed_credits_at_session_start(self.agent)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             self._active_agent_route_signature = _route_signature(effective_model, runtime)
 
             # Force-create DB row on /title intent, then apply title.

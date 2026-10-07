@@ -178,8 +178,8 @@ def _migrate_to_13(results: Dict[str, Any], quiet: bool) -> None:
                 _c.save_env_value(dead_var, "")
                 if not quiet:
                     print(f"  ✓ Cleared {dead_var} from .env (no longer used — config.yaml is source of truth)")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 _LOCAL_WHISPER_MODELS = frozenset({

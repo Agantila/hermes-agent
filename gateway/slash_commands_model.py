@@ -112,8 +112,8 @@ class _ModelSwitchContext:
             excl = cfg.get("model_catalog", {}).get("excluded_providers")
             if isinstance(excl, list):
                 self.excluded_provs = excl
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def apply_override(self, override: dict) -> None:
         """A session /model override supersedes the configured route."""
@@ -491,8 +491,8 @@ class GatewayModelCommandsMixin:
         try:  # off-loop: listing still reads config/disk cache synchronously (#41289)
             providers = await asyncio.to_thread(list_authenticated_providers, max_models=_TEXT_LISTING_MODELS, **listing_kwargs)
             lines.extend(_model_provider_listing_lines(providers))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         lines.append(t("gateway.model.usage_switch_model"))
         lines.append(t("gateway.model.usage_switch_provider"))
         lines.append(t("gateway.model.usage_persist"))

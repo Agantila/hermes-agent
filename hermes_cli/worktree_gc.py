@@ -387,8 +387,8 @@ def audit_branches(repo_root: str) -> List[BranchRecord]:
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=workers, thread_name_prefix="hermes-branch-gc") as pool:
                 return list(pool.map(_classify_branch, branches))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return [_classify_branch(b) for b in branches]
 
 

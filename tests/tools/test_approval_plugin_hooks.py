@@ -6,6 +6,7 @@ ignored) and must fire on BOTH the CLI-interactive path and the async gateway
 path, so external tools like macOS notifiers can be alerted regardless of
 which surface the user is on.
 """
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -43,8 +44,8 @@ def isolated_session(monkeypatch, tmp_path):
         _am._session_approved.update(_saved_session)
         try:
             approval_context._approval_session_key.reset(token)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         clear_session(session_key)
 
 

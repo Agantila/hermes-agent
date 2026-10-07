@@ -158,8 +158,8 @@ def _read_script_for_guard(env: Any, guard_cwd: str, script_path: str, max_bytes
                 data = local_path.read_bytes()
                 if len(data) <= max_bytes:
                     return None if b"\x00" in data else data.decode("utf-8", errors="replace")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Remote backend: bound the read at the source with `head -c` so an
     # oversized binary never crosses the wire (an unbounded `cat` once
     # pinned the gateway's tool thread for 30+ min on a shlex scan). One
@@ -170,8 +170,8 @@ def _read_script_for_guard(env: Any, guard_cwd: str, script_path: str, max_bytes
         if result.get("returncode", -1) == 0:
             output = result.get("output", "")
             return None if output and "\x00" in output else output
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 

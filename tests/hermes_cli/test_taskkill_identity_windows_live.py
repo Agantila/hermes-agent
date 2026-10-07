@@ -13,6 +13,7 @@ Class under test (#98814 / #89614):
 - ``hermes_cli._subprocess_compat.pid_is_hermes`` fails closed on foreign
   processes and identity mismatches.
 """
+import logging
 import subprocess
 import sys
 import time
@@ -38,8 +39,8 @@ def _cleanup(proc: subprocess.Popen) -> None:
         pass
     try:
         proc.wait(timeout=10)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class TestTerminatePidIdentityLive:

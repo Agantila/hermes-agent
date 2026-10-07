@@ -6,6 +6,7 @@ cli-level names through ``from cli import ...`` at call time so facade monkeypat
 
 from __future__ import annotations
 
+import logging
 import functools
 import itertools
 import os
@@ -208,8 +209,8 @@ def _query_osc11_background() -> str | None:
                 r, _, _ = select.select([fd], [], [], drain_deadline - time.monotonic())
                 if not r or not os.read(fd, 64):
                     break
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _heal_cooked_mode_drift(fd: int) -> bool:

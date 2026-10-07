@@ -31,6 +31,7 @@ first wins; the other fails with ``ImportError``, and the polluted
 incident.
 """
 
+import logging
 import ast
 import os
 import sys
@@ -62,8 +63,8 @@ def _bind_lark_sdk_globals_when_installed():
         from plugins.platforms.feishu.adapter import _load_lark_oapi
 
         _load_lark_oapi()
-    except Exception:
-        pass  # adapter not importable in this environment — tests will skip
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # adapter not importable in this environment — tests will skip
     yield
 
 

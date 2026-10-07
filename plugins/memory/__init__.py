@@ -318,8 +318,8 @@ def _instantiate_subclass(namespace) -> Optional["MemoryProvider"]:
         if isinstance(attr, type) and issubclass(attr, MemoryProvider) and attr is not MemoryProvider:
             try:
                 return attr()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 
@@ -335,8 +335,8 @@ def _load_provider_from_entry_point(entry_point, *, register_skills: bool = True
     if isinstance(loaded, type) and issubclass(loaded, MemoryProvider):
         try:
             return loaded()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if hasattr(loaded, "register"):
         collector = _ProviderCollector(entry_point.name, register_skills=register_skills)
         collector.collect(loaded.register, source=getattr(loaded, "__file__", None))
@@ -520,8 +520,8 @@ def _explicitly_disabled(name: str, provider_dir: Path) -> bool:
         import hermes_yaml as yaml
         with open(provider_dir / "plugin.yaml", encoding="utf-8-sig") as f:
             names.add(str((yaml.safe_load(f) or {}).get("name") or ""))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return bool(names & {v for v in disabled if isinstance(v, str)})
 
 

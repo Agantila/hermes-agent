@@ -7,6 +7,7 @@ original registration point.  Shared helpers are reached via the late-binding
 seam so ``monkeypatch.setattr(<owning module>, ...)`` keeps working.
 """
 
+import logging
 import asyncio
 from typing import Optional
 
@@ -90,8 +91,8 @@ def _clear_skills_prompt_cache() -> None:
     try:
         from agent.prompt_builder import clear_skills_system_prompt_cache
         clear_skills_system_prompt_cache(clear_snapshot=True)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @hub_router.post("/api/skills/hub/install")

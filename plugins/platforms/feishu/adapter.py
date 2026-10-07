@@ -1164,8 +1164,8 @@ def _run_official_feishu_ws_client(ws_client: Any, adapter: Any) -> None:
     _apply_runtime_ws_overrides()
     try:
         ws_client.start()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     finally:
         _ws_isolation_state.loop = None
         _ws_isolation_state.connect_kwargs = None
@@ -1181,8 +1181,8 @@ def _run_official_feishu_ws_client(ws_client: Any, adapter: Any) -> None:
         for closer in (loop.stop, loop.close):
             try:
                 closer()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         adapter._ws_thread_loop = None
 
 
@@ -1634,8 +1634,8 @@ class FeishuAdapter(BasePlatformAdapter):
             return
         try:
             setattr(self._ws_client, "_auto_reconnect", False)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         finally:
             self._ws_client = None
 
@@ -2466,8 +2466,8 @@ class FeishuAdapter(BasePlatformAdapter):
         if action_value:
             try:
                 synthetic_text += f" {json.dumps(action_value, ensure_ascii=False)}"
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         logger.info("[Feishu] Routing card action %r from %s in %s as synthetic command", action_tag, open_id, chat_id)
         await self._dispatch_synthetic_event(
             text=synthetic_text, message_type=MessageType.COMMAND, chat_id=chat_id,
@@ -3835,8 +3835,8 @@ class FeishuAdapter(BasePlatformAdapter):
                 await asyncio.shield(ws_future)
             except asyncio.CancelledError:
                 raise
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             # Deliberate disconnects nil ``_ws_client``/``_running`` first; only restart a live link.
             if not self._running or self._ws_client is None:
                 return

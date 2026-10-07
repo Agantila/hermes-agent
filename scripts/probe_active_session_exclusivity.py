@@ -25,6 +25,7 @@ inference cost.
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import subprocess
@@ -96,16 +97,16 @@ class Gateway:
     def close(self):
         try:
             self.proc.stdin.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             self.proc.terminate()
             self.proc.wait(timeout=15)
         except Exception:
             try:
                 self.proc.kill()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def reason_of(response: dict):

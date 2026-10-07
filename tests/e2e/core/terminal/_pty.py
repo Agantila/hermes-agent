@@ -11,6 +11,7 @@ is a paste and inserts a newline); we wait until the typed text is echoed on scr
 
 from __future__ import annotations
 
+import logging
 import fcntl
 import os
 import re
@@ -265,8 +266,8 @@ class PtyHermes:
         try:
             import psutil
             found |= {(c.pid, _start_time(c.pid)) for c in psutil.Process(self.proc.pid).children(recursive=True)}
-        except Exception:  # noqa: BLE001 - the child may exit between the scan and the walk
-            pass
+        except Exception as _exc:  # noqa: BLE001 - the child may exit between the scan and the walk
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         self.seen_members.update(item for item in found if item[1] is not None)
 
     def exit(self, command: str = "/exit", timeout: float = 60.0) -> int:

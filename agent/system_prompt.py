@@ -243,8 +243,8 @@ def _agent_home(agent: Any) -> Optional[Path]:
         override = get_hermes_home_override()
         if override:
             return Path(override)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         db_path = getattr(getattr(agent, "_session_db", None), "db_path", None)
         return Path(db_path).parent if db_path else None
@@ -360,8 +360,8 @@ def _bot_mode_parts(agent: Any) -> List[str]:
             # user-initiated capability change in an eternal session.
             parts.append(epoch_line(_agent_home(agent)))
             agent._bot_chat_timeless_prompt = True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return parts
 
 
@@ -418,8 +418,8 @@ def _default_platform_hint(platform_key: str) -> str:
             from gateway.platform_registry import platform_registry
             _entry = platform_registry.get(platform_key)
             hint = (_entry and _entry.platform_hint) or ""
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if platform_key == "telegram" and hint and _telegram_rich_messages_enabled():
         hint = hint.rstrip() + " " + TELEGRAM_RICH_MESSAGES_HINT
     return hint
@@ -688,8 +688,8 @@ def _coding_parts(agent: Any) -> Tuple[List[str], List[str], List[str]]:
         if replay is None:
             agent._frozen_workspace_snapshot = (cwd_key, parts[1][0] if parts[1] else "")
         return parts
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return [], [], []
 
 
@@ -702,8 +702,8 @@ def _post_workspace_parts(agent: Any) -> List[str]:
         try:
             from tools.env_probe import get_environment_probe_line
             parts.append(get_environment_probe_line())
-        except Exception:
-            pass  # Probe failure must never block prompt build.
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Probe failure must never block prompt build.
     if getattr(agent, "_bot_mode_protocol", True):
         parts.extend(_bot_mode_parts(agent))
     parts.append(platform_hint(agent))

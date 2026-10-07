@@ -227,8 +227,8 @@ class SessionGatewayMixin:
         if alive:
             try:
                 psutil.wait_procs(alive, timeout=1.5)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return signalled
 
     def record_gateway_session_peer(

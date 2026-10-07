@@ -9,6 +9,7 @@ runs sync httpx connects through the process-wide Happy Eyeballs racer
 
 from __future__ import annotations
 
+import logging
 import socket
 import sys
 import threading
@@ -260,8 +261,8 @@ def close_shared_transports() -> int:
     for transport in transports:
         try:
             transport.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return len(transports)
 
 

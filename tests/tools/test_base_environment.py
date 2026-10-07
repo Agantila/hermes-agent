@@ -4,6 +4,7 @@ Tests _wrap_command(), _extract_cwd_from_output(), _embed_stdin_heredoc(),
 init_session() failure handling, and the CWD marker contract.
 """
 
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -159,8 +160,8 @@ class TestAtomicSnapshotWrite:
         env._run_bash = fake_run_bash  # type: ignore[assignment]
         try:
             env.init_session()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         boot = captured.get("cmd", "")
         assert ".tmp." in boot and "mv -f " in boot, boot
         assert "mktemp " in boot

@@ -382,9 +382,9 @@ def _auth_gate_status() -> Dict[str, Any]:
             auth_flows.append("cookie")
             if _list_session_providers():
                 auth_flows.append("native_pkce")
-    except Exception:
+    except Exception as _exc:
         # Module not importable yet (early startup) — leave as [].
-        pass
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return {"auth_required": auth_required, "auth_providers": auth_providers,
             "auth_flows": auth_flows}
 
@@ -459,8 +459,8 @@ async def _advisory_pressure(status: Dict[str, Any], home: Path) -> None:
                 _sdb.close()
             if _rebuild is not None:
                 status["fts_rebuild"] = _rebuild
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @router.get("/api/status")
@@ -609,8 +609,8 @@ async def get_system_stats():
         for fill in (_disk, _cpu, _uptime, _process):
             try:
                 fill()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         info["psutil"] = True
     except Exception:
         info["psutil"] = False

@@ -1359,8 +1359,8 @@ def _pool_first_oauth_status(
                                         or getattr(entry, "base_url", None) or "").rstrip("/")}
             if on_pool_miss is not None and (degraded := on_pool_miss()):
                 return degraded
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         creds = resolve()
         return {

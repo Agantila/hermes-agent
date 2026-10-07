@@ -97,8 +97,8 @@ def artifact_scope_key(scope: Any) -> str:
     try:
         principal = str(getattr(scope, "principal_id", "") or "")
         family = str(getattr(scope, "transport_family", "") or "")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if not principal:
         # Fail closed: only an authenticated principal may mint artifacts.
         raise ArtifactError("artifact scope must carry a resolved principal")

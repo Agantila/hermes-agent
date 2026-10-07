@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 
 # Embedded in every prompt so the generated file reads like a maintainer wrote it.
@@ -102,8 +103,8 @@ def _resolve_session_cwd(session_key: str | None) -> str:
         recorded = get_session_cwd(key)
         if recorded and os.path.isdir(recorded):
             return recorded
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from agent.runtime_cwd import resolve_agent_cwd
 

@@ -920,8 +920,8 @@ def _jsonable(value: Any) -> Any:
                 return _jsonable(value.model_dump(mode="json", warnings=False))
             except TypeError:
                 return _jsonable(value.model_dump())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         attributes = {str(key): item for key, item in vars(value).items() if not str(key).startswith("_")}
     except (TypeError, AttributeError):

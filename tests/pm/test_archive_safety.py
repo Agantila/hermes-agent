@@ -18,6 +18,7 @@ pinning pm's truthful win32 degradation.
 
 from __future__ import annotations
 
+import logging
 import io
 import stat
 import sys
@@ -111,8 +112,8 @@ class TestPathTraversal:
         dest = tmp_path / "dest"
         try:
             extract(archive, dest)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         assert not Path("/tmp/PWNED-pm-store.txt").exists()
         outside = [

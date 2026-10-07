@@ -1387,8 +1387,8 @@ class GatewayShutdownMixin:
                     await asyncio.to_thread(atomic_json_write, path, counts, indent=None)
                 else:
                     path.unlink(missing_ok=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Restart orchestration
     @staticmethod

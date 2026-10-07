@@ -7,6 +7,7 @@ late-bound via ``_kb`` (import-cycle breaking) so monkeypatching
 
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import sqlite3
@@ -419,8 +420,8 @@ def _cleanup_workspace(conn: sqlite3.Connection, task_id: str) -> None:
         # After cleaning up this task's workspace, check if any parent tasks now have all children done —
         # their deferred cleanup can proceed (#33774).
         _try_cleanup_parent_workspaces(conn, task_id)
-    except Exception:
-        pass  # best-effort — never block completion
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort — never block completion
 
 
 def _cleanup_worktree_workspace(
@@ -492,8 +493,8 @@ def _cleanup_worktree_workspace(
         branch = (branch_name or "").strip() or f"wt/{task_id}"
         if branch.startswith("wt/"):
             _git(repo_root, "branch", "-D", branch, timeout=30)
-    except Exception:
-        pass  # best-effort — never block completion
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort — never block completion
 
 
 def _try_cleanup_parent_workspaces(conn: sqlite3.Connection, task_id: str) -> None:
@@ -533,8 +534,8 @@ def _try_cleanup_parent_workspaces(conn: sqlite3.Connection, task_id: str) -> No
                 release_lsp_clients(str(wp))
                 shutil.rmtree(wp, ignore_errors=True)
                 _kb._log.debug("Deferred cleanup: removed parent %s scratch workspace: %s", parent_id, wp)
-    except Exception:
-        pass  # best-effort
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort
 
 
 def _cleanup_worker_tmux(conn: sqlite3.Connection, task_id: str) -> None:
@@ -554,8 +555,8 @@ def _cleanup_worker_tmux(conn: sqlite3.Connection, task_id: str) -> None:
         if out.stdout.strip() == "1":
             subprocess.run(["tmux", "kill-session", "-t", session], capture_output=True, timeout=5)
             _kb._log.debug("Killed stale tmux session: %s", session)
-    except Exception:
-        pass  # best-effort — never block completion
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort — never block completion
 
 
 _SCRATCH_TIP_SENTINEL_NAME = ".scratch_tip_shown"
@@ -610,9 +611,9 @@ def _maybe_emit_scratch_tip(
                 conn, task_id, "tip_scratch_workspace",
                 {"message": _SCRATCH_TIP_MESSAGE},
             )
-    except Exception:
+    except Exception as _exc:
         # Best-effort — never block the spawn loop over a help message.
-        pass
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     finally:
         _mark_scratch_tip_shown()
 

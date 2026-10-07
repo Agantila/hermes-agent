@@ -24,6 +24,7 @@ toward the slow path, which then does the authoritative parse).
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
 
@@ -232,8 +233,8 @@ def print_fast_version_info(*, check_updates: bool = True) -> None:
             print(f"Update available: {behind} {commits_word} behind — run '{recommended_update_command()}'")
         elif behind == 0:
             print("Up to date")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def try_fast_version(argv: list[str] | None = None) -> bool:

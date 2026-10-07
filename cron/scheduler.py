@@ -4429,8 +4429,8 @@ if __name__ == "__main__":
             from hermes_logging import setup_logging
 
             setup_logging(hermes_home=_get_hermes_home(), mode="cron")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         raise SystemExit(
             0 if _run_external_worker_payload(args.external_worker_file, args.ack_file) else 1
         )

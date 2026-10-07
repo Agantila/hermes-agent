@@ -6,6 +6,7 @@ print and issue strings to append. No printing inside workers — the caller pri
 
 from __future__ import annotations
 
+import logging
 from pm import install_hint
 import concurrent.futures
 import errno
@@ -116,8 +117,8 @@ def _build_apikey_providers_list() -> list:
             _base_var = next((v for v in _pp.env_vars if _is_url(v)), None)
             _models_url = (_pp.models_url or (_pp.base_url.rstrip("/") + "/models")) if _pp.base_url else None
             _static.append((_label, _key_vars, _models_url, _base_var, getattr(_pp, "supports_health_check", True)))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _static
 
 

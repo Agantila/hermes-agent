@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Optional
@@ -94,8 +95,8 @@ def expensive_model_warning(
             from agent.models_dev import get_model_info
 
             input_cost, output_cost, source = _pricing_from_model_info(get_model_info(provider, model))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     if _unpriced() and _can_trust_pricing_lookup(model, provider=provider, base_url=base_url):
         try:

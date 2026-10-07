@@ -34,8 +34,8 @@ class MCPServerRunMixin:
                 t.cancel()
                 try:
                     await t
-                except (asyncio.CancelledError, Exception):
-                    pass
+                except (asyncio.CancelledError, Exception) as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _event_waiters(self) -> tuple:
         """Fresh ``(shutdown, reconnect)`` wait tasks; cancel them via ``_cancel_waiters``."""

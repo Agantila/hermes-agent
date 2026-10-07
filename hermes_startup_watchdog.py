@@ -156,8 +156,8 @@ def _log_quietly(level: str, msg: str, *args) -> None:
     """Log at *level*; never raises (the wedged main thread may hold the logging lock)."""
     try:
         getattr(logger, level)(msg, *args)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _mark_lifecycle_exit(exit_code: int) -> None:
@@ -170,8 +170,8 @@ def _mark_lifecycle_exit(exit_code: int) -> None:
         from gateway.lifecycle_ledger import mark_exited
 
         mark_exited(exit_code, reason="startup_liveness_watchdog")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class StartupWatchdogHandle:
@@ -273,8 +273,8 @@ class StartupWatchdogHandle:
             threading.Thread(
                 target=self._exit_escort, daemon=True, name="gateway-startup-watchdog-exit-escort"
             ).start()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         elapsed = time.monotonic() - self.armed_at
         _log_quietly(
             "critical",
@@ -318,8 +318,8 @@ class StartupWatchdogHandle:
             )
             ledger_thread.start()
             ledger_thread.join(timeout=_LEDGER_JOIN_TIMEOUT_S)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._fire_done.set()
         self._exit(self.exit_code)
 

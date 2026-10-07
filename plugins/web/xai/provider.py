@@ -68,8 +68,8 @@ class XAIWebSearchProvider(BaseWebSearchProvider):
             from tools.interrupt import is_interrupted
             if is_interrupted():
                 return _fail("Interrupted")
-        except Exception:  # noqa: BLE001 — interrupt module is best-effort
-            pass
+        except Exception as _exc:  # noqa: BLE001 — interrupt module is best-effort
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         creds = resolve_xai_http_credentials()
         api_key = str(creds.get("api_key") or "").strip()
         base_url = str(creds.get("base_url") or "https://api.x.ai/v1").strip().rstrip("/")

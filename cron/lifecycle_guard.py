@@ -857,8 +857,8 @@ def _resolve_script_directory(script_path: str) -> Optional[str]:
         path = _resolve_script_path(script_path)
         if path is not None and path.is_absolute():
             return str(path.parent)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 

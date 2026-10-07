@@ -6,6 +6,7 @@ Cold scans run on a background thread; ``/achievements`` serves the last snapsho
 """
 from __future__ import annotations
 
+import logging
 import json
 import math
 import re
@@ -168,8 +169,8 @@ def _data_file(name: str) -> Path:
                 # and the write (utf-8, never emits one) stay distinct.
                 legacy_text = legacy.read_text(encoding="utf-8-sig")
                 path.write_text(legacy_text, encoding="utf-8")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return path
 
 
@@ -608,8 +609,8 @@ def scan_sessions(limit: Optional[int] = None, progress_callback: Optional[Any] 
             if progress_callback is not None and progress_every > 0 and (idx % progress_every == 0) and idx < total_sessions:
                 try:
                     progress_callback(list(sessions), idx, total_sessions)
-                except Exception:
-                    pass  # Advisory — a broken publisher must never abort the scan.
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # Advisory — a broken publisher must never abort the scan.
         _write_json(CHECKPOINT_FILE, {"schema_version": _CHECKPOINT_SCHEMA_VERSION, "generated_at": int(time.time()), "sessions": checkpoint_sessions})
     finally:
         db.close()
@@ -678,8 +679,8 @@ def aggregate_stats(sessions: List[Dict[str, Any]]) -> Dict[str, Any]:
                     agg["weekend_sessions"] += 1
                 if lt.tm_hour < 6 or lt.tm_hour >= 23:
                     agg["night_sessions"] += 1
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     agg["distinct_model_count"] = len({m for m in model_names if m and m != "None"})
     agg["distinct_provider_count"] = len(provider_names)
     return agg
@@ -788,8 +789,8 @@ def _run_scan_and_update_cache(publish_partial_snapshots: bool = True) -> None:
                 # _SNAPSHOT_CACHE_AT stays 0 so partials remain in the 'stale' regime: the UI
                 # keeps polling /scan-status and never mistakes an in-flight result for a finished one.
                 _set_cache(_compute_from_scan(partial_scan, is_partial=True), 0)
-            except Exception:
-                pass  # Intermediate publication is best-effort; don't kill the scan.
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # Intermediate publication is best-effort; don't kill the scan.
 
         try:
             computed = _json_safe(compute_all(progress_callback=_publish_partial if publish_partial_snapshots else None))
@@ -889,6 +890,6 @@ async def reset_state():
     for name in (SNAPSHOT_FILE, CHECKPOINT_FILE):
         try:
             _data_file(name).unlink(missing_ok=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return {"ok": True}

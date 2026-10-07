@@ -320,8 +320,8 @@ async def _tick_socket_handler(reader: asyncio.StreamReader, writer: asyncio.Str
     try:
         writer.write(b"1")
         await writer.drain()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     finally:  # close even on CancelledError (BaseException), as on BASE
         with contextlib.suppress(Exception):
             writer.close()

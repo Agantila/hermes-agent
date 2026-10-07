@@ -123,8 +123,8 @@ class ManagedModalEnvironment(BaseEnvironment):
             try:
                 from tools.environments.base import touch_activity_if_due
                 touch_activity_if_due(_activity_state, "modal command running")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             time.sleep(0.25)
 
     @staticmethod
@@ -199,7 +199,7 @@ class ManagedModalEnvironment(BaseEnvironment):
                 if isinstance(message, str) and message:
                     return f"{prefix}: {message}"
                 return f"{prefix}: {json.dumps(payload, ensure_ascii=False)}"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         text = response.text.strip()
         return f"{prefix}: {text}" if text else f"{prefix}: HTTP {response.status_code}"

@@ -7,6 +7,7 @@ inside each method (``from cli import ...``) — never at module load time (impo
 
 from __future__ import annotations
 
+import logging
 import errno
 import shutil
 import threading
@@ -240,8 +241,8 @@ class CLIStatusBarMixin:
 
             snapshot["focus_label"] = focus_statusbar_segment(
                 bool(getattr(self, "_focus_view_enabled", False)))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Git branch (⎇) — opt-in via display.status_bar.fields, so the filesystem probe
         # (TTL-cached in status_bar_git) only runs when the user asked for the segment.
@@ -251,8 +252,8 @@ class CLIStatusBarMixin:
                 from hermes_cli.status_bar_git import current_git_branch
 
                 snapshot["git_branch"] = current_git_branch()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Battery reads are memoised inside agent.battery, so per-repaint polling is cheap.
         if getattr(self, "_battery_visible", False):
@@ -262,8 +263,8 @@ class CLIStatusBarMixin:
                 _batt = read_battery()
                 snapshot["battery_label"] = format_battery(_batt)
                 snapshot["battery_category"] = battery_category(_batt)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Live /bg tasks: entries are removed in the task thread's finally block; dict len()
         # is atomic in CPython, no lock needed.
@@ -271,18 +272,18 @@ class CLIStatusBarMixin:
             bg_tasks = getattr(self, "_background_tasks", None)
             if bg_tasks:
                 snapshot["active_background_tasks"] = len(bg_tasks)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             from tools.process_registry import process_registry
             snapshot["active_background_processes"] = process_registry.count_running()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             from tools.async_delegation import active_count as _async_active_count
             snapshot["active_background_subagents"] = _async_active_count()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Standing /goal (Ralph loop): GoalManager is cached on self — no DB hit per repaint.
         # Only an *active* goal earns a segment (paused/done stay out, like the desktop).
@@ -293,8 +294,8 @@ class CLIStatusBarMixin:
                 snapshot["goal_active"] = True
                 snapshot["goal_turns_used"] = int(getattr(goal_state, "turns_used", 0) or 0)
                 snapshot["goal_max_turns"] = int(getattr(goal_state, "max_turns", 0) or 0)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         if not agent:
             return snapshot
@@ -329,8 +330,8 @@ class CLIStatusBarMixin:
                     if delta and delta[0].get("role") == "assistant":
                         delta = delta[1:]
                     snapshot["context_estimated"] = bool(delta)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             context_length = max(0, getattr(compressor, "context_length", 0) or 0)
             if context_length:
                 context_tokens = min(context_tokens, context_length)
@@ -632,8 +633,8 @@ class CLIStatusBarMixin:
             return
         try:
             collector.record_tool(function_name, result=result, is_error=bool(is_error))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _turn_summary_emit(self) -> None:
         """Print the post-turn accounting line, when enabled for this surface."""
@@ -919,8 +920,8 @@ class CLIStatusBarMixin:
                     if getattr(exc, "errno", None) == errno.EIO:
                         self._mark_terminal_io_broken("pet_anim")
                         break
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _pet_start_anim(self) -> None:
         if self._pet_anim_running:

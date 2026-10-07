@@ -525,8 +525,8 @@ class BaseEnvironment(ABC):
             trace.exception_exit()
             try:
                 _kill_and_join()
-            except Exception:
-                pass  # cleanup is best-effort
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # cleanup is best-effort
             raise
 
         # The drain thread exits promptly after bash does (~300ms idle check);
@@ -534,8 +534,8 @@ class BaseEnvironment(ABC):
         drain_thread.join(timeout=2)
         try:
             proc.stdout.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         trace.natural_exit(proc.returncode)
 
         # Join the stdin writer before reading its error list: a child that exits without
@@ -736,8 +736,8 @@ class BaseEnvironment(ABC):
     def __del__(self):
         try:
             self.cleanup()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _prepare_command(self, command: str) -> tuple[str, str | None]:
         """Rewrite sudo for a piped password, or leave it alone when this backend has NOPASSWD.

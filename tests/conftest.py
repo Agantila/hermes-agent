@@ -18,6 +18,7 @@ remain (CPU count, worker count) are addressed by the canonical
 test runner at ``scripts/run_tests.sh``.
 """
 
+import logging
 import asyncio
 import atexit
 import importlib
@@ -307,8 +308,8 @@ def _hermetic_environment(tmp_path, tmp_path_factory, monkeypatch):
     try:
         import hermes_constants as _hc
         monkeypatch.setattr(_hc, "_PINNED_PROCESS_HERMES_HOME", None, raising=False)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Per-TEST host-rendezvous dir (see the session-level block at the top): the
     # host gateway/serve record is shared per OS user by design, so without this
     # one test's published owner makes the next test's lifecycle code attach to it.
@@ -404,8 +405,8 @@ def _hermetic_environment(tmp_path, tmp_path_factory, monkeypatch):
         # reset keeps this fixture the single source of plugin-state
         # hygiene rather than relying on path uniqueness.
         _plugins_mod._reset_plugin_managers_for_tests()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Explicitly clear provider-specific base URL overrides that don't match
     # the generic credential-shaped env-var filter above.
     monkeypatch.delenv("GMI_API_KEY", raising=False)
@@ -523,11 +524,11 @@ def _close_leaked_session_dbs():
             continue
         try:
             db.close()
-        except Exception:
+        except Exception as _exc:
             # Teardown must never fail a passing test; a close that raises
             # (cross-thread ProgrammingError, already-closed) leaves at most
             # the one connection for the next sweep / process exit.
-            pass
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @pytest.fixture(autouse=True)
@@ -832,8 +833,8 @@ def _reset_tui_gateway_server_state():
 
         if get_hermes_home_override() is not None:
             set_hermes_home_override(None)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @pytest.fixture()
@@ -1319,8 +1320,8 @@ def _isolate_computer_use_approval_state():
         from tools.computer_use import tool as _cu_tool
 
         _cu_tool.set_approval_callback(None)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @pytest.fixture(autouse=True)
@@ -1372,8 +1373,8 @@ def _capture_real_hermes_root() -> list[Path]:
     try:
         default_root = (Path.home() / ".hermes").resolve()
         roots.append(default_root)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     # native-Windows default: %LOCALAPPDATA%\hermes (get_hermes_home's
     # platform-native path) — guard it too
     localappdata = os.environ.get("LOCALAPPDATA", "")
@@ -1382,8 +1383,8 @@ def _capture_real_hermes_root() -> list[Path]:
             win_root = (Path(localappdata) / "hermes").resolve()
             if win_root not in roots:
                 roots.append(win_root)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     if _PRE_SANDBOX_HERMES_HOME and not _hermes_home_points_at_production(
         _PRE_SANDBOX_HERMES_HOME
     ):
@@ -1396,8 +1397,8 @@ def _capture_real_hermes_root() -> list[Path]:
                 return roots
             if custom not in roots:
                 roots.append(custom)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return roots
 
 

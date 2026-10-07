@@ -71,8 +71,8 @@ def _discard_active_session_file(app: "FastAPI", channel: Optional[str], path: O
         files = _get_pty_active_session_files(app)
         if files.get(channel) == path:
             files.pop(channel, None)
-    except Exception:  # health: allow BLE001 S110 -- marker cleanup must never mask the PTY teardown path it runs inside
-        pass
+    except Exception as _exc:  # health: allow BLE001 S110 -- marker cleanup must never mask the PTY teardown path it runs inside
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _ws_auth_mode() -> str:
@@ -445,8 +445,8 @@ async def console_ws(ws: WebSocket) -> None:
             active_task.cancel()
             try:
                 await active_task
-            except (asyncio.CancelledError, Exception):
-                pass
+            except (asyncio.CancelledError, Exception) as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 async def _pty_fail(ws: WebSocket, exc: BaseException) -> None:

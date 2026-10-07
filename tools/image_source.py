@@ -8,6 +8,7 @@ exec-read *inside the sandbox*, so ``vision_analyze('/etc/passwd')`` never reads
 """
 from __future__ import annotations
 
+import logging
 import asyncio
 import base64
 import os
@@ -208,8 +209,8 @@ def _ensure_container_env(task_id: Optional[str]) -> None:
     try:
         from tools.terminal_tool import ensure_task_env
         ensure_task_env(task_id)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 async def _resolve_container_fallback(

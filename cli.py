@@ -234,8 +234,8 @@ try:
     _pt_extras.install_keypress_data_normalization()
     _pt_extras.install_ignored_terminal_sequences()
     del _pt_extras
-except Exception:
-    pass
+except Exception as _exc:
+    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 import threading
 import queue
 
@@ -298,8 +298,8 @@ def _reverse_alias_for_display(model_name: str) -> str:
                         if isinstance(val, str) and val.strip():
                             v = val.strip()
                             _put(v.split("/", 1)[1] if "/" in v else v, alias)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         _REVERSE_ALIAS_CACHE = rmap
     return _REVERSE_ALIAS_CACHE.get(model_name, model_name)
 
@@ -378,15 +378,15 @@ try:
                     cls = getattr(module, "AsyncHttpxClientWrapper", None)
                     if cls is not None:
                         cls.__del__ = lambda self: None  # type: ignore[assignment]
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
             spec.loader.exec_module = _patched_exec  # type: ignore[method-assign]
             return spec
 
     _httpx_neuter_sys.meta_path.insert(0, _AsyncHttpxDelNeuter())
-except Exception:
-    pass
+except Exception as _exc:
+    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # Agent/tool systems load lazily: bare startup only needs the prompt.
@@ -552,8 +552,8 @@ def _reset_terminal_input_modes_on_exit() -> None:
             stream.write(_TERMINAL_INPUT_MODE_RESET_SEQ)
             stream.flush()
             return
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     with suppress(Exception), open("/dev/tty", "w", encoding="ascii") as tty:
         tty.write(_TERMINAL_INPUT_MODE_RESET_SEQ)
         tty.flush()
@@ -703,8 +703,8 @@ def _replay_output_history(fit=None, output=None) -> None:
             for line in rendered_lines:  # repainted: they wrap at today's width from now on
                 if isinstance(line, _PaintedLine):
                     line.width = width
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     finally:
         _OUTPUT_HISTORY_REPLAYING = False
 
@@ -980,8 +980,8 @@ class HermesCLI(CLIInitMixin, CLITuiRuntimeMixin, CLIProcessNotificationsMixin, 
             banner = startup_banner(detect_compromised())
             if banner:
                 print(banner, file=sys.stderr, flush=True)
-        except Exception:
-            pass  # never block startup
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # never block startup
 
     def _show_browser_backend_notice(self):
         """Once-per-24h hint when the default Browser Use backend silently fell back to built-in tools."""
@@ -1056,8 +1056,8 @@ class HermesCLI(CLIInitMixin, CLITuiRuntimeMixin, CLIProcessNotificationsMixin, 
                 self._console_print()
                 for line in lines:
                     self._console_print(line)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def show_config(self):
         """Display current configuration with kawaii ASCII art."""
@@ -1371,8 +1371,8 @@ class HermesCLI(CLIInitMixin, CLITuiRuntimeMixin, CLIProcessNotificationsMixin, 
                 stray = self._interrupt_queue.get_nowait()
                 if stray:
                     self._pending_input.put(stray)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _on_reasoning(self, reasoning_text: str):
         """Callback for intermediate reasoning display during tool-call loops."""
@@ -1429,8 +1429,8 @@ class HermesCLI(CLIInitMixin, CLITuiRuntimeMixin, CLIProcessNotificationsMixin, 
                     _hermes_call_output_screen_diff, _orig_osd
                 )
                 _pt_renderer._hermes_osd_patched = True
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         _apply_bracketed_paste_timeout_patch()
 
@@ -1461,8 +1461,8 @@ class HermesCLI(CLIInitMixin, CLITuiRuntimeMixin, CLIProcessNotificationsMixin, 
                     # (the mock path), which would double-print the line.
                     import asyncio as _aio
                     _aio.get_running_loop().set_exception_handler(self._tui_suppress_closed_loop_errors)
-                except Exception:
-                    pass  # no running loop -- nothing to patch
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # no running loop -- nothing to patch
                 # Record that the app enables focus reporting + mouse tracking so _run_cleanup
                 # resets them; extended key modes are popped by the same reset.
                 # When multiline shortcuts are on, also ask supported terminals (e.g. iTerm2) to report

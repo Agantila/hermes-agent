@@ -6,6 +6,7 @@ right after it, ``manage_router`` (mutation/detail) much later.  web_server-owne
 helpers are reached via the late-binding seam so monkeypatching keeps working.
 """
 
+import logging
 import asyncio
 import json
 import re
@@ -552,8 +553,8 @@ async def get_session_stats(profile: Optional[str] = None):
         try:
             out["by_source"] = db.session_count_by_source(
                 include_archived=True, exclude_children=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return out
 
     return await asyncio.to_thread(_with_db, profile, _stats, read_only=True)

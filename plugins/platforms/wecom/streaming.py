@@ -138,8 +138,8 @@ class WeComStreamMixin:
                 "[%s] Reply ack timeout waiting for pending (req_id=%s) — pending_stream_id=%s pending_finish=%s elapsed=%.1fs. Possible causes: ack cmd filtered, ack req_id mismatch, or WeCom did not ack.",
                 *pending_desc, _elapsed(pending_frame.sent_at),
             )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         queue.pending_ack = None  # resolved or timed out either way
 
     def _release_pending(self, queue: ReplyQueue, req_id: str, frame: ReplyFrame) -> None:
@@ -178,8 +178,8 @@ class WeComStreamMixin:
         if handle is not None:
             try:
                 handle.cancel()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _retire_turn(self, turn: StreamTurn, turn_id: Optional[str]) -> None:
         """Single choke point for "turn is dead": cancel the timer, then drop it from the registry."""

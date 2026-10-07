@@ -79,8 +79,8 @@ def handle_outer_loop_error(
         # it mask the shutdown exit. finalize_turn retries.
         try:
             agent._persist_session(messages, conversation_history)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         _turn_exit_reason = "interpreter_shutdown"
         failed = True
         _sid = getattr(agent, "session_id", None)

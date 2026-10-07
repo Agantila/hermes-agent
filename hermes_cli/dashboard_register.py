@@ -8,6 +8,7 @@ idempotently, then print the gate-engagement hint.
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import random
@@ -155,8 +156,8 @@ def _public_url_from_redirect(redirect_uri: Optional[str]) -> str:
         parsed = urlparse(redirect_uri or "")
         if parsed.scheme in ("http", "https") and parsed.netloc:
             return f"{parsed.scheme}://{parsed.netloc}"
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return ""
 
 

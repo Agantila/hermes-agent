@@ -136,8 +136,8 @@ try:
     for t in get_tool_definitions(agent.enabled_toolsets):
         if t["function"]["name"].startswith("browser"):
             schema_desc_len += len(json.dumps(t["function"]))
-except Exception:
-    pass
+except Exception as _exc:
+    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 t0 = time.time()
 error = None

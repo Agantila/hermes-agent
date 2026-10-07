@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Optional
 
 
@@ -22,8 +23,8 @@ def detect_provider() -> Optional[str]:
         if isinstance(provider, str) and provider.strip() and (
                 (isinstance(api_key, str) and api_key.strip()) or callable(api_key)):
             return provider.strip().lower()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 

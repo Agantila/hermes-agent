@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import contextlib
 import threading
 import time
@@ -39,8 +40,8 @@ def _publish_health(source: _HealthSource, path: Path, state: str) -> None:
     try:
         from gateway.status import publish_runtime_status
         publish_runtime_status(session_store={"status": aggregate})
-    except Exception:
-        pass  # Runtime health is diagnostic only; persistence must not depend on it.
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # Runtime health is diagnostic only; persistence must not depend on it.
 
 
 def _registry_owned(handle: Any) -> bool:

@@ -12,6 +12,7 @@ gets stripped from the durable transcript. This test file verifies:
   - The JSON log drops only the nudge, keeping the assistant candidate.
 """
 
+import logging
 import sys
 from unittest.mock import MagicMock
 
@@ -39,8 +40,8 @@ def _restore_modules(saved):
         if parent and parent in saved:
             try:
                 setattr(saved[parent], child, mod)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _fresh_run_agent(hermes_home):

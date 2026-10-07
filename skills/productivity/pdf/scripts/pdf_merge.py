@@ -2,6 +2,7 @@
 """Merge multiple PDFs into one, optionally adding a bookmark per source file."""
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import os
@@ -12,8 +13,8 @@ def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     parser = argparse.ArgumentParser(description="Merge PDFs (pypdf).")
     parser.add_argument("inputs", nargs="+", help="Input PDF paths, in order")
     parser.add_argument("-o", "--output", required=True, help="Output PDF path")

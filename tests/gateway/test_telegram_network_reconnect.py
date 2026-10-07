@@ -6,6 +6,7 @@ network error, the adapter must self-reschedule the next reconnect attempt
 rather than silently leaving polling dead.
 """
 
+import logging
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -72,8 +73,8 @@ async def test_reconnect_self_schedules_on_start_polling_failure():
         t.cancel()
         try:
             await t
-        except (asyncio.CancelledError, Exception):
-            pass
+        except (asyncio.CancelledError, Exception) as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @pytest.mark.asyncio
@@ -589,8 +590,8 @@ async def test_reconnect_schedules_heartbeat_probe_on_success():
         t.cancel()
         try:
             await t
-        except (asyncio.CancelledError, Exception):
-            pass
+        except (asyncio.CancelledError, Exception) as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # ── Persistent heartbeat loop (_polling_heartbeat_loop) ──────────────────────
@@ -641,8 +642,8 @@ async def test_heartbeat_loop_skips_reconnect_if_already_in_progress():
     existing_task.cancel()
     try:
         await existing_task
-    except (asyncio.CancelledError, Exception):
-        pass
+    except (asyncio.CancelledError, Exception) as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # ── Bootstrap degradation: keep polling alive during outages (#47508) ────
@@ -673,8 +674,8 @@ async def test_polling_bootstrap_conflict_schedules_conflict_recovery_task():
         task.cancel()
         try:
             await task
-        except (asyncio.CancelledError, Exception):
-            pass
+        except (asyncio.CancelledError, Exception) as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     assert not adapter.has_fatal_error
 
 

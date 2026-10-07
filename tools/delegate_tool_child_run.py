@@ -332,8 +332,8 @@ class _Heartbeat:
                 desc = f"delegate_task: subagent running {child_tool} (iteration {child_iter}/{child_max})"
             elif child_summary.get("last_activity_desc", ""):
                 desc = f"delegate_task: subagent {child_summary.get('last_activity_desc', '')} (iteration {child_iter}/{child_max})"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         with _quiet(None):
             touch(desc)
         return None

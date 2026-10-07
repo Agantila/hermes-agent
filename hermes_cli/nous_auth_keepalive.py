@@ -213,8 +213,8 @@ def start_nous_auth_keepalive(
         if is_guest_state(get_provider_auth_state("nous")):
             logger.debug("Nous auth keepalive skipped: free tier has no refresh token")
             return None
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     global _keepalive_thread
     with _keepalive_lock:
         if _keepalive_thread is not None and _keepalive_thread.is_alive():

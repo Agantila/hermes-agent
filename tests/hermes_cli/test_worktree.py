@@ -4,6 +4,7 @@ Verifies worktree creation, cleanup, .worktreeinclude handling,
 .gitignore management, and integration with the CLI.  (#652)
 """
 
+import logging
 import os
 import subprocess
 import pytest
@@ -489,8 +490,8 @@ class TestPruneParallelEquivalence:
         # can't collide with phase A's leftover refs) run through a real pool.
         try:
             worktree_ops._worktree_merge_cache_path().unlink()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         board2 = self._board(git_repo, tag="b")
         monkeypatch.setattr(cli.os, "cpu_count", lambda: 8)
         cli._prune_stale_worktrees(str(git_repo))

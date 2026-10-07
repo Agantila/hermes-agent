@@ -7,6 +7,7 @@ never imports ``cli`` at module load time (import cycle).
 
 from __future__ import annotations
 
+import logging
 import json
 import re
 import shutil
@@ -88,8 +89,8 @@ class CLIStreamMixin:
                 self._pending_credit_notices.append((level, text))
             render_notification(queue_notice, platform="cli", diagnostic=is_diagnostic_notice(notice),
                                 user_config=getattr(getattr(self, "agent", None), "_notification_config", None))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _flush_credit_notices(self) -> None:
         """Print queued credit notices as level-colored lines at turn end (after
@@ -103,8 +104,8 @@ class CLIStreamMixin:
             colors = {"error": "\033[31m", "warn": "\033[33m", "success": "\033[32m", "info": _DIM}
             for level, text in pending:
                 _cprint(f"  {colors.get(level, _DIM)}{text}{_RST}")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _on_notice_clear(self, key: str) -> None:
         """No-op for the REPL (lines are printed, no persistent slot to wipe); kept so the
@@ -491,8 +492,8 @@ class CLIStreamMixin:
             try:
                 self._spinner_text = f"… {preview}"
                 self._invalidate()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _flush_stream(self) -> None:
         """Emit any remaining partial line from the stream buffer and close the box."""
@@ -681,8 +682,8 @@ class CLIStreamMixin:
                       else t("cli.stream.reference_header", label=label))
             try:
                 self._flush_reasoning_preview(force=True)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             _cprint(f"  {_DIM}┊ ◇ {header}{_RST}")
             try:
                 self._emit_reasoning_preview(text)
@@ -714,8 +715,8 @@ class CLIStreamMixin:
             if getattr(self, "_focus_view_enabled", False):
                 try:
                     self._note_focus_hidden_line(function_name or "")
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             # "verbose" must commit the same line as "all": non-streaming calls (MoA aggregator,
             # copilot-acp) never emit the "preparing" line, so nothing else builds history.
             if function_name and self.tool_progress_mode in {"new", "all", "verbose"}:
@@ -734,8 +735,8 @@ class CLIStreamMixin:
                     from agent.display import get_cute_tool_message
                     line = get_cute_tool_message(function_name, stored_args, duration, result=kwargs.get("result"))
                     _cprint(f"  {line}")
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 # One-time /verbose hint on the first long tool in the noisiest mode; latched
                 # on self and persisted to config.yaml.
                 try:
@@ -750,8 +751,8 @@ class CLIStreamMixin:
                             _cprint(f"  {_DIM}{tool_progress_hint_cli()}{_RST}")
                             mark_seen(_hermes_home / "config.yaml", TOOL_PROGRESS_FLAG)
                             CLI_CONFIG.setdefault("onboarding", {}).setdefault("seen", {})[TOOL_PROGRESS_FLAG] = True
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             self._invalidate()
             return
         if event_type != "tool.started":
@@ -795,8 +796,8 @@ class CLIStreamMixin:
                 key = "cli.stream.background_running_one" if n == 1 else "cli.stream.background_running_other"
                 try:
                     _cprint(f"\033[2m{t(key, count=n)}\033[0m")
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         snapshot = self._pending_edit_snapshots.pop(tool_call_id, None)
         try:
             from agent.display import render_edit_diff_with_delta

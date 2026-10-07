@@ -18,6 +18,7 @@ All network calls live behind small functions that the hermetic tests monkeypatc
 """
 from __future__ import annotations
 
+import logging
 import email as _email
 import email.utils
 import imaplib
@@ -310,8 +311,8 @@ def fetch_recent(env: dict | None = None, since_days: int = 3, limit: int = 30,
     finally:
         try:
             conn.logout()
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as _exc:  # noqa: BLE001
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def link_from_messages(messages: list[dict], broker: dict) -> dict | None:

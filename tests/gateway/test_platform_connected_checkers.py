@@ -4,6 +4,7 @@ checker so ``GatewayConfig.get_connected_platforms()`` doesn't silently drop
 platforms with bespoke auth requirements.
 """
 
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -45,8 +46,8 @@ def test_all_builtins_have_checker_or_generic_token_path():
         for _entry in platform_registry.all_entries():
             if _entry.is_connected is not None or _entry.validate_config is not None:
                 plugin_checker_values.add(_entry.name)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Every built-in should be in one of the sets
     all_builtins = set(_BUILTIN_PLATFORM_VALUES)

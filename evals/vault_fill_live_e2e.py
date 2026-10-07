@@ -9,6 +9,7 @@ Run: HERMES_E2E_BROWSER=1 <venv>/bin/python evals/vault_fill_live_e2e.py
 """
 from __future__ import annotations
 
+import logging
 import http.server
 import json
 import os
@@ -135,8 +136,8 @@ def main() -> int:
         try:
             from tools.browser_tool_lifecycle import cleanup_all_browsers
             cleanup_all_browsers()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         srv.shutdown()
 
 

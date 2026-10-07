@@ -43,8 +43,8 @@ def _stream_drain_timeout() -> float:
         value = agent_cfg.get("stream_drain_timeout") if isinstance(agent_cfg, dict) else None
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             return max(0.0, float(value))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _DEFAULT_STREAM_DRAIN_TIMEOUT
 
 

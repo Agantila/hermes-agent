@@ -1,5 +1,6 @@
 """Status command for hermes CLI."""
 
+import logging
 import json
 import os
 import sys
@@ -191,8 +192,8 @@ def _render_terminal(ctx):
             if provider is not None:
                 for ok, label, text in provider.doctor_checks():
                     print(f"  {label}: {check_mark(bool(ok))} {text}")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     _kv_flag("Sudo:", os.getenv("SUDO_PASSWORD", ""), "enabled", "disabled")
 
 

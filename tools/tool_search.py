@@ -549,8 +549,8 @@ def out_of_scope_reason(name: str) -> Optional[str]:
         if _registry_toolset(name) in _DIRECT_SURFACE_TOOLSETS:
             return (f"'{name}' needs a desktop-app session with a GUI surface (preview/terminal panes). "
                     "This session has none: use it only from the Hermes desktop app, not via tool_search.")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 

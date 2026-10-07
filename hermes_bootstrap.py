@@ -15,6 +15,7 @@ here may pull in a Hermes package that a project-local directory could shadow.
 
 from __future__ import annotations
 
+import logging
 import errno
 import importlib.abc
 import importlib.util
@@ -48,8 +49,8 @@ def _interleave_addrinfos(addrinfos: list[tuple]) -> list[tuple]:
 def _quiet_unregister(selector, sock) -> None:
     try:
         selector.unregister(sock)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _happy_eyeballs_create_connection(address: tuple[str, int], timeout: float | None,
@@ -317,8 +318,8 @@ def suppress_platform_ver_console() -> None:
                 return system, release, version
 
             platform._syscmd_ver = _quiet_syscmd_ver
-    except Exception:
-        pass  # hardening only — never break an entry point
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # hardening only — never break an entry point
 
 
 def _glibc_frees_environ() -> bool:
@@ -464,8 +465,8 @@ def export_scratch_tmp_env() -> None:
     try:
         from hermes_constants import export_scratch_tmp_env as _export
         _export()
-    except Exception:
-        pass  # a missing/unwritable home just leaves the system temp dir in place
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # a missing/unwritable home just leaves the system temp dir in place
 
 
 # Apply on import — entry points just need ``import hermes_bootstrap``

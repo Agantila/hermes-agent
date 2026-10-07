@@ -21,6 +21,7 @@ Compare two labels with: python evals/codebase_navigability/compare.py base.json
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import ast
 import json
@@ -139,8 +140,8 @@ def _reexports(src: str) -> dict[str, tuple[str, str]]:
             for k, v in zip(n.value.keys, n.value.values):
                 try:
                     out[ast.literal_eval(k)] = tuple(ast.literal_eval(v))
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return out
 
 

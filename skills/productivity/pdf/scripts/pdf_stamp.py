@@ -14,6 +14,7 @@ Examples:
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import io
 import json
@@ -48,8 +49,8 @@ def build_overlay(args, page_width: float, page_height: float) -> bytes:
     try:
         c.setFillAlpha(float(args.opacity))
         c.setStrokeAlpha(float(args.opacity))
-    except Exception:
-        pass  # very old reportlab: no alpha support
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # very old reportlab: no alpha support
     c.translate(float(args.x), float(args.y))
     if args.rotation:
         c.rotate(float(args.rotation))
@@ -77,8 +78,8 @@ def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     parser = argparse.ArgumentParser(description="Stamp text or an image onto PDF pages.")
     parser.add_argument("pdf", help="Input PDF path")
     parser.add_argument("-o", "--output", required=True, help="Output PDF path")

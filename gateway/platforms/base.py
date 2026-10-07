@@ -638,8 +638,8 @@ def _secure_media_cache_dir(cache_dir: Path) -> None:
             from hermes_cli.config import is_managed
 
             managed = bool(is_managed())
-        except Exception:  # pragma: no cover - defensive
-            pass
+        except Exception as _exc:  # pragma: no cover - defensive
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if managed:
             cache_dir.mkdir(parents=True, exist_ok=True)
             return

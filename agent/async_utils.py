@@ -46,5 +46,5 @@ def consume_detached_task_result(task: "asyncio.Future[Any]") -> None:
     are swallowed because the task's owner already gave up on it."""
     try:
         task.exception()
-    except (asyncio.CancelledError, Exception):
-        pass
+    except (asyncio.CancelledError, Exception) as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)

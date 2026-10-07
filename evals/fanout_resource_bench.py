@@ -16,6 +16,7 @@ Prints one JSON line; append several and compare with --compare a.json b.json.
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import http.server
 import json
@@ -210,8 +211,8 @@ def main() -> None:
         ok = None
     try:
         session_db.checkpoint() if hasattr(session_db, "checkpoint") else None
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     out = {"label": a.label, "children": a.children, "worktrees": a.worktrees, "ok": ok, "wall_s": wall,
            "before": before, "peak": peak, "after": after}
     sys.__stderr__.write("BENCH " + json.dumps(out) + "\n"); sys.__stderr__.flush()
@@ -222,8 +223,8 @@ def main() -> None:
         shutdown_service()
         from tools.code_kernel import shutdown_all_kernels
         shutdown_all_kernels()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     shutil.rmtree(base, ignore_errors=True)
     os._exit(0)
 

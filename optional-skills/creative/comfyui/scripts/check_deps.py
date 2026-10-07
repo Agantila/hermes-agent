@@ -24,6 +24,7 @@ Stdlib-only. Python 3.10+.
 
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import sys
@@ -130,8 +131,8 @@ def fetch_object_info(url: str, headers: dict) -> tuple[set[str] | None, dict | 
             data = r.json()
             if isinstance(data, dict):
                 return set(data.keys()), None
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return None, {"http_status": 200, "reason": "non-dict response"}
     if r.status == 403:
         try:
@@ -223,8 +224,8 @@ def fetch_embeddings(base: str, headers: dict, *, is_cloud: bool) -> tuple[set[s
                         # Also store stem for fuzzy matching
                         names.add(Path(n).stem)
                 return names, None
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None, {"http_status": r.status, "reason": "unexpected"}
 
 

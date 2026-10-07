@@ -25,6 +25,7 @@ limits into both inner ``AsyncHTTPTransport`` pools because httpx ignores
 client-level limits when a custom transport is supplied.
 """
 
+import logging
 import asyncio
 import socket
 import ssl
@@ -106,10 +107,10 @@ def _drive_connect(monkeypatch, *, proxy_url, fallback_ips=None):
         asyncio.run(adapter.connect())
     except _StopConnect:
         pass
-    except Exception:
+    except Exception as _exc:
         # connect() wraps work in a try; if it swallows the sentinel and
         # continues to real init, the recorded instances are still valid.
-        pass
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return list(_RecordingHTTPXRequest.instances)
 

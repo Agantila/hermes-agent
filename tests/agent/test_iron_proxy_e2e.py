@@ -12,6 +12,7 @@ and `curl` to be present.
 
 from __future__ import annotations
 
+import logging
 import os
 import socket
 import subprocess
@@ -163,8 +164,8 @@ def test_iron_proxy_swaps_authorization_header_end_to_end(hermes_home, monkeypat
         # ----- cleanup ------------------------------------------------------
         try:
             ip.stop_proxy()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         server.shutdown()
         server.server_close()
 
@@ -268,8 +269,8 @@ def test_iron_proxy_swaps_x_api_key_header_end_to_end(hermes_home, monkeypatch):
     finally:
         try:
             ip.stop_proxy()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         server.shutdown()
         server.server_close()
 
@@ -363,7 +364,7 @@ def test_iron_proxy_management_reload_end_to_end(hermes_home, monkeypatch):
     finally:
         try:
             ip.stop_proxy()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         server.shutdown()
         server.server_close()

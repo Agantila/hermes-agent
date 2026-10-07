@@ -2,6 +2,7 @@
 
 First-party Python only (excludes tests/, node_modules, apps/, website, build, .venv, skills md).
 """
+import logging
 import ast, collections, io, json, os, shutil, subprocess, sys, time, tokenize
 
 TREE, LABEL = sys.argv[1], sys.argv[2]
@@ -34,8 +35,8 @@ def code_lines(src):
         for n in ast.walk(tree):
             if isinstance(n, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and n.body and isinstance(n.body[0], ast.Expr) and isinstance(getattr(n.body[0], "value", None), ast.Constant) and isinstance(n.body[0].value.value, str):
                 for r in range(n.body[0].lineno, n.body[0].end_lineno + 1): doc_rows.add(r)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     for t in toks:
         if t.type == tokenize.COMMENT: comment_rows.add(t.start[0])
         elif t.type not in (tokenize.NL, tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT, tokenize.ENDMARKER, tokenize.ENCODING):

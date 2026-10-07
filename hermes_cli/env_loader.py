@@ -268,8 +268,8 @@ def format_secret_source_suffix(env_var: str) -> str:
         registered = get_source(source)
         if registered is not None and registered.label:
             return f" (from {registered.label})"
-    except Exception:  # noqa: BLE001 — label lookup must never raise
-        pass
+    except Exception as _exc:  # noqa: BLE001 — label lookup must never raise
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return f" (from {source})"
 
 
@@ -448,8 +448,8 @@ def _sanitize_env_file_if_needed(path: Path) -> None:
                 except OSError:
                     pass
                 raise
-    except Exception:
-        pass  # best-effort — don't block gateway startup
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort — don't block gateway startup
 
 
 def load_hermes_dotenv(
@@ -569,8 +569,8 @@ def _reapply_terminal_config_bridge(home_path: Path) -> None:
         from hermes_cli.config import apply_terminal_config_to_env
 
         apply_terminal_config_to_env(env=None)
-    except Exception:  # noqa: BLE001 — early bootstrap / malformed config
-        pass
+    except Exception as _exc:  # noqa: BLE001 — early bootstrap / malformed config
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _apply_managed_env(*, load_pass: int | None = None) -> None:
@@ -780,8 +780,8 @@ def _load_secrets_config(home_path: Path) -> dict:
 
             data = read_raw_config() or {}
             return data.get("secrets") or {}
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Routed profiles re-enter their scope on every poll/turn; only re-parse after the file changed.
     try:
         data = load_yaml_file_readonly(config_path) or {}

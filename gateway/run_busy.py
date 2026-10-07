@@ -701,8 +701,8 @@ class GatewayBusySessionMixin:
             elif not _interrupt_text and _media_urls:
                 _interrupt_text = _build_media_placeholder(event)
             running_agent.interrupt(_interrupt_text)
-        except Exception:
-            pass  # don't let interrupt failure block the ack
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # don't let interrupt failure block the ack
 
     def _busy_steer_ack_enabled(self, event: MessageEvent, session_key: str) -> bool:
         # Some mobile chat setups want silent steering — keep the behavior, drop the bubble.
@@ -760,8 +760,8 @@ class GatewayBusySessionMixin:
                     )
                 if summary.get("current_tool"):
                     status_parts.append(t("gateway.busy.running_tool", tool=summary.get("current_tool")))
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         status_detail = (t("gateway.busy.ack_detail_wrap", detail=t("gateway.busy.ack_detail_joiner").join(status_parts))
                          if status_parts else "")
         if is_steer_mode and self._agent_has_active_subagents(running_agent):
@@ -1299,8 +1299,8 @@ class GatewayBusySessionMixin:
             approvals = self._read_user_config().get("approvals")
             if isinstance(approvals, dict):
                 confirm_required = bool(approvals.get("destructive_slash_confirm", True))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if not confirm_required:
             return await execute()
 

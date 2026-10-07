@@ -98,8 +98,8 @@ def _diff_ansi() -> dict[str, str]:
             h = bg_hex[key]
             if h and len(h) == 7:
                 colors[key] = _tinted_bg(_hex_rgb(h), dominant)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     _diff_colors_cached = colors
     return colors
 
@@ -881,8 +881,8 @@ class KawaiiSpinner:
         if self._print_fn is not None:
             try:
                 self._print_fn(text)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             return
         try:
             self._out.write(text + end)
@@ -1076,8 +1076,8 @@ def _cute_todo_list(a: dict, result) -> str:
     try:
         summary = (safe_json_loads(result) or {}).get("summary", {}) if result else {}
         total, done = summary.get("total", 0), summary.get("completed", 0)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     progress = t("display.cute.todo_progress", done=done, total=total)
     if todos_arg is None:
         detail = progress if total > 0 else t("display.cute.todo_reading")

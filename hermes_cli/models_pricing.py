@@ -9,6 +9,7 @@ intercepting.
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import time
@@ -321,8 +322,8 @@ def _resolve_nous_pricing_credentials() -> tuple[str, str]:
         if creds:
             api_key = creds.get("api_key", "") or ""
             creds_base = (creds.get("base_url", "") or "").strip()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     base_url = (env_base or creds_base or _DEFAULT_NOUS_INFERENCE_BASE).rstrip("/")
     if base_url.endswith("/v1"):
         base_url = base_url[:-3]

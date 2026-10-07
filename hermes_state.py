@@ -588,8 +588,8 @@ class SessionDB(
             self._creation_site = (
                 f"{caller.f_globals.get('__name__', '?')}.{caller.f_code.co_name}:{caller.f_lineno}"
             )
-        except Exception:
-            pass  # Diagnostic metadata must not prevent opening the database.
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Diagnostic metadata must not prevent opening the database.
         finally:
             del caller
         self._lock = threading.Lock()
@@ -1036,8 +1036,8 @@ class SessionDB(
                     except BaseException:
                         try:
                             self._conn.rollback()
-                        except Exception:
-                            pass
+                        except Exception as _exc:
+                            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                         raise
                 # Success — periodic best-effort checkpoint + FTS merge.
                 self._write_count += 1
@@ -1575,8 +1575,8 @@ class SessionDB(
         if self.__dict__.get("_conn") is not None:
             try:
                 self.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # ── Async token accounting (SessionUsageMixin) ──
     # queue_token_counts() is a deque append; a single-writer thread applies deltas in

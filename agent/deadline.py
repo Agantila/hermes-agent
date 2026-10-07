@@ -194,8 +194,8 @@ def _consume_abandoned(task: "asyncio.Future[Any]") -> None:
     try:
         if not task.cancelled():
             task.exception()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _abandon(task: "asyncio.Future[Any]") -> None:

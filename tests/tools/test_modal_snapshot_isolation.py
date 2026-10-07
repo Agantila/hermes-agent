@@ -1,3 +1,4 @@
+import logging
 import json
 import os
 import sys
@@ -103,8 +104,8 @@ def _install_modal_test_modules(
         if path.exists():
             try:
                 return json.loads(path.read_text())
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return {}
 
     def _save_json_store(path, data):

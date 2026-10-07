@@ -100,8 +100,8 @@ def _get_hermes_site_packages(env: dict) -> list[Path]:
             try:
                 import site
                 result.extend(Path(sp) for sp in site.getsitepackages())
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             if not result:
                 pyver = f"python{sys.version_info[0]}.{sys.version_info[1]}"
                 result.append(Path(sys.prefix) / "Lib" / "site-packages" if _IS_WINDOWS

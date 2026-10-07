@@ -39,8 +39,8 @@ def stream_diag_capture_response(agent: Any, diag: Dict[str, Any], http_response
         return
     try:
         diag["http_status"] = getattr(http_response, "status_code", None)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         headers = getattr(http_response, "headers", None) or {}
         captured: Dict[str, str] = {}
@@ -51,8 +51,8 @@ def stream_diag_capture_response(agent: Any, diag: Dict[str, Any], http_response
             except Exception:
                 continue
         diag["headers"] = captured
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def flatten_exception_chain(error: BaseException) -> str:
@@ -101,8 +101,8 @@ def _diag_fields(diag: Optional[Dict[str, Any]]) -> tuple:
             if diag.get("serving_provider"):
                 _serving_provider = str(diag["serving_provider"])
             _finish_reason_seen = bool(diag.get("finish_reason_seen"))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _http_status, _bytes, _chunks, _elapsed, _ttfb, _serving_provider, _finish_reason_seen, _headers_repr
 
 
@@ -159,16 +159,16 @@ def emit_stream_drop(
         started = diag.get("started_at") if isinstance(diag, dict) else None
         if started is not None:
             _suffix = f" after {max(0.0, time.time() - float(started)):.1f}s"
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         agent._buffer_diagnostic_status(
             f"⚠️ {provider} stream {kind} ({type(error).__name__}){_suffix} "
             f"— attempt {attempt}/{max_attempts} dropped, reconnecting"
         )
         agent._touch_activity(f"stream retry {attempt}/{max_attempts} after {type(error).__name__}")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # Above this size a refused/reset connect is as likely a body-size limit on the endpoint or a proxy

@@ -2,6 +2,7 @@
 connected for the grace window and no turn is running (#101626): it is detached from any parent on
 purpose, so the client count IS its liveness signal."""
 
+import logging
 from fastapi import FastAPI, WebSocket
 from starlette.testclient import TestClient
 
@@ -35,8 +36,8 @@ def test_ws_sessions_are_counted_at_the_asgi_boundary_for_any_route():
     try:
         with client.websocket_connect("/api/refused"):
             pass
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     assert tracker.live_count() == 0  # a refused (never accepted) upgrade is not a client
 
 

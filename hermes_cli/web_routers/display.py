@@ -240,5 +240,5 @@ async def _bridge(ws: WebSocket, info: dict) -> None:
             _lease.release(viewer_id, profile_key=profile_home)
         try:
             await ws.close()
-        except Exception:  # already closed by the peer or by an eviction
-            pass
+        except Exception as _exc:  # already closed by the peer or by an eviction
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)

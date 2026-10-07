@@ -77,8 +77,8 @@ class StatusOutputMixin:
         try:
             if not is_warning_status(kind, message) or self._warning_presentation_enabled():
                 self._vprint(f"{self.log_prefix}{message}", force=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._call_callback("status_callback", kind, message, origin=origin)
 
     def _warning_presentation_enabled(self) -> bool:
@@ -250,5 +250,5 @@ class StatusOutputMixin:
                 else:
                     if self._warning_presentation_enabled():
                         self._vprint(f"{self.log_prefix}{msg}", force=True)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)

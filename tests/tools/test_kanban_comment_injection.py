@@ -11,6 +11,7 @@ new comments steer, and own-authored comments are skipped.
 
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 
@@ -45,8 +46,8 @@ def worker_home(tmp_path, monkeypatch):
     try:
         import hermes_constants
         hermes_constants._cached_default_hermes_root = None  # type: ignore[attr-defined]
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     kb._INITIALIZED_PATHS.clear()
     # Reset module-level poll state so tests don't leak into each other.
     kt._comment_watermark.clear()

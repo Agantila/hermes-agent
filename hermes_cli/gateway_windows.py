@@ -153,8 +153,8 @@ def _preserve_hermes_home_path(path: str | Path) -> str:
         candidate_key = os.path.normcase(str(resolved_candidate))
         if os.path.commonpath([home_key, candidate_key]) == home_key:
             return str(home / os.path.relpath(str(resolved_candidate), str(resolved_home)))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return str(candidate)
 
 
@@ -339,8 +339,8 @@ def _stable_gateway_working_dir(project_root: Path) -> str:
         home = get_hermes_home()
         if home and Path(home).is_dir():
             return str(Path(home))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return str(project_root)
 
 
@@ -1273,8 +1273,8 @@ def _task_run_hint(fmt: str) -> str | None:
     try:
         if is_task_registered():
             return fmt.format(get_task_name())
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 
@@ -1573,8 +1573,8 @@ def _probe_state_file(state_path: Path) -> None:
                 updated_dt = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
                 age_seconds = int((datetime.now(timezone.utc) - updated_dt).total_seconds())
                 age_str = f" (updated {age_seconds}s ago)"
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         _probe(5, gateway_state in ("running", "degraded"), f"gateway_state.json state={gateway_state!r}{age_str}")
     except Exception as exc:
         _probe(5, False, f"gateway_state.json present but unreadable: {exc}")
@@ -1704,8 +1704,8 @@ def _drain_gateway_pid(pid: int, drain_timeout: float) -> bool:
 
     try:
         write_planned_stop_marker(pid)
-    except Exception:
-        pass   # best-effort; caller escalates to a hard kill
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort; caller escalates to a hard kill
 
     deadline = time.monotonic() + max(drain_timeout, 1.0)
     while time.monotonic() < deadline:
@@ -1774,8 +1774,8 @@ def _collect_gateway_stop_pids(primary_pid: int | None = None) -> list[int]:
         for pid in _gateway_pids():
             if pid > 0 and pid not in pids:
                 pids.append(pid)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return pids
 
 

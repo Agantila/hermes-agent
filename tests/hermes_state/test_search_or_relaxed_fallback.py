@@ -13,6 +13,7 @@ The retry is strictly additive: it only fires on a zero-result miss, never
 reorders existing hits, and respects explicit boolean operators.
 """
 
+import logging
 import pytest
 
 from hermes_state import SessionDB
@@ -39,8 +40,8 @@ def db(tmp_path):
     yield d
     try:
         d.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @pytest.mark.parametrize("query, expected", [

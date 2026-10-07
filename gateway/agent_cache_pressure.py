@@ -10,6 +10,7 @@ persisted session next turn).  Pure/read-only; config under ``agent.agent_cache`
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
 from dataclasses import dataclass
@@ -185,8 +186,8 @@ def read_anon_rss_mb() -> Optional[int]:
             kib = snapshot.get(key)
             if isinstance(kib, int) and kib > 0:
                 return kib // 1024
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         import psutil  # type: ignore
 

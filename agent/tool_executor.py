@@ -436,8 +436,8 @@ def _unwrap_tool_search_call(
                 f"{json.dumps(probe.get('parameters', {}), ensure_ascii=False)}. "
                 f"{probe.get('hint', '')}"
             ).strip()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return function_name, function_args, scope_block
 
 
@@ -617,8 +617,8 @@ def _run_tool_activity_heartbeat(
             if is_thread_interrupted(worker_tid):
                 return
             agent._touch_activity(label)
-    except Exception:
-        pass  # a heartbeat must never break the agent loop
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # a heartbeat must never break the agent loop
 
 
 def _run_with_activity_heartbeat(agent, function_name: str, fn):

@@ -4,6 +4,7 @@ Split out of ``hermes_cli/main.py``. Names that still live in main (``PROJECT_RO
 are imported lazily inside the functions that use them (avoids an import cycle).
 """
 
+import logging
 from pm import install_hint
 import sys
 
@@ -124,8 +125,8 @@ def cmd_insights(args):
         if db is not None:
             try:
                 db.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _dict_or_empty(value) -> dict:

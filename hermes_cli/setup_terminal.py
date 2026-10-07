@@ -301,8 +301,8 @@ def setup_terminal_backend(config: dict):
             pname = provider.name.strip().lower()
             backends.append((pname, f"{provider.display_name} - {provider.description}"))
             plugin_backend_names.append(pname)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     terminal_choices = [label for _, label in backends] + [f"Keep current ({current_backend})"]
     terminal_idx = _setup.prompt_choice("Select terminal backend:", terminal_choices, len(backends))
     if terminal_idx == len(backends):

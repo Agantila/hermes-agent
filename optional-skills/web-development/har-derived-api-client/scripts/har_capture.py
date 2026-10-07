@@ -12,6 +12,7 @@ Actions run in order after page load. The HAR embeds request/response bodies
 NOTE: a failing action raises before the HAR is flushed -- you get no file.
 Fix the selector (try --headed to watch) and rerun.
 """
+import logging
 import argparse
 import sys
 import time
@@ -59,8 +60,8 @@ def main() -> int:
             run_action(page, spec)
             try:
                 page.wait_for_load_state("networkidle", timeout=15000)
-            except Exception:
-                pass  # some pages never fully idle; the trailing --wait covers it
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # some pages never fully idle; the trailing --wait covers it
         time.sleep(args.wait)
         context.close()  # flushes the HAR
         browser.close()

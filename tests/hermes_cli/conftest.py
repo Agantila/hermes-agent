@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import pytest
 
 
@@ -116,9 +117,9 @@ def _discharge_host_update_obligation():
             from hermes_cli.update_host_obligation import clear_host_obligation
 
             clear_host_obligation()
-        except Exception:
+        except Exception as _exc:
             # Import/env failure here must never error an unrelated test.
-            pass
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     _clear()
     yield
@@ -154,10 +155,10 @@ def _reset_prompt_toolkit_output_cache():
             from prompt_toolkit.application.current import get_app_session
 
             get_app_session()._output = None
-        except Exception:
+        except Exception as _exc:
             # prompt_toolkit not importable / internal shape changed — the
             # tests that rely on this simply keep their prior behavior.
-            pass
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     _clear()
     yield

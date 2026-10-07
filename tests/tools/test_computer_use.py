@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import base64
+import logging, base64
 import json
 import os
 from pathlib import Path
@@ -1516,14 +1516,14 @@ class TestCuaEnvironmentScrubbing:
                 signal_task = asyncio.create_task(_signal_shutdown_when_ready())
                 try:
                     await session._lifecycle_coro()
-                except BaseException:
-                    pass  # mocks may raise; the env capture still landed
+                except BaseException as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # mocks may raise; the env capture still landed
                 finally:
                     signal_task.cancel()
                     try:
                         await signal_task
-                    except (asyncio.CancelledError, BaseException):
-                        pass
+                    except (asyncio.CancelledError, BaseException) as _exc:
+                        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         asyncio.run(drive_lifecycle())
 

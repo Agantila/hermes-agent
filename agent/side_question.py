@@ -130,8 +130,8 @@ def _answer_via_fork(parent_agent: Any, question: str, history: Optional[List[Di
                      fork.shutdown_memory_provider, fork.close):
             try:
                 step()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _answer_via_oneshot(question: str, history: Optional[List[Dict[str, Any]]], **run_kwargs: Any) -> str:

@@ -46,8 +46,8 @@ def _config_settings() -> tuple[bool, float, int, float]:
         config = load_config_readonly() or {}
         context = config.get("context") if isinstance(config, dict) else None
         settings = context.get("memory_trim") if isinstance(context, dict) else None
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if not isinstance(settings, dict):
         settings = {}
     enabled = settings["enabled"] if isinstance(settings.get("enabled"), bool) else True

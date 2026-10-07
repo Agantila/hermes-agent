@@ -7,7 +7,7 @@ late-bound via ``_kb`` (import-cycle breaking) so monkeypatching
 
 from __future__ import annotations
 
-import contextlib
+import logging, contextlib
 import os
 import re
 import signal
@@ -303,8 +303,8 @@ def reap_worker_zombies() -> "list[int]":
                 break
             _record_worker_exit(pid, status)
             reaped.append(pid)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return reaped
 
 
@@ -2600,8 +2600,8 @@ def _resolve_hermes_argv() -> list[str]:
     try:
         if importlib.util.find_spec("hermes_cli") is not None:
             return _module_hermes_argv()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     hermes_bin = _safe_which_no_cwd("hermes") if _kb._IS_WINDOWS else shutil.which("hermes")
     if hermes_bin:

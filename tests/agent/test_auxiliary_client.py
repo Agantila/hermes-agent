@@ -5021,8 +5021,8 @@ class TestNoProgressTimeoutTaskConfigGating:
                 try:
                     call_llm(task=task, provider="openai-codex", model="gpt-5.6-sol",
                              messages=[{"role": "user", "content": "summarize"}])
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             return captured["window"]
 
         (home / "config.yaml").write_text(yaml.safe_dump(

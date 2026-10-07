@@ -487,8 +487,8 @@ class WhatsAppAdapter(WhatsAppBehaviorMixin, BasePlatformAdapter):
             print(f"[{self.name}] Running bridge is stale ({stale_reason}), restarting")
         except asyncio.TimeoutError:
             self._bridge_probe_timed_out = True  # something holds the port but gave no identity; connect() leaves it
-        except Exception:
-            pass  # Bridge not running, start a new one
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Bridge not running, start a new one
         return False
 
     def _bridge_env(self) -> dict:

@@ -1,6 +1,7 @@
 """Configurable budget constants for tool result persistence.
 Per-tool resolution: pinned > config overrides > registry > default."""
 
+import logging
 from dataclasses import dataclass, field
 from typing import Dict
 
@@ -37,8 +38,8 @@ def _configured_mcp_result_size() -> int:
         raw = block.get("mcp_result_size_chars") if isinstance(block, dict) else None
         if raw is not None and int(raw) > 0:
             return int(raw)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return DEFAULT_MCP_RESULT_SIZE_CHARS
 
 

@@ -112,8 +112,8 @@ def _supported_media_types() -> frozenset:
         from hermes_cli.local_runtime.capabilities import ACCEPTED_IMAGE_MIMES, is_managed_provider
         if is_managed_provider(str(_v("provider") or ""), str(_v("base_url") or "")):
             return ACCEPTED_IMAGE_MIMES
-    except Exception:  # best-effort narrowing only
-        pass
+    except Exception as _exc:  # best-effort narrowing only
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _ANTHROPIC_SUPPORTED_MEDIA_TYPES
 
 
@@ -127,8 +127,8 @@ def _rasterize_svg_to_png(svg_path: Path, out_path: Path) -> bool:
         import cairosvg  # type: ignore
         cairosvg.svg2png(url=str(svg_path), write_to=str(out_path))
         return _nonempty_file(out_path)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from svglib.svglib import svg2rlg  # type: ignore
         from reportlab.graphics import renderPM  # type: ignore
@@ -136,8 +136,8 @@ def _rasterize_svg_to_png(svg_path: Path, out_path: Path) -> bool:
         if drawing is not None:
             renderPM.drawToFile(drawing, str(out_path), fmt="PNG")
             return _nonempty_file(out_path)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     import shutil
     import subprocess
     for cmd in (

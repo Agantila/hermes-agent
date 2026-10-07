@@ -6,7 +6,7 @@ the helpers/handlers via ``from cli import ...`` — cli.py imports this module 
 
 from __future__ import annotations
 
-import argparse
+import logging, argparse
 import atexit
 import io
 import json
@@ -696,8 +696,8 @@ class CLICommandsMixin(CLICommandsSessionToolsMixin):
                 from cli import _rich_text_from_ansi
                 console.print(_rich_text_from_ansi(text))
                 return
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         print(text)
 
     # ---- /snapshot ------------------------------------------------------------------------
@@ -964,8 +964,8 @@ class CLICommandsMixin(CLICommandsSessionToolsMixin):
             # Older SessionDB without only_states (mixed installs): legacy unconditional fail.
             with suppress(Exception):
                 self._session_db.fail_handoff(self.session_id, "timed out waiting for gateway")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return self._handoff_keep(f"  {_t('handoff.timed_out')}", f"  {_t('handoff.session_intact')}")
 
     # ---- /resume, /sessions, /branch ------------------------------------------------------

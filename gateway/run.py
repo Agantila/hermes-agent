@@ -354,8 +354,8 @@ def _gateway_compression_progress_notices_enabled() -> bool:
         if isinstance(compression_cfg, dict):
             return str(compression_cfg.get("progress_notices", False)).strip().lower() in {
                 "true", "1", "yes", "on"}
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 # Surfaces consuming gateway text programmatically must keep RAW status/error text; unknown/empty -> chat.
@@ -2043,8 +2043,8 @@ def _bridge_auxiliary_config_to_env(_auxiliary_cfg: dict) -> None:
         from hermes_cli.plugins import get_plugin_auxiliary_tasks
         for _entry in get_plugin_auxiliary_tasks():
             _aux_bridged_keys.add(_entry["key"])
-    except Exception:
-        pass  # plugin discovery failure must not break startup; built-in bridging stays intact
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # plugin discovery failure must not break startup; built-in bridging stays intact
     for _task_key in _aux_bridged_keys:
         _task_cfg = _auxiliary_cfg.get(_task_key, {})
         if not isinstance(_task_cfg, dict):
@@ -2569,16 +2569,16 @@ async def _probe_audio_duration(path: str) -> Optional[str]:
                     rate = wf.getframerate() or 1
                     return frames / float(rate)
             return _format_duration(await asyncio.to_thread(_wav_duration))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if ext in (".ogg", ".opus", ".oga"):
         try:
             def _ogg_duration() -> float:
                 from mutagen.oggopus import OggOpus
                 return float(OggOpus(path).info.length)
             return _format_duration(await asyncio.to_thread(_ogg_duration))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         proc = await asyncio.create_subprocess_exec(
             "ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -2587,8 +2587,8 @@ async def _probe_audio_duration(path: str) -> Optional[str]:
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=5.0)
         if proc.returncode == 0:
             return _format_duration(float(stdout.decode().strip()))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return None
 
@@ -2741,8 +2741,8 @@ def _watch_gateway_turn_inactivity(
                     # Preserve the most recent usable activity clock as the fallback if
                     # a later provider-side diagnostic read raises or returns None.
                     activity_origin = now - idle_seconds
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if idle_seconds < timeout:
             continue
         _abandon_timed_out_gateway_turn(
@@ -2845,8 +2845,8 @@ def _check_unavailable_skill(command_name: str) -> str | None:
                 rel = skill_md.parent.relative_to(optional_dir)
                 install_path = f"official/{'/'.join(rel.parts)}"
                 return t("gateway.skills.not_installed", name=command_name, install_name=install_path)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 
@@ -2945,8 +2945,8 @@ def _resolve_hermes_bin() -> Optional[list[str]]:
         import importlib.util
         if importlib.util.find_spec("hermes_cli") is not None:
             return [sys.executable, "-m", "hermes_cli.main"]
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     import shutil
     hermes_bin = shutil.which("hermes")
     if hermes_bin:
@@ -3287,8 +3287,8 @@ def _write_runtime_status_quiet(**fields: Any) -> None:
     try:
         from gateway.status import publish_runtime_status
         publish_runtime_status(**fields)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _command_origin_for_source(source: Any) -> Optional[dict]:
@@ -3302,8 +3302,8 @@ def _command_origin_for_source(source: Any) -> Optional[dict]:
                 "chat_id": str(chat_id),
                 "chat_name": getattr(source, "chat_name", None),
                 "thread_id": getattr(source, "thread_id", None)}
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 
@@ -3875,8 +3875,8 @@ class GatewayRunner(
                 session_key = self.session_store._generate_session_key(source)
                 if isinstance(session_key, str) and session_key:
                     return session_key
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         config = getattr(self, "config", None)
         # Mirror SessionStore._resolve_profile_for_key so this fallback yields the primary path's
         # namespace: None (legacy agent:main) unless multiplexing is on, then the pinned identity's
@@ -4062,8 +4062,8 @@ class GatewayRunner(
             max_size = getattr(self, "_session_sources_max", 512)
             while len(cached_sources) > max_size:
                 cached_sources.popitem(last=False)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     @property
     def async_session_store(self) -> AsyncSessionStore:
@@ -5067,8 +5067,8 @@ def _clear_takeover_marker_quiet() -> None:
     try:
         from gateway.status import clear_takeover_marker
         clear_takeover_marker()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 async def _wait_for_pid_exit(pid: int, attempts: int, delay: float) -> bool:
@@ -5167,8 +5167,8 @@ async def _start_gateway_replace_existing_instance(existing_pid: int, replace: b
         _released = release_all_scoped_locks(owner_pid=existing_pid, owner_start_time=existing_start_time)
         if _released:
             logger.info("Released %d stale scoped lock(s) from old gateway.", _released)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return True
 
 

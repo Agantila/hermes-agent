@@ -18,6 +18,7 @@ Usage:
 <cdp_url> is the ws:// or http:// CDP endpoint. For Hermes: run
 `/browser connect` to see the active endpoint, or read BROWSER_CDP_URL.
 """
+import logging
 import argparse
 import base64
 import json
@@ -55,8 +56,8 @@ def _har_entry(req, resp):
             except UnicodeDecodeError:
                 body_text = base64.b64encode(raw).decode("ascii")
                 encoding = "base64"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     post = req.post_data
     return {
         "_resourceType": req.resource_type,
@@ -114,8 +115,8 @@ def main() -> int:
             run_action(page, spec)
             try:
                 page.wait_for_load_state("networkidle", timeout=15000)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         time.sleep(args.wait)
 
         page.remove_listener("request", on_request)

@@ -76,8 +76,8 @@ def _notify_provider_jobs_changed_safe() -> None:
     try:
         from cron.scheduler import _notify_provider_jobs_changed
         _notify_provider_jobs_changed()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # ---------------------------------------------------------------------------
@@ -546,8 +546,8 @@ def _try_dispatch_background_run(
         from gateway.session_context import async_delivery_supported
         if not async_delivery_supported():
             return None
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Routing capture BEFORE the claim: no routable session = no durable consumer for a detached
     # completion, so don't claim-and-dispatch (direct callers like `hermes cron run` exit right after).
@@ -565,8 +565,8 @@ def _try_dispatch_background_run(
         from cron.scheduler import is_job_running
         if is_job_running(job_id):
             return {"claimed": False, "success": False, "error": _ALREADY_RUNNING_ERROR}
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     claimed_job, err = _claim_for_manual_run(job_id, "background run")
     if err is not None:
@@ -578,8 +578,8 @@ def _try_dispatch_background_run(
     try:
         from gateway.session_context import get_session_env
         origin_ui_session_id = get_session_env("HERMES_UI_SESSION_ID", "") or ""
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     try:
         from tools.async_delegation import _current_origin_session_id, dispatch_async_delegation

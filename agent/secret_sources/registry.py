@@ -422,8 +422,8 @@ def apply_all(secrets_cfg: dict, home_path: Path,
         try:
             for var in source.protected_env_vars(cfg):
                 protected.setdefault(var, source.name)
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as _exc:  # noqa: BLE001
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # An alias never shadows a var some source supplies by its real name.
     supplied_directly = {v for _, _, r in fetches if r.ok for v in r.secrets if isinstance(v, str)}

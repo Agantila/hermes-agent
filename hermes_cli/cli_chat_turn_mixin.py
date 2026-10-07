@@ -132,8 +132,8 @@ class CLIChatTurnMixin:
             try:
                 from tools.voice_mode import stop_thinking_sound
                 stop_thinking_sound()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         # Safety-net sentinel for exception paths that skipped _chat_settle_turn's; a
         # duplicate is harmless (stream_tts_to_speaker exits on the first None).
         # stop_event only on abnormal exit: after a normal drain it would race the
@@ -141,8 +141,8 @@ class CLIChatTurnMixin:
         if turn.text_queue is not None:
             try:
                 turn.text_queue.put_nowait(None)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if turn.stop_event is not None and not turn.tts_normal_exit:
             logger.info("TTS CUT: exception finally block setting stop_event")
             turn.stop_event.set()
@@ -392,14 +392,14 @@ class CLIChatTurnMixin:
                 set_unlock_prompt_callback(None)
                 set_save_login_prompt_callback(None)
                 set_code_prompt_callback(None)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             # Unbind the per-turn key; ``_session_yolo`` state itself persists across turns.
             if _approval_session_token is not None and reset_current_session_key is not None:
                 try:
                     reset_current_session_key(_approval_session_token)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _chat_monitor_agent_thread(self, turn, agent_thread):
         """Poll the interrupt queue while the agent thread runs; returns the interrupting message (or None)."""
@@ -432,8 +432,8 @@ class CLIChatTurnMixin:
             if self._clarify_state or self._clarify_freetext:
                 try:
                     self._pending_input.put(interrupt_msg)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 interrupt_msg = None
                 continue
             _cprint(f"\n{t('cli.chat.new_message_interrupting')}")
@@ -451,8 +451,8 @@ class CLIChatTurnMixin:
                              f"parent._interrupt={self.agent._interrupt_requested}\n")
                     for _ci, _ch in enumerate(self.agent._active_children):
                         _f.write(f"  child[{_ci}]._interrupt={_ch._interrupt_requested}\n")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             break
 
         if interrupt_msg is not None:
@@ -487,8 +487,8 @@ class CLIChatTurnMixin:
         try:
             from agent.auxiliary_client import cleanup_stale_async_clients
             cleanup_stale_async_clients()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._flush_stream()
         if turn.use_streaming_tts and turn.text_queue is not None:
             turn.text_queue.put(None)  # end-of-text sentinel
@@ -551,8 +551,8 @@ class CLIChatTurnMixin:
         # Focus view: "⋯ N tool lines hidden" after the answer; resets the counter.
         try:
             self._emit_focus_recovery_line()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         self._ring_bell(context=t("cli.modal.bell_turn_complete"))  # propagates over SSH
         if turn.result and not turn.result.get("completed") and not turn.result.get("interrupted"):
@@ -641,8 +641,8 @@ class CLIChatTurnMixin:
                 if (not agent_thread.is_alive() and self.agent
                         and getattr(self.agent, "_interrupt_requested", False)):
                     self.agent.clear_interrupt()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return pending_message, _show_interrupt_marker
 
     def _chat_print_reasoning_box(self, turn):
@@ -730,5 +730,5 @@ class CLIChatTurnMixin:
                         title_align="left", border_style="#CD7F32", box=rich_box.HORIZONTALS,
                         padding=(1, 4), width=self._scrollback_box_width(),
                     ))
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)

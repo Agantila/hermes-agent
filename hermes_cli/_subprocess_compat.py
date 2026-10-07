@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import shutil
@@ -259,8 +260,8 @@ def suppress_platform_ver_console() -> None:
                 return system, release, version
 
             platform._syscmd_ver = _quiet_syscmd_ver
-    except Exception:
-        pass  # Purely cosmetic hardening — never let it break startup.
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # Purely cosmetic hardening — never let it break startup.
 
 
 def windows_detach_popen_kwargs() -> dict:
@@ -617,8 +618,8 @@ def posix_is_zombie(pid: int) -> bool:
                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5,
             )
             return r.returncode == 0 and r.stdout.strip().startswith("Z")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     except (IndexError, PermissionError, OSError):
         pass
     return False
@@ -776,8 +777,8 @@ def _legacy_kill_process_tree(proc: "subprocess.Popen") -> None:
             pgid = os.getpgid(proc.pid)
             if pgid == proc.pid:
                 os.killpg(pgid, _signal.SIGKILL)  # windows-footgun: ok — inside `if not IS_WINDOWS` gate
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         proc.kill()
     except OSError:
@@ -790,8 +791,8 @@ def _legacy_kill_process_tree(proc: "subprocess.Popen") -> None:
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                            stdin=subprocess.DEVNULL, timeout=2, check=False,
                            creationflags=windows_hide_flags())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def bounded_probe_run(
@@ -864,8 +865,8 @@ def _close_job(job) -> None:
         return
     try:
         job.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def bounded_git_probe(argv: Sequence[str], *, timeout: float, env: "Mapping[str, str] | None" = None) -> str:

@@ -8,6 +8,7 @@ across turns can find the bot. The bot is a detached subprocess reached via file
 
 from __future__ import annotations
 
+import logging
 import contextlib
 import json
 import os
@@ -122,8 +123,8 @@ def status() -> Dict[str, Any]:
     if status_path.is_file():
         try:
             bot_status = json.loads(status_path.read_text(encoding="utf-8-sig"))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return {
         "ok": True,

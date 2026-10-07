@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable, List, Optional
 
 from agent.model_metadata import MINIMUM_CONTEXT_LENGTH
@@ -42,8 +43,8 @@ def _estimate_tokens(agent: Any, messages: Optional[List[dict]]) -> Optional[int
             return int(
                 estimate_request_tokens_rough(
                     messages, system_prompt=system_prompt, tools=tools or None))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     last = int(getattr(cc, "last_prompt_tokens", 0) or 0)
     if last > 0:
@@ -149,8 +150,8 @@ def enrich_model_switch_warnings_for_gateway(
                     configured_model=model_cfg.get("default") or model_cfg.get("model"),
                     configured_provider=model_cfg.get("provider"),
                     configured_base_url=model_cfg.get("base_url"))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     messages = None
     db = getattr(runner, "_session_db", None)
@@ -159,8 +160,8 @@ def enrich_model_switch_warnings_for_gateway(
         try:
             entry = store.get_or_create_session(source)
             messages = db.get_messages_as_conversation(entry.session_id)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     merge_preflight_compression_warning(
         result, agent=agent, messages=messages, custom_providers=custom_providers, **configured)

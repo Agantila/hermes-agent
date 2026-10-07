@@ -7,6 +7,7 @@ new symbol from an older cached ``auxiliary_client`` module.
 
 from __future__ import annotations
 
+import logging
 import base64
 import json
 from typing import Any, Dict
@@ -76,8 +77,8 @@ def codex_account_headers(access_token: str) -> Dict[str, str]:
         residency = auth.get("chatgpt_data_residency") or auth.get("chatgpt_compute_residency")
         if isinstance(residency, str) and residency.strip():
             headers["x-openai-internal-codex-residency"] = residency.strip()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return headers
 
 

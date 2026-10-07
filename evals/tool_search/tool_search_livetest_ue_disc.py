@@ -19,6 +19,7 @@ Scoring per family:
 """
 from __future__ import annotations
 
+import logging
 import json, os, shutil, sys, time, traceback
 from pathlib import Path
 from typing import Any, Dict, List
@@ -160,8 +161,8 @@ def run_one(scenario, mode, rep, out_dir: Path):
             cu = _orig_norm(raw, **kw)
             try:
                 usage_log.append({"prompt_tokens": cu.prompt_tokens})
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             return cu
         _cl.normalize_usage = _norm_spy
         result = agent.run_conversation(
@@ -182,8 +183,8 @@ def run_one(scenario, mode, rep, out_dir: Path):
             try:
                 import agent.turn_usage as _cl2
                 _cl2.normalize_usage = _orig_norm
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     elapsed = time.time() - started
     bridge_call_log = base._extract_bridge_calls(messages_out)

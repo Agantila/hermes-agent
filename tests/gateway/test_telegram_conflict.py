@@ -1,3 +1,4 @@
+import logging
 import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
@@ -32,8 +33,8 @@ async def _cancel_heartbeat(adapter):
         task.cancel()
         try:
             await task
-        except (asyncio.CancelledError, Exception):
-            pass
+        except (asyncio.CancelledError, Exception) as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     adapter._polling_heartbeat_task = None
 
 
@@ -270,8 +271,8 @@ async def test_polling_conflict_becomes_fatal_after_retries(monkeypatch):
         leaked.cancel()
         try:
             await leaked
-        except (asyncio.CancelledError, Exception):
-            pass
+        except (asyncio.CancelledError, Exception) as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # After 5 failed retries (count 1-5 each enter the retry branch but
     # start_polling raises), the 6th conflict pushes count to 6 which
@@ -500,8 +501,8 @@ async def test_polling_conflict_reschedule_uses_running_loop(monkeypatch):
     adapter._polling_error_task.cancel()
     try:
         await adapter._polling_error_task
-    except (asyncio.CancelledError, Exception):
-        pass
+    except (asyncio.CancelledError, Exception) as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     await _cancel_heartbeat(adapter)
 
 

@@ -5,6 +5,7 @@ Replaces the old ``os.environ``-based ``HERMES_SESSION_*`` state with task-local
 other's routing ids.  ``get_session_env`` is a drop-in for ``os.getenv``.
 """
 
+import logging
 import os
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -74,8 +75,8 @@ def _runtime_cwd(func: str, *args: Any) -> None:
     try:
         from agent import runtime_cwd
         getattr(runtime_cwd, func)(*args)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def set_current_session_id(session_id: str) -> None:
@@ -87,8 +88,8 @@ def set_current_session_id(session_id: str) -> None:
         from agent.delegation_context import is_delegated_child_context
         if is_delegated_child_context():
             return
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     os.environ["HERMES_SESSION_ID"] = session_id
 
 

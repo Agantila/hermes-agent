@@ -86,8 +86,8 @@ def _fire_pre_api_request_hook(
                 middleware_trace=list(_llm_middleware_trace),
                 request=agent._api_request_payload_for_hook(api_kwargs),
             )
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def build_api_request(

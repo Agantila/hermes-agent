@@ -831,8 +831,8 @@ def _active_image_capabilities() -> Dict[str, Any]:
                 if caps.get("creative_controls"):
                     info["creative_controls"] = list(caps["creative_controls"])
                 return info
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as _exc:  # noqa: BLE001
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     # In-tree FAL path (provider unset or == "fal"); _resolve_fal_model() never raises.
     model_id, meta = _resolve_fal_model()
     can_edit = bool(meta.get("edit_endpoint"))

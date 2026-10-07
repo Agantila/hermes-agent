@@ -185,8 +185,8 @@ async def test_bare_ping_request_produces_proper_response_and_no_stderr_noise(
             agent_task.cancel()
             try:
                 await agent_task
-            except BaseException:  # noqa: BLE001
-                pass
+            except BaseException as _exc:  # noqa: BLE001
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     finally:
         root.handlers = prior_handlers
         root.setLevel(prior_level)

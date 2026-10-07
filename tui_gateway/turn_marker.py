@@ -47,8 +47,8 @@ def _writer_identity() -> dict:
         start = _own_start_time()
         if start is not None:
             identity["writer_start_time"] = float(start)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return identity
 
 

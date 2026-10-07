@@ -7,6 +7,7 @@ imported LAZILY inside each method — the mixin never imports ``cli`` at module
 
 from __future__ import annotations
 
+import logging
 import json
 import queue
 import sys
@@ -48,8 +49,8 @@ def _approval_gate_on(key: str) -> bool:
         approvals = cfg.get("approvals") if isinstance(cfg, dict) else None
         if isinstance(approvals, dict):
             return bool(approvals.get(key, True))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return True
 
 
@@ -206,8 +207,8 @@ class CLIModalMixin:
         except Exception:
             try:
                 buffer.text = ""
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _prefill_input_buffer(self, text: str) -> None:
         """Place ``text`` in the active prompt_toolkit buffer, editable."""
@@ -267,8 +268,8 @@ class CLIModalMixin:
                 # a direct input() so keystrokes don't leak into the agent buffer.
                 try:
                     _ask()
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             finally:
                 self._status_bar_visible = was_visible
                 self._app.invalidate()
@@ -425,8 +426,8 @@ class CLIModalMixin:
         try:
             for cmd, info in sorted(_ensure_skill_commands().items()):
                 entries.append((cmd, t("cli.palette.category_skill"), info.get("description", "")))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return entries
 
     def _open_command_palette(self) -> None:
@@ -698,16 +699,16 @@ class CLIModalMixin:
                 buf = app.current_buffer
                 buf.text = self._connection_prefill_text()
                 buf.cursor_position = len(buf.text)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         loop = getattr(app, "loop", None)
         if loop is not None and threading.current_thread() is not threading.main_thread():
             try:
                 loop.call_soon_threadsafe(_apply)
                 return
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         _apply()
 
     def _connection_callback(self, payload):
@@ -962,8 +963,8 @@ class CLIModalMixin:
                 return
         try:
             state["response_queue"].put(dict(state["answers"]))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._clarify_state = None
         self._clarify_freetext = False
         self._clarify_multi_base = None
@@ -1241,8 +1242,8 @@ class CLIModalMixin:
             buf = self._app.current_buffer
             buf.text = snapshot.get("text", "")
             buf.cursor_position = min(snapshot.get("cursor_position", 0), len(buf.text))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _clear_active_overlays_for_interrupt(self) -> None:
         """Drain and clear every input-blocking overlay left by an interrupted agent: the worker
@@ -1252,8 +1253,8 @@ class CLIModalMixin:
         def _put(state, value) -> None:
             try:
                 state["response_queue"].put(value)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         if self._approval_state:
             _put(self._approval_state, "deny")
@@ -1291,5 +1292,5 @@ class CLIModalMixin:
         if getattr(self, "_app", None):
             try:
                 self._app.current_buffer.reset()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)

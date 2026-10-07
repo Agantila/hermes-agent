@@ -295,8 +295,8 @@ async def _await_bounded(aw: Awaitable[Any]) -> None:
     """Best-effort teardown await: bounded, swallows timeout/cancel/errors."""
     try:
         await asyncio.wait_for(aw, timeout=_TEARDOWN_AWAIT_TIMEOUT_S)
-    except (asyncio.TimeoutError, asyncio.CancelledError, Exception):  # noqa: BLE001
-        pass
+    except (asyncio.TimeoutError, asyncio.CancelledError, Exception) as _exc:  # noqa: BLE001
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # Ceiling on the brokered-suspend redial hold. Must outlast the client's own

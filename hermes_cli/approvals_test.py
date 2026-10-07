@@ -12,6 +12,7 @@ rules (fire before yolo/off), 5. yolo / ``approvals.mode: off`` bypass, 6. perma
 
 from __future__ import annotations
 
+import logging
 import json
 
 EXIT_ALLOW = 0
@@ -38,8 +39,8 @@ def evaluate_command(command: str, env_type: str = "local") -> dict:
     # would see (load is read-only).
     try:
         approval.load_permanent_allowlist()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     variants = list(approval_detection._command_detection_variants(command))
 

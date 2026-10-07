@@ -195,8 +195,8 @@ def _trim_tool_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                         if isinstance(args.get(k), str) and len(args[k]) > 500:
                             args[k] = f"[{len(args[k])} chars — truncated for response.completed]"
                     item["arguments"] = json.dumps(args)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         elif item.get("type") == "function_call_output":
             output = item.get("output", [])
             if isinstance(output, list) and output:

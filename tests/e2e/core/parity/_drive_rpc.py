@@ -14,6 +14,7 @@ Both speak the same contract (``tui_gateway/contracts``): ``session.create`` →
 
 from __future__ import annotations
 
+import logging
 import json
 import queue
 import subprocess
@@ -244,8 +245,8 @@ def ws_rpc(port: int, token: str) -> tuple[RpcClient, Callable[[], None]]:
         try:
             for msg in ws:
                 frames.put(msg if isinstance(msg, str) else msg.decode())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         frames.put(None)
 
     threading.Thread(target=pump, daemon=True, name="parity-ws").start()

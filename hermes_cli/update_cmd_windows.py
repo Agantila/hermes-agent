@@ -480,8 +480,8 @@ def _live_argv_low(psutil, pid, cmdline: str) -> str | None:
         argv = " ".join(psutil.Process(int(pid)).cmdline()) or cmdline
     except psutil.NoSuchProcess:
         return None
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return argv.lower()
 
 

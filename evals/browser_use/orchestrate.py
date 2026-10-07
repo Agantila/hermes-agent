@@ -12,6 +12,7 @@ Usage:
                                [--arms base,pr,prns] [--reps 3]
 """
 
+import logging
 import argparse
 import itertools
 import json
@@ -46,8 +47,8 @@ if os.path.exists(args.results):
         try:
             r = json.loads(line)
             done.add((r["arm"], r["task"], r["model"], r["rep"]))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def reset_browser_state():
@@ -69,8 +70,8 @@ def reset_browser_state():
             timeout=120,
             env=ENV,
         )
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 cells = [

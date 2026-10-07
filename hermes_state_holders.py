@@ -652,9 +652,9 @@ def live_writer_holds_db(
         if probe is not None:
             try:
                 probe.execute("PRAGMA locking_mode=NORMAL")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             try:
                 probe.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)

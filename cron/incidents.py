@@ -12,6 +12,7 @@ the operator (``alerted_at`` = when the latest one did; the scheduler withholds 
 
 from __future__ import annotations
 
+import logging
 import hashlib
 import re
 import sqlite3
@@ -123,8 +124,8 @@ def _redact_error(error: str) -> str:
         from agent.redact import redact_sensitive_text
 
         text = redact_sensitive_text(text, force=True)  # persisted to disk: always scrub
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return text[:MAX_ERROR_CHARS]
 
 

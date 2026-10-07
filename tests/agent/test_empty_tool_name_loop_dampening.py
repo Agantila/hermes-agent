@@ -21,6 +21,7 @@ of the message string.
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import shutil
@@ -166,8 +167,8 @@ def agent_env():
             if _parent and _parent in saved_modules:
                 try:
                     setattr(saved_modules[_parent], _child, _mod)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if prev_home is None:
             os.environ.pop("HERMES_HOME", None)
         else:

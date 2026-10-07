@@ -27,6 +27,7 @@ Probes:
    client, and the replacement must complete a real HTTP round-trip.
 """
 
+import logging
 import asyncio
 import json
 import sys
@@ -87,8 +88,8 @@ class _LiveBotApiServer:
         for w in self._writers:
             try:
                 w.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if self.server is not None:
             self.server.close()
             await self.server.wait_closed()
@@ -102,8 +103,8 @@ class _LiveBotApiServer:
         for w in self._writers:
             try:
                 w.write_eof()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         # Give the client's TCP stack a moment to process the FIN.
         await asyncio.sleep(0.2)
 
@@ -136,8 +137,8 @@ class _LiveBotApiServer:
         finally:
             try:
                 writer.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _make_adapter():

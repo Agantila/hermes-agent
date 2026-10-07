@@ -1,5 +1,6 @@
 """Secret-capture prompt for the interactive CLI (``_secret_capture_callback`` backend)."""
 
+import logging
 import queue
 import time as _time
 
@@ -23,8 +24,8 @@ def _clear_secret_input(cli) -> None:
             cli._clear_secret_input_buffer()
         elif getattr(cli, "_app", None):
             cli._app.current_buffer.reset()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _skipped(var_name: str, reason: str, message: str) -> dict:

@@ -82,8 +82,8 @@ def load_tracked() -> List[Dict[str, Any]]:
                 data = json.loads(bak.read_text(encoding="utf-8-sig"))
                 _log("WARN: tracked.json corrupted — restored from .bak")
                 return data
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         _log("WARN: tracked.json corrupted, no backup — starting fresh")
         return []
 

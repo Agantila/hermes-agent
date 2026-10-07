@@ -16,6 +16,7 @@ Stdlib + pytest + unittest.mock only. No live cua-driver, no network.
 
 from __future__ import annotations
 
+import logging
 import json
 from typing import Any, Dict, Optional
 from unittest.mock import patch
@@ -350,8 +351,8 @@ def test_call_tool_restarts_a_dead_session(monkeypatch):
         def run(self, coro, timeout=None):
             try:
                 coro.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             return {"isError": False, "data": {}, "structuredContent": {}}
     sess._bridge = _Bridge()
     sess._is_transient_daemon_error = lambda e: False  # type: ignore[method-assign]

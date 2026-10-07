@@ -334,15 +334,15 @@ def _kill_windows_process_tree(pid: int, sig: int) -> None:
     for child in descendants:
         try:
             child.terminate()
-        except Exception:  # noqa: BLE001 - raced away or refused; sweep continues
-            pass
+        except Exception as _exc:  # noqa: BLE001 - raced away or refused; sweep continues
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if sig == getattr(_signal, "SIGKILL", _signal.SIGTERM):  # force pass: don't wait for graceful exit
         _, alive = psutil.wait_procs(descendants, timeout=0)
         for child in alive:
             try:
                 child.kill()
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as _exc:  # noqa: BLE001
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _group_alive(pgid: Optional[int], my_pgid: Optional[int]) -> bool:

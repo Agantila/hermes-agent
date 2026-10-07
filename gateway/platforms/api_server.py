@@ -3108,8 +3108,8 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
                 if title_filter == BOT_CHAT_TITLE and await asyncio.to_thread(_resurrect):
                     sessions = await _list()
-            except Exception:
-                pass  # resolution degrades to today's no-row behavior
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # resolution degrades to today's no-row behavior
         # Back-filled pins arrive PAST the limit, so counting them would report
         # another page that doesn't exist. Only the recency window decides.
         windowed = sum(1 for s in sessions if not s.get("pinned"))

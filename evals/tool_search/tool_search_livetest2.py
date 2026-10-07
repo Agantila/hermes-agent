@@ -11,6 +11,7 @@ Runs each scenario N_REPS times in each mode (on/off). Output:
 """
 from __future__ import annotations
 
+import logging
 import json, os, shutil, sys, tempfile, time, traceback
 from pathlib import Path
 from typing import Any, Dict, List
@@ -121,8 +122,8 @@ def run_one(scenario: Dict[str, Any], mode: str, rep: int, out_dir: Path) -> Dic
                     "cached_tokens": getattr(cu, "cache_read_tokens", 0) or 0,
                     "src": "norm",
                 })
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             return cu
         _cl.normalize_usage = _norm_spy
         result = agent.run_conversation(
@@ -146,8 +147,8 @@ def run_one(scenario: Dict[str, Any], mode: str, rep: int, out_dir: Path) -> Dic
                     _cl2.normalize_usage = _orig_norm  # type: ignore[name-defined]
                 except NameError:
                     pass
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if pm is not None:
             try:
                 pm._hooks.get("post_api_request", []).remove(usage_hook)

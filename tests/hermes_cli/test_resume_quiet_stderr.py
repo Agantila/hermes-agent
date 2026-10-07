@@ -10,6 +10,7 @@ The fix in cli._init_agent routes three messages to stderr when
 Interactive mode (tool_progress_mode == "full") still uses ChatConsole.
 """
 
+import logging
 from datetime import datetime
 from unittest.mock import MagicMock
 
@@ -84,11 +85,11 @@ class TestResumeQuietStderr:
         # constructing a real AIAgent (the next code path).
         try:
             cli._init_agent()
-        except Exception:
+        except Exception as _exc:
             # The post-resume agent-init machinery may fail in this
             # stubbed context (no API key, no real config) — we only
             # care about the printed banner that comes earlier.
-            pass
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         captured = capsys.readouterr()
         # Banner on stderr — stdout stays clean for automation.
@@ -107,8 +108,8 @@ class TestResumeQuietStderr:
         cli = _make_cli(quiet=True, db=db)
         try:
             cli._init_agent()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         captured = capsys.readouterr()
         assert "has no messages" not in captured.out

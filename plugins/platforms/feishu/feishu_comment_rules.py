@@ -252,8 +252,8 @@ def _pairing_cmd(args: list) -> int:
 def _main() -> int:
     try:
         __import__("hermes_cli.env_loader", fromlist=["load_hermes_dotenv"]).load_hermes_dotenv()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     usage = f"""Usage: python -m gateway.platforms.feishu_comment_rules <command> [args]
 
 Commands:

@@ -79,8 +79,8 @@ def _first_available_plugin_provider(registry: str, skip: str = None):
                     return provider.display_name
             except Exception:
                 continue
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 
@@ -174,8 +174,8 @@ def _spotify_row(config, feats):
         state = get_provider_auth_state("spotify") or {}
         if state.get("access_token") or state.get("refresh_token"):
             return ("Spotify (PKCE OAuth)", True, None)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 

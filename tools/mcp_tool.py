@@ -174,8 +174,8 @@ def _ensure_mcp_sdk() -> bool:
         if _MCP_AVAILABLE:
             try:
                 _JSONRPC_METHOD_NOT_FOUND = importlib.import_module("mcp.types").METHOD_NOT_FOUND
-            except Exception:  # pragma: no cover — SDK without the constant
-                pass
+            except Exception as _exc:  # pragma: no cover — SDK without the constant
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         _MCP_MESSAGE_HANDLER_SUPPORTED = _client_session_accepts("message_handler")
         if _MCP_AVAILABLE and not _MCP_MESSAGE_HANDLER_SUPPORTED:
             logger.debug("MCP SDK does not support message_handler -- dynamic tool discovery disabled")
@@ -643,8 +643,8 @@ def _update_death_supervisor(verb: str, pgids) -> None:
             # Reap it, or the exited supervisor stays a zombie until the next Popen in this process.
             try:
                 proc.wait(timeout=5)
-            except Exception:  # noqa: BLE001 - timeout or already gone; either way we drop it
-                pass
+            except Exception as _exc:  # noqa: BLE001 - timeout or already gone; either way we drop it
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             _death_supervisor = None
 
 

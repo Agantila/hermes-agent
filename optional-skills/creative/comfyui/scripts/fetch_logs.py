@@ -14,6 +14,7 @@ Usage:
 
 from __future__ import annotations
 
+import logging
 import argparse
 import sys
 from pathlib import Path
@@ -33,8 +34,8 @@ def fetch_history_entry(host: str, headers: dict, prompt_id: str, *, is_cloud: b
         if r.status == 200:
             try:
                 return {"ok": True, "entry": r.json(), "source": "/api/jobs"}
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         # Fallback to history_v2
         url = resolve_url(host, f"/history/{prompt_id}", is_cloud=True)
         r = http_get(url, headers=headers, retries=2, timeout=30)

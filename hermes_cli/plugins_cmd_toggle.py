@@ -37,16 +37,16 @@ def _discover_context_engines() -> list[tuple[str, str]]:
         from plugins.context_engine import discover_context_engines
         for name, desc, _avail in discover_context_engines():
             engines.setdefault(name, desc)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from hermes_cli.plugins import discover_plugins, get_plugin_context_engine
         discover_plugins()
         plugin_engine = get_plugin_context_engine()
         if plugin_engine and getattr(plugin_engine, "name", None):
             engines.setdefault(plugin_engine.name, "installed plugin")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return list(engines.items())
 
 

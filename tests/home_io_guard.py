@@ -1,6 +1,7 @@
 """Guard Python filesystem calls in tests, not arbitrary native/subprocess I/O."""
 from __future__ import annotations
 
+import logging
 import builtins
 from functools import lru_cache, wraps
 import io
@@ -67,8 +68,8 @@ class HomeIOGuard:
                 # turn that into its own crash — the unexpanded path is checked instead.
                 try:
                     candidate = os.fspath(Path(candidate).expanduser())
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             if dir_fd is not None and not os.path.isabs(candidate):
                 parent = self.directories.get(dir_fd)
                 if parent is None:

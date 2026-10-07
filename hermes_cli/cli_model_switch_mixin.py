@@ -10,6 +10,7 @@ module-level functions taking ``cli`` and siblings are called as ``HermesCLI.<na
 
 from __future__ import annotations
 
+import logging
 import copy
 import sys
 import threading
@@ -348,8 +349,8 @@ class CLIModelSwitchMixin:
                 if resolved_mode != self.api_mode:
                     self.api_mode = resolved_mode
                     changed = True
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             return changed
 
         try:
@@ -359,8 +360,8 @@ class CLIModelSwitchMixin:
                 _adopt(
                     normalize_model_for_provider(current_model, resolved_provider),
                     lambda new: t("cli.model.normalized_model", old=current_model, new=new, provider=resolved_provider))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         if resolved_provider == "copilot":
             from hermes_cli.models import copilot_model_api_mode, normalize_copilot_model_id
@@ -401,8 +402,8 @@ class CLIModelSwitchMixin:
                     access_token=self.api_key if self.api_key else None, base_url=self.base_url or None)
                 if available:
                     fallback_model = available[0]
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             if current_model != fallback_model:
                 self.model = fallback_model
                 changed = True
@@ -740,8 +741,8 @@ class CLIModelSwitchMixin:
                 try:
                     from hermes_cli.models import cached_provider_model_ids
                     model_list = cached_provider_model_ids(provider_data["slug"]) or model_list
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             from hermes_cli.models_validate import offered_model_ids
             model_list = offered_model_ids(
                 model_list, provider_data.get("slug"), provider_data.get("api_url"))
@@ -843,8 +844,8 @@ class CLIModelSwitchMixin:
                 from hermes_cli.models import clear_provider_models_cache
                 clear_provider_models_cache()
                 _cprint(f"  {t('cli.model.cleared_picker_cache')}")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Live session state is overlaid truthy-only so empty self.* attrs don't clobber config.
         from hermes_cli.inventory import load_picker_context

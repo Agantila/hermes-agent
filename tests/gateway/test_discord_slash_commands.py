@@ -1,5 +1,6 @@
 """Tests for native Discord slash command fast-paths (thread creation & auto-thread)."""
 
+import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 import sys
@@ -69,8 +70,8 @@ def _ensure_discord_mock():
     if _app is not None and not hasattr(_app, "autocomplete"):
         try:
             _app.autocomplete = lambda **kwargs: (lambda fn: fn)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 _ensure_discord_mock()

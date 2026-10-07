@@ -1234,8 +1234,8 @@ def _maybe_auto_subscribe(conn: Any, task_id: str) -> bool:
     try:
         if not cfg_get(load_config(), "kanban", "auto_subscribe_on_create", default=True):
             return False
-    except Exception:
-        pass  # unreadable config keeps the user-friendly default (True)
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # unreadable config keeps the user-friendly default (True)
     target = None
     try:
         target = _resolve_notify_target()

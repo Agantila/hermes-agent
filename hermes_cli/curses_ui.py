@@ -1,5 +1,6 @@
 """Curses checklist / radiolist / single-select menus with keyboard navigation and fuzzy ``/``
 search, plus a numbered text fallback for terminals without curses."""
+import logging
 import sys
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
@@ -311,8 +312,8 @@ def flush_stdin() -> None:
         if sys.stdin.isatty():
             import termios
             termios.tcflush(sys.stdin, termios.TCIFLUSH)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # Normalized menu actions returned by ``read_menu_key``.

@@ -103,8 +103,8 @@ class _BackgroundLoop:
         finally:
             try:
                 loop.close()
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as _exc:  # noqa: BLE001
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def run(self, coro, *, timeout: Optional[float] = None) -> Any:
         """Submit a coroutine to the loop and block for its result (or raise)."""
@@ -449,8 +449,8 @@ class LSPService:
             try:
                 # Fire-and-forget shutdown — we're already on a slow path.
                 self._loop.run(client.shutdown(), timeout=1.0)
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as _exc:  # noqa: BLE001
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if not already_broken:
             eventlog.log_spawn_failed(key[0], key[1], exc)
 

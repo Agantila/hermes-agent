@@ -7,6 +7,7 @@ subprocesses and child Python ``print()`` calls agree on encoding.
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
 
@@ -29,8 +30,8 @@ def _flip_console_code_page_to_utf8() -> None:
         kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         kernel32.SetConsoleCP(65001)
         kernel32.SetConsoleOutputCP(65001)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _reconfigure_stream(stream, *, encoding: str = "utf-8", errors: str = "replace") -> None:
@@ -40,8 +41,8 @@ def _reconfigure_stream(stream, *, encoding: str = "utf-8", errors: str = "repla
         reconfigure = getattr(stream, "reconfigure", None)
         if reconfigure is not None:
             reconfigure(encoding=encoding, errors=errors)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def configure_windows_stdio() -> bool:

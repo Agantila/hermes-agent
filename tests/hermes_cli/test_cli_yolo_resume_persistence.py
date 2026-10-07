@@ -17,6 +17,7 @@ The fix persists a ``yolo_mode`` flag inside the session row's
   and re-enables the in-memory bypass.
 """
 
+import logging
 import json
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -47,8 +48,8 @@ def db(tmp_path):
     yield d
     try:
         d.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class TestSessionDbYoloFlag:

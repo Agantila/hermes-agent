@@ -48,6 +48,7 @@ if installed for nicer behavior.
 
 from __future__ import annotations
 
+import logging
 import argparse
 import copy
 import json
@@ -332,8 +333,8 @@ class ComfyRunner:
         finally:
             try:
                 ws.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         if error_payload is not None:
             return {"status": "error", "data": error_payload}
@@ -349,8 +350,8 @@ class ComfyRunner:
             if r.status == 200:
                 try:
                     return (r.json() or {}).get("outputs", {}) or {}
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             # Fallback
             r = http_get(self._url(f"/history/{prompt_id}"), headers=self.headers, retries=2)
             if r.status == 200:
@@ -416,8 +417,8 @@ class ComfyRunner:
             try:
                 if out_path.exists():
                     out_path.unlink()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             raise WorkflowRunError(
                 "download_failed",
                 f"Download of {filename} failed: HTTP {r.status}",

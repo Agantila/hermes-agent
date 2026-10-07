@@ -60,8 +60,8 @@ def _require_sdk(names: Iterable[str] = _SPAN_SDK, *, auto_install: bool = True)
         try:
             from pm import ensure_import as _lazy_ensure
             _lazy_ensure("otlp")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         return {name: getattr(importlib.import_module(_SDK_SYMBOLS[name]), name) for name in names}
     except Exception as e:  # ImportError or partial install

@@ -269,8 +269,8 @@ class DiscordMediaMixin:
                 if aiohttp_session is not None:
                     try:
                         await aiohttp_session.close()
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return SendResult(success=delivered, error=None if delivered else "all images failed to send")
 
 

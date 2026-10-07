@@ -7,6 +7,7 @@ subsequent terminal/file-tool call until the gateway restarts.
 
 Regression coverage for https://github.com/NousResearch/hermes-agent/issues/17558.
 """
+import logging
 import pytest
 
 import os
@@ -70,8 +71,8 @@ def _close_fds(fds):
     for f in fds:
         try:
             f.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class TestRunBashCwdRecovery:

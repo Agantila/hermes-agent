@@ -8,6 +8,7 @@ Windows would need a separate ConPTY/``pywinpty`` implementation).
 
 from __future__ import annotations
 
+import logging
 import asyncio
 import errno
 import fcntl  # windows-footgun: ok — POSIX-only module by design (see docstring)
@@ -323,8 +324,8 @@ class PtyBridge:
                     os.killpg(pgid, sig)  # windows-footgun: ok — POSIX-only module (imports fcntl/termios/ptyprocess at top)
                 else:
                     self._proc.kill(sig)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             deadline = time.monotonic() + 0.5
             while self._proc.isalive() and time.monotonic() < deadline:
                 self._discard_output(0.02)
@@ -362,8 +363,8 @@ class PtyBridge:
                             child.send_signal(sig)
                         else:
                             child.kill()
-                    except Exception:
-                        pass  # already gone; psutil raises NoSuchProcess/Zombie
+                    except Exception as _exc:
+                        logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # already gone; psutil raises NoSuchProcess/Zombie
                 if sig == signal.SIGHUP:  # windows-footgun: ok — POSIX-only module (imports fcntl/termios/ptyprocess at top)
                     deadline = time.monotonic() + grace
                     while any(_psutil_alive(c) for c in non_leader_descendants) and time.monotonic() < deadline:
@@ -371,8 +372,8 @@ class PtyBridge:
 
         try:
             self._proc.close(force=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def __enter__(self) -> "PtyBridge":
         return self

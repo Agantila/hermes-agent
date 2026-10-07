@@ -235,8 +235,8 @@ async def get_elevenlabs_voices(profile: Optional[str] = None):
                 api_key = (get_secret("ELEVENLABS_API_KEY") or "").strip()
             except UnscopedSecretError:
                 api_key = (os.environ.get("ELEVENLABS_API_KEY") or "").strip()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     if not api_key:
         return {"available": False, "voices": []}
 
@@ -739,8 +739,8 @@ async def speak_stream_ws(ws: "WebSocket") -> None:
                     break
                 if frame.get("done"):
                     text_q.put(None)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         stop.set()
         text_q.put(None)  # unblock the producer
 

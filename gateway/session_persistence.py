@@ -187,8 +187,8 @@ class SessionPersistenceMixin:
             for entry in list(self._entries.values()):
                 if entry.session_id == session_id:
                     return entry.session_key
-        except Exception:
-            pass  # bare stores / foreign entry objects in suites
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # bare stores / foreign entry objects in suites
         return (getattr(self, "_session_owner_hints", None) or {}).get(session_id)
 
     def _db_for_session_id(self, session_id: Optional[str]):

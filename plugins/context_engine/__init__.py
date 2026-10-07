@@ -110,8 +110,8 @@ class _EngineCollector(_loader.NoopPluginContext):
             if resolve_command(clean) is not None:
                 logger.warning(conflict, self._engine_name, clean, "conflicts with a built-in command.")
                 return
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             from hermes_cli.plugins import get_plugin_manager
             manager = get_plugin_manager()

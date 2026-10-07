@@ -146,8 +146,8 @@ def _ask_human(command: str, description: str, timeout_seconds: int, allow_perma
                            "to avoid stdin deadlock. command=%r description=%r", command, description)
             return Unanswered("no approval callback is registered on this thread while prompt_toolkit owns "
                               "the terminal, so the prompt could not be shown")
-    except Exception:
-        pass  # prompt_toolkit absent or detection failed: legacy input() path is safe
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # prompt_toolkit absent or detection failed: legacy input() path is safe
 
     os.environ["HERMES_SPINNER_PAUSE"] = "1"
     try:

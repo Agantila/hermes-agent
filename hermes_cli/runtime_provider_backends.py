@@ -6,6 +6,7 @@ collaborators are resolved on the origin module at call time via :func:`_rp` so 
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from typing import Any, Dict, Optional
@@ -258,8 +259,8 @@ def _is_external_process_provider(provider: str) -> bool:
         pconfig = _rp().PROVIDER_REGISTRY.get(name)
         if pconfig is not None:
             return pconfig.auth_type == "external_process"
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from providers import get_provider_profile
 

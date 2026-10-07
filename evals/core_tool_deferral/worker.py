@@ -4,6 +4,7 @@
 Usage: worker.py <arm:base|pr> <model_slug> <task_id> <rep> <out_json>
 Env: OPENROUTER_API_KEY must be set. Exit 3 = infra/config error (do not score).
 """
+import logging
 import json
 import os
 import shutil
@@ -320,8 +321,8 @@ for m in reversed(messages):
 todo_dump = []
 try:
     todo_dump = list(getattr(agent._todo_store, "_items", []))
-except Exception:
-    pass
+except Exception as _exc:
+    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 ctx = {
     "workspace": workspace, "hermes_home": hermes_home,
@@ -368,6 +369,6 @@ print(json.dumps({k: record[k] for k in ("arm", "model", "task", "rep", "score",
                                           "bridge_calls", "error")}))
 try:
     agent.close()
-except Exception:
-    pass
+except Exception as _exc:
+    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 shutil.rmtree(tmp_root, ignore_errors=True)

@@ -697,8 +697,8 @@ class GatewayConfig:
             if entry:
                 check = entry.is_connected if entry.is_connected is not None else entry.validate_config
                 return True if check is None else check(config)
-        except Exception:
-            pass  # Registry not yet initialised during early import
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Registry not yet initialised during early import
         return False
 
     def get_home_channel(self, platform: Platform) -> Optional[HomeChannel]:

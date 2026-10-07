@@ -2,6 +2,7 @@
 names are Hermes-managed credentials. The env *builders* applying it (``_make_run_env``,
 ``_sanitize_subprocess_env``, ``hermes_subprocess_env``) live in ``tools.environments.local``."""
 
+import logging
 import functools
 import os
 from typing import Optional
@@ -316,8 +317,8 @@ def _static_gate_env_prefixes() -> frozenset:
         bundled, aliases = Platform._scan_bundled_plugin_platforms()
         names.update(bundled)
         names.update(aliases)
-    except Exception:  # noqa: BLE001 — a broken gateway import must not disable the gate strip
-        pass
+    except Exception as _exc:  # noqa: BLE001 — a broken gateway import must not disable the gate strip
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return frozenset(str(n).upper().replace("-", "_") for n in names if n)
 
 
@@ -329,8 +330,8 @@ def _platform_gate_env_prefixes() -> frozenset:
     try:
         from gateway.platform_registry import platform_registry
         names.update(str(n).upper().replace("-", "_") for n in platform_registry.registered_names() if n)
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as _exc:  # noqa: BLE001
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return frozenset(names)
 
 

@@ -3,6 +3,7 @@ check routes through the real runtime contracts instead of a parallel scanner.""
 
 from __future__ import annotations
 
+import logging
 import inspect
 import os
 import shutil
@@ -100,8 +101,8 @@ def _doctor_runtime(plugin_path: Path):
         # the original exception.
         try:
             manager.unload()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         entries_after = {entry.name: entry for entry in registry._snapshot_entries()}
         changed_names = {
             name
@@ -250,8 +251,8 @@ def resolve_plugin_path(target: str | os.PathLike[str] | None = None) -> Path:
             from hermes_cli.plugins import get_bundled_plugins_dir
             bundled = get_bundled_plugins_dir()
             candidates += [bundled / raw, bundled / "platforms" / raw, bundled / "model-providers" / raw]
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         candidates.append(Path.cwd() / ".hermes" / "plugins" / raw)
     for candidate in candidates:
         if _holds_plugin(candidate):

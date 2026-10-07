@@ -25,6 +25,7 @@ Run:  python -m pytest tests/tui_gateway/test_stale_provider_resume_live.py -o a
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import tempfile
@@ -77,8 +78,8 @@ def live_home(monkeypatch):
             if hasattr(mod, attr):
                 try:
                     setattr(mod, attr, None)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     import hermes_state
     import tui_gateway.server as server
@@ -97,13 +98,13 @@ def live_home(monkeypatch):
     try:
         if server._db is not None:
             server._db.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     server._db = None
     try:
         reset_hermes_home_override(home_token)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _seed_session_row(

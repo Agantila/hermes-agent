@@ -199,6 +199,6 @@ def configured_provider_name(section: str, logger: logging.Logger) -> Optional[s
             from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER
             if configured.lower() == NOUS_MANAGED_PROVIDER:
                 configured = "fal"
-        except Exception:  # pragma: no cover — helpers are in-repo
-            pass
+        except Exception as _exc:  # pragma: no cover — helpers are in-repo
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return configured

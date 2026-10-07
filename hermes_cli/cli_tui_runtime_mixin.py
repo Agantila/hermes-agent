@@ -225,8 +225,8 @@ class CLITuiRuntimeMixin:
             if _loop is not None:
                 _loop.call_soon_threadsafe(_app.exit)
                 return  # clean unwind — no traceback, no ENTER pause
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         raise KeyboardInterrupt()  # fallback for non-prompt_toolkit contexts
 
     def _tui_print_startup(self):
@@ -272,8 +272,8 @@ class CLITuiRuntimeMixin:
             _welcome_skin = get_active_skin()
             _welcome_text = _welcome_skin.get_branding("welcome", _welcome_text)
             _welcome_color = _welcome_skin.get_color("banner_text", _welcome_color)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._console_print(f"[{_welcome_color}]{_welcome_text}[/]")
 
         self._tui_startup_prewarm_and_warnings(_welcome_skin)
@@ -334,10 +334,10 @@ class CLITuiRuntimeMixin:
                 try:
                     from hermes_cli.config import get_config_path as _get_cfg_path_resid
                     mark_seen(_get_cfg_path_resid(), OPENCLAW_RESIDUE_FLAG)
-                except Exception:
-                    pass  # banner fires again next session
-        except Exception:
-            pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # banner fires again next session
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _tui_startup_background_maintenance(self):
         """Best-effort startup passes: curator skill maintenance, personal + org skill sync.
@@ -407,8 +407,8 @@ class CLITuiRuntimeMixin:
             # bound by prompt_toolkit. Never call agent.interrupt() here (fake user message).
             if sys.platform == "win32":
                 _signal.signal(_signal.SIGINT, lambda signum, frame: None)
-        except Exception:
-            pass  # restricted environments
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # restricted environments
 
     def _tui_stdin_usable(self) -> bool:
         """Validate fd 0 before prompt_toolkit starts; on macOS fall back to a select() loop when kqueue can't watch it (uv-managed Python)."""

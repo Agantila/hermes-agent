@@ -13,6 +13,7 @@ thread) — no mocked spawn.
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
 import time
@@ -32,8 +33,8 @@ def registry(tmp_path, monkeypatch):
     for sid in list(reg._running):
         try:
             reg.kill_process(sid)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _wait_exit(reg, sid, timeout=60):

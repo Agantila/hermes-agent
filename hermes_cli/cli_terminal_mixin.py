@@ -3,6 +3,7 @@ CLI. Mixin on ``HermesCLI``; cli.py symbols are imported lazily inside methods (
 
 from __future__ import annotations
 
+import logging
 import base64
 import errno
 import os
@@ -51,8 +52,8 @@ def _run_on_app_loop(app, fn) -> None:
         try:
             loop.call_soon_threadsafe(fn)
             return
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     fn()
 
 
@@ -81,8 +82,8 @@ class CLITerminalMixin:
         self._terminal_io_broken = True
         try:
             self._pet_stop_anim()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         logger.warning(
             "Terminal I/O broken%s — freezing UI paints to avoid redraw storm (#81521)",
             f" ({reason})" if reason else "")
@@ -209,8 +210,8 @@ class CLITerminalMixin:
         try:
             from hermes_cli.curses_ui import flush_stdin
             flush_stdin()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._force_full_redraw()
 
     def _clear_prompt_toolkit_screen(self, app, *, rebuild_scrollback: bool = False, keep_above: bool = False):
@@ -270,8 +271,8 @@ class CLITerminalMixin:
         except OSError as exc:
             if _is_eio(exc):
                 self._mark_terminal_io_broken("clear_screen")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return _NO_REPLAY
 
     @staticmethod
@@ -433,8 +434,8 @@ class CLITerminalMixin:
         if old_timer is not None:
             try:
                 old_timer.cancel()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         timer = threading.Timer(delay, lambda: fn(timer))
         timer.daemon = True
         setattr(self, attr, timer)
@@ -451,8 +452,8 @@ class CLITerminalMixin:
                 self._status_bar_suppressed_after_resize = False
                 try:
                     app.invalidate()
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             self._restart_debounce_timer(
                 "_status_bar_unsuppress_timer", delay, lambda _t: _run_on_app_loop(app, _clear))
         except Exception:
@@ -622,8 +623,8 @@ class CLITerminalMixin:
         try:
             if _cli_multiline_shortcuts_enabled(self.config or CLI_CONFIG):
                 _enable_extended_enter_keys(output)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         logger.warning("Recovered terminal input modes after leak: %s", reason)
         if not self._input_mode_recovery_notice_shown:
             self._input_mode_recovery_notice_shown = True
@@ -661,8 +662,8 @@ class CLITerminalMixin:
                 "run_in_terminal cooked→raw restore was lost.")
             try:
                 self._invalidate()  # so the prompt is visibly alive again
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             if not self._termios_drift_notice_shown:
                 self._termios_drift_notice_shown = True
                 _cprint(f"  {_DIM}{t('cli.terminal.recovered_cooked_mode')}{_RST}")

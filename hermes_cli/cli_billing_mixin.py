@@ -8,6 +8,7 @@ English identifiers; only labels/descriptions are translated."""
 
 from __future__ import annotations
 
+import logging
 from agent.i18n import t
 
 _RULE = "─" * 41
@@ -218,8 +219,8 @@ class CLIBillingMixin:
             from hermes_cli.auth import _can_open_graphical_browser, _is_remote_session
             if _is_remote_session() or not _can_open_graphical_browser():
                 return False
-        except Exception:
-            pass  # guard unavailable → plain best-effort open
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # guard unavailable → plain best-effort open
         try:
             import webbrowser
             return bool(webbrowser.open(url))
@@ -517,8 +518,8 @@ class CLIBillingMixin:
                 _c = _bs.card if _bs.logged_in else None
                 if _c is not None and _c.resolved_via in ("subPin", "customerDefault"):
                     _card_line = t("cli.subscription.named_card_on_subscription_charged", card=_c.masked)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             self._dim(_card_line)
             pay_label = (t("cli.subscription.choice_pay_and_upgrade", amount=_amt) if _amt
                          else t("cli.subscription.choice_upgrade_now_prorated"))
@@ -625,8 +626,8 @@ class CLIBillingMixin:
         try:
             from hermes_cli import nous_billing as _nb
             _nb.invalidate_cached_token()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         # Re-fetch fresh state, then replay the held action ONCE (allow_stepup=False).
         from agent.subscription_view import build_subscription_state
         try:

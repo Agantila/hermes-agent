@@ -38,8 +38,8 @@ def db(tmp_path):
     yield session_db
     try:
         session_db.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class TestTryWalCheckpointPassive:

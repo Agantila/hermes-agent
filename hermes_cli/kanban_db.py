@@ -1372,8 +1372,8 @@ def create_task(
     if project_id is None and workspace_kind != "scratch":
         try:
             project_id = (_board_meta_for(board).get("project_id") or "").strip() or None
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     if workspace_kind is None:
         workspace_kind = "scratch"
     if workspace_kind not in VALID_WORKSPACE_KINDS:

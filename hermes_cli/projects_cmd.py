@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import argparse
 import functools
 import sys
@@ -220,8 +221,8 @@ def _cmd_bind_board(args, conn, proj) -> str:
             slug = kb._normalize_board_slug(args.board)
             if slug and (slug == kb.DEFAULT_BOARD or kb.board_exists(slug)):
                 kb.write_board_metadata(slug, default_workdir=proj.primary_path)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return f"Bound {proj.slug} -> board {args.board}"
 
 

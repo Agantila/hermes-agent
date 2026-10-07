@@ -11,6 +11,7 @@ interpreter before it publishes either command.
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import shlex
@@ -839,8 +840,8 @@ def _broadcast_environment_change() -> None:
 
     try:
         ctypes.windll.user32.SendMessageTimeoutW(0xFFFF, 0x1A, 0, "Environment", 0x0002, 5000, None)  # type: ignore[attr-defined]
-    except Exception:  # noqa: BLE001 - never fail an update over the broadcast
-        pass
+    except Exception as _exc:  # noqa: BLE001 - never fail an update over the broadcast
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _expose_windows_user_bin(root: Path, *, create: bool) -> dict:

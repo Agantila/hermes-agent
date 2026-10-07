@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import shlex
 import subprocess
@@ -41,8 +42,8 @@ def resolve_passthrough_env(explicit_forward: Iterable[str] = (),
         from agent.secret_scope import _is_global_env as is_global_env, is_multiplex_active
         multiplex_active = is_multiplex_active()
         passthrough_keys = set(get_all_passthrough())
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     implicit_forward = {k for k in passthrough_keys if not _is_hermes_internal_secret(k)}
     forward_keys = set(explicit_forward) | {
         k for k in implicit_forward if not _is_provider_env_blocklisted(k)}

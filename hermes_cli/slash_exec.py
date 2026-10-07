@@ -7,6 +7,7 @@ tests/hermes_cli/test_commands_execute.py).
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
@@ -64,8 +65,8 @@ def _exec_profile(ctx: CommandContext) -> CommandReply:
         from hermes_cli.profiles import format_profile_label, get_profile_dir, read_profile_meta
         display = read_profile_meta(get_profile_dir(profile_name)).get("display_name", "")
         label = format_profile_label(profile_name, display)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return CommandReply(t("gateway.profile.plain", profile=label, home=home_display),
                         data={"profile": profile_name, "home": home_display})
 
@@ -115,8 +116,8 @@ def _exec_help(ctx: CommandContext) -> CommandReply:
                          for cmd in sorted_cmds[:10])
             if len(sorted_cmds) > 10:
                 lines.append(t("gateway.help.more_use_commands", count=len(sorted_cmds) - 10))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return CommandReply("\n".join(lines), format="markdown")
 
 
@@ -145,8 +146,8 @@ def _exec_commands(ctx: CommandContext) -> CommandReply:
         from tools.skills_tool import _find_all_skills
         entries.extend(f"⚠ {note}" for note in filter(None, map(
             skill_command_collision_note, sorted(s["name"] for s in _find_all_skills()))))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     if not entries:
         return CommandReply(t("gateway.commands.none"), format="markdown")

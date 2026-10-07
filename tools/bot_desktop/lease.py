@@ -164,8 +164,8 @@ def _notify(key: str, lease: Lease) -> None:
     for cb in list(_listeners):
         try:
             cb(key, lease)
-        except Exception:  # a broken subscriber must not wedge the handoff
-            pass
+        except Exception as _exc:  # a broken subscriber must not wedge the handoff
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _transition(profile_key: Optional[str], mutate: Callable[[Lease], bool]) -> Lease:

@@ -104,8 +104,8 @@ def _use_keyless_ring(capability: Optional[str] = None) -> bool:
         try:
             if probe():
                 return False
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as _exc:  # noqa: BLE001
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return use_keyless("firecrawl", "")
 
 
@@ -230,8 +230,8 @@ def _to_plain_object(value: Any) -> Any:
         if hasattr(value, attr):
             try:
                 return convert(value)
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as _exc:  # noqa: BLE001
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return value
 
 

@@ -158,8 +158,8 @@ def resolve_prompt_cache_scope(agent: Any) -> str:
     if root is not None or db is None or getattr(agent, "_persist_disabled", False):
         try:
             setattr(agent, _MEMO_ATTR, (key, scope))
-        except Exception:
-            pass  # frozen/slotted doubles: resolution works, just unmemoized
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # frozen/slotted doubles: resolution works, just unmemoized
     return _apply_fork_tag(agent, scope)
 
 

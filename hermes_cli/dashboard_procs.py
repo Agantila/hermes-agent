@@ -4,6 +4,7 @@ Helpers defined in ``hermes_cli.main_dashboard`` / ``hermes_cli.main_install_rep
 call time so imports stay one-way (both of those modules import this one lazily).
 """
 
+import logging
 import contextlib
 import os
 import subprocess
@@ -370,8 +371,8 @@ def _caller_ancestor_pids() -> set[int]:
         import psutil
 
         return {p.pid for p in psutil.Process().parents()}
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     ancestors: set[int] = set()
     cur = os.getpid()
     for _ in range(2048):  # cycle / corrupt-PPid guard
@@ -400,8 +401,8 @@ def _argv_head_command(pid: int) -> str | None:
         argv = psutil.Process(pid).cmdline()
         if argv:
             return os.path.basename(str(argv[0]))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         raw = Path(f"/proc/{pid}/cmdline").read_bytes()
     except OSError:

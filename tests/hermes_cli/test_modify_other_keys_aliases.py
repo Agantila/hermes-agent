@@ -15,6 +15,7 @@ the raw byte would.
 
 from __future__ import annotations
 
+import logging
 import pytest
 
 from prompt_toolkit.input.ansi_escape_sequences import ANSI_SEQUENCES
@@ -423,8 +424,8 @@ def test_buffer_level_shift_space_no_raw_csi():
             app.exit()
             try:
                 await asyncio.wait_for(run_task, 2)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return result
 
     for label, payload in (
@@ -475,8 +476,8 @@ def test_buffer_level_shift_letter_no_raw_csi():
             app.exit()
             try:
                 await asyncio.wait_for(run_task, 2)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return result
 
     for label, payload, expected in (

@@ -166,8 +166,8 @@ def _load_sessions_index_from_db() -> dict:
     finally:
         try:
             db.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _load_sessions_index_from_json() -> dict:

@@ -117,8 +117,8 @@ def get_model_info(profile: Optional[str] = None):
             mc = get_model_capabilities(provider=provider, model=model_name)
             if mc is not None:
                 caps = {name: getattr(mc, name) for name in _CAPABILITY_FIELDS}
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         return {
             "model": model_name, "provider": provider, "auto_context_length": auto_ctx,

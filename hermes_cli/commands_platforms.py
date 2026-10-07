@@ -213,8 +213,8 @@ def _iter_gateway_skills(platform: str):
                     roots.append(Path(d).resolve())
                 except Exception:
                     continue
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     skill_cmds = get_skill_commands()
     for cmd_key in sorted(skill_cmds):
         info = skill_cmds[cmd_key]
@@ -253,8 +253,8 @@ def _collect_gateway_skill_entries(
             for raw, desc, cmd_key in rows:
                 if name := sanitize(raw):
                     out.append((name, _truncate_desc(desc, desc_limit), cmd_key, name))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return _clamp_command_names(out, reserved_names)
 
     def _plugin_rows():
@@ -358,8 +358,8 @@ def discord_skill_commands_by_category(
                 categories.setdefault(rel_parts[0], []).append(entry)
             else:
                 uncategorized.append(entry)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return categories, uncategorized, hidden
 
 

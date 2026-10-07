@@ -16,6 +16,7 @@ on PR #93200 — the bug is cross-process ownership, so monkeypatched helpers
 prove nothing.
 """
 
+import logging
 import contextlib
 import errno
 import subprocess
@@ -117,8 +118,8 @@ def db(tmp_path):
     yield d
     try:
         d.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class TestRebuildFtsAdmission:

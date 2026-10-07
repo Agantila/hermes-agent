@@ -56,8 +56,8 @@ async def _close_stalled_pty_input(ws: "WebSocket", *, path: str) -> None:
     _log.warning("pty input stalled path=%s; recycling terminal session", path)
     try:
         await ws.close(code=1013, reason="PTY input stalled")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 async def _legacy_pump(ws: "WebSocket", bridge) -> None:

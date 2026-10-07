@@ -1076,8 +1076,8 @@ class RelayAdapter(BasePlatformAdapter):
             message_id, _chat = _event_ids(event)
             if message_id:
                 self._last_inbound_ts_by_chat[chat] = str(message_id)
-        except Exception:  # noqa: BLE001 - scope tracking must never break inbound
-            pass
+        except Exception as _exc:  # noqa: BLE001 - scope tracking must never break inbound
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _with_scope(self, chat_id: str, metadata: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         """Outbound metadata carrying the tenant discriminators (see _capture_scope).
@@ -1265,8 +1265,8 @@ class RelayAdapter(BasePlatformAdapter):
                 await asyncio.wait_for(
                     self._revocation_monitor, timeout=_RELAY_REVOCATION_MONITOR_TEARDOWN_TIMEOUT_S
                 )
-            except (asyncio.TimeoutError, asyncio.CancelledError, Exception):  # noqa: BLE001 - best-effort teardown
-                pass
+            except (asyncio.TimeoutError, asyncio.CancelledError, Exception) as _exc:  # noqa: BLE001 - best-effort teardown
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             self._revocation_monitor = None
         if self._transport is not None:
             # Ask the connector to flip this instance to buffered-only BEFORE tearing
@@ -1482,8 +1482,8 @@ class RelayAdapter(BasePlatformAdapter):
                 self._auto_thread_by_chat[str(chat_id)] = (str(_at_thread), str(_at_name))
                 if len(self._auto_thread_by_chat) > 256:
                     self._auto_thread_by_chat.pop(next(iter(self._auto_thread_by_chat)), None)
-        except Exception:  # noqa: BLE001 - feedback capture must never break send
-            pass
+        except Exception as _exc:  # noqa: BLE001 - feedback capture must never break send
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         # Wake the rename lane on EVERY send into this chat: "nowhere new" is an
         # answer it should get now rather than by outlasting a timeout.
         waiter = self._auto_thread_waiters.get(str(chat_id))

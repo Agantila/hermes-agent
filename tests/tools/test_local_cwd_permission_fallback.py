@@ -8,6 +8,7 @@ needs search permission on ``/``), so the old existence-only check in
 not enter. The fix checks X_OK and falls back to the nearest usable ancestor.
 """
 
+import logging
 import os
 import sys
 import tempfile
@@ -59,8 +60,8 @@ class TestInaccessibleCwdFallback:
         finally:
             try:
                 env.cleanup()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class TestUsableCwdBehaviorUnchanged:

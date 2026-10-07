@@ -8,6 +8,7 @@ skip with an actionable finding while a live writer holds the database.
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 from pathlib import Path
 
@@ -44,8 +45,8 @@ def test_wal_checkpoint_skipped_while_live_writer_holds_db(tmp_path):
     finally:
         try:
             holder.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     assert finding.fixed == 0
     assert any("gateway" in issue for issue in finding.issues)

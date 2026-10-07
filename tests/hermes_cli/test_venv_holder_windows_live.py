@@ -17,6 +17,7 @@ the empirical premise-check for each issue:
 
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 import sys
@@ -67,8 +68,8 @@ def _kill(*procs: subprocess.Popen) -> None:
         try:
             proc.kill()
             proc.wait(timeout=10)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class TestDetection:

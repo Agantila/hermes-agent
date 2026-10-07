@@ -12,6 +12,7 @@ Nothing here knows about Hermes: the adapter under test talks to it through its 
 
 from __future__ import annotations
 
+import logging
 import asyncio
 import json
 import threading
@@ -129,8 +130,8 @@ class StandinServer:
 
         try:
             asyncio.run_coroutine_threadsafe(_shutdown(), self._loop).result(15)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._loop.call_soon_threadsafe(self._loop.stop)
         if self._thread is not None:
             self._thread.join(10)

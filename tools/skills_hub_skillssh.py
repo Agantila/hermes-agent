@@ -282,8 +282,8 @@ class SkillsShSource(SkillSource):
                 found = _match_in(dir_name + "/")
                 if found:
                     return found
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return None
 
     def _resolve_github_meta(self, identifier: str, detail: Optional[dict] = None) -> Optional[SkillMeta]:

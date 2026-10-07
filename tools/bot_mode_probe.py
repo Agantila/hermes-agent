@@ -12,6 +12,7 @@ helpers shared by ``bot_mode_dm`` and ``bot_relay``.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import threading
@@ -393,8 +394,8 @@ def capability_fingerprint(home: str | os.PathLike | None = None) -> str:
         surface["disabled_toolsets"] = sorted(parse_config_string_list(agent_cfg.get("disabled_toolsets")))
         mcp = cfg.get("mcp_servers")
         surface["mcp"] = json.dumps(mcp, sort_keys=True, default=str) if isinstance(mcp, dict) else ""
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _soul() -> str:
         soul = resolved / "SOUL.md"

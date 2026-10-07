@@ -7,6 +7,7 @@ replies, and empty responses are never recorded; ledger failures never
 block the send.
 """
 
+import logging
 import asyncio
 import threading
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -196,8 +197,8 @@ class TestProducerHook:
         # broadly — drive only through the send block by tolerating the error.
         try:
             await _run(adapter, _event())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         rows = _rows()
         assert len(rows) == 1

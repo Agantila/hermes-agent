@@ -2,7 +2,7 @@
 message prefix between call N and N+1. If Hermes strips prior-turn thinking, call N+1's messages[:k]
 will NOT equal call N's messages (prefix divergence) even though the conversation only grew.
 Also reports cache hit per call. Cost: a handful of calls."""
-import os, sys, re, tempfile, time, json, copy, subprocess
+import os, sys, re, tempfile, time, json, copy, subprocess, logging
 # LIVE: makes ~6 real calls to the configured provider (a few cents). Usage:
 #   python cache_prefix_wire.py <repo_root> <A|B> [--hermes-home DIR]   (default HERMES_HOME: the real one, for credentials)
 sys.path.insert(0, sys.argv[1])
@@ -30,14 +30,14 @@ if _orig_convert is None:
     for name, fn in inspect.getmembers(amc, inspect.isfunction):
         try:
             if "_manage_thinking_signatures(result" in inspect.getsource(fn): _orig_convert = (name, fn); break
-        except Exception: pass
+        except Exception as _exc: logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 name, fn = _orig_convert
 def _wrapped(*a, **k):
     out = fn(*a, **k)
     try:
         msgs = out[1] if isinstance(out, tuple) else out   # (system, messages)
         captured.append(copy.deepcopy(msgs))
-    except Exception: pass
+    except Exception as _exc: logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return out
 setattr(amc, name, _wrapped)
 if hasattr(ad, name): setattr(ad, name, _wrapped)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import pytest
 
 import hermes_cli.auth as auth
@@ -140,8 +141,8 @@ def test_device_login_fires_on_verification_before_polling(monkeypatch):
     # synthetic token — swallow it; the ordering assertion is what matters.
     try:
         auth._nous_device_code_login(open_browser=False, on_verification=_cb)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     assert order[:2] == ["verify", "poll"], "callback must fire before polling"
     assert seen["url"] == "https://portal.example/device?code=ABCD"

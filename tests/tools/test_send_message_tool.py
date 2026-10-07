@@ -1,5 +1,6 @@
 """Tests for tools/send_message_tool.py."""
 
+import logging
 import asyncio
 import json
 import os
@@ -209,8 +210,8 @@ class _patch_slack_standalone_sender:
         if message:
             try:
                 formatted = SlackAdapter.__new__(SlackAdapter).format_message(message)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         token = getattr(pconfig, "token", None)
         return await self._mock(token, chat_id, formatted, thread_ts=thread_id)
 

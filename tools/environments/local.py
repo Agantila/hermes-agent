@@ -215,8 +215,8 @@ def _apply_profile_home(env: dict) -> None:
     try:
         if value := get_hermes_home_override():
             env["HERMES_HOME"] = value
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     apply_subprocess_home_env(env)
 
 
@@ -826,8 +826,8 @@ def _wait_for_group_exit(proc, pgid: int, timeout: float) -> bool:
     while True:
         try:
             proc.poll()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             os.killpg(pgid, 0)  # windows-footgun: ok — POSIX process-group alive probe
         except ProcessLookupError:
@@ -910,8 +910,8 @@ def _kill_process_group_posix(proc) -> None:
         try:
             import psutil
             descendants = psutil.Process(proc.pid).children(recursive=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         _sweep_escaped_descendants(descendants, pgid)
         return
     try:  # psutil children snapshot; empty on any failure (must never break the kill)
@@ -1022,8 +1022,8 @@ class LocalEnvironment(BaseEnvironment):
             if resolved.startswith("/") and os.access(resolved, os.W_OK | os.X_OK):
                 _prune_terminal_temp_once()
                 return _posix(resolved)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         # tempfile's own candidate walk already covers the system temp dir.
         fallback = tempfile.gettempdir()
         return _posix(fallback if fallback.startswith("/") else os.path.abspath(fallback))

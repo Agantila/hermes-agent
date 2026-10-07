@@ -235,8 +235,8 @@ def register_self(purpose: str, *, project_root: Optional[Path] = None, detail: 
         # 10 tokens: enough for `hermes serve --host X --port N --profile P` while bounding
         # pathological argv. Structured detail is canonical; argv is the human-readable fallback.
         entry.argv = " ".join(_sys.argv[:10])
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _append_entry(entry)
 
 
@@ -338,8 +338,8 @@ def register_child(pid: int, purpose: str, *, project_root: Optional[Path] = Non
         import psutil
 
         entry.argv = " ".join(psutil.Process(pid).cmdline()[:10])
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _append_entry(entry)
 
 
@@ -532,12 +532,12 @@ def _kill_process_tree_windows(proc) -> None:
     for child in descendants:
         try:
             child.terminate()
-        except Exception:  # noqa: BLE001 - raced away or refused; keep going
-            pass
+        except Exception as _exc:  # noqa: BLE001 - raced away or refused; keep going
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         proc.terminate()
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as _exc:  # noqa: BLE001
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         _, alive = psutil.wait_procs(descendants + [proc], timeout=2.0)
     except Exception:  # noqa: BLE001 - broken fake/raced process; nothing more to force-kill
@@ -545,8 +545,8 @@ def _kill_process_tree_windows(proc) -> None:
     for survivor in alive:
         try:
             survivor.kill()
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as _exc:  # noqa: BLE001
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def attach_self_to_kill_on_close_job() -> bool:

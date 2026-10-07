@@ -119,8 +119,8 @@ def _emit_execution_state(
         from agent.monitoring.cron_health import emit_execution_state
 
         emit_execution_state(record, delivery_outcome=delivery_outcome)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _process_start_time(pid: int) -> Optional[int]:

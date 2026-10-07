@@ -10,6 +10,7 @@ background-process notifications that re-entered the root.
 """
 from __future__ import annotations
 
+import logging
 import json
 import re
 from typing import Any, Dict, List
@@ -44,8 +45,8 @@ def main(argv=None) -> int:
         row = run._conn.execute("SELECT value FROM state_meta WHERE key=?", (f"goal:{root}",)).fetchone()
         if row:
             goal_state = json.loads(row[0])
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     parked = {k: goal_state.get(k) for k in ("status", "waiting_on_pid", "waiting_on_session", "waiting_until", "waiting_since", "waiting_reason", "last_verdict", "turns_used")}
     if goal_state.get("waiting_since"):
         # The barrier is never auto-cleared unless a turn re-evaluates it, so its age at session end is

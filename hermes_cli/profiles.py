@@ -771,8 +771,8 @@ def _read_config_model(profile_dir: Path) -> tuple:
                 return model_cfg, None
             if isinstance(model_cfg, dict):
                 return model_cfg.get("default") or model_cfg.get("model"), model_cfg.get("provider")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return None, None
 
     return _cached_profile_read(config_path, "config-model", _read)

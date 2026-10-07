@@ -115,8 +115,8 @@ def _clear_skills_cache() -> None:
     try:
         from agent.prompt_builder import clear_skills_system_prompt_cache
         clear_skills_system_prompt_cache(clear_snapshot=True)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _finish_change(c: Console, invalidate_cache: bool, what: str = "Change will take effect",
@@ -620,8 +620,8 @@ def _announce_blueprint(c: Console, skill_name: str) -> None:
                     "or the pending list is full — run [bold]/suggestions[/] to review).")
             c.print("[dim]You can still schedule it any time by asking the agent "
                     "or via[/] [bold]hermes cron add[/][dim].[/]\n")
-    except Exception:  # pragma: no cover - blueprint detection is best-effort
-        pass
+    except Exception as _exc:  # pragma: no cover - blueprint detection is best-effort
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _pinned_sources(c: Console, sources, source_id: Optional[str], identifier: str):

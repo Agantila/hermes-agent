@@ -17,6 +17,7 @@ optional and requires ruamel.yaml (standalone install: ruamel.yaml==0.18.17).
 
 from __future__ import annotations
 
+import logging
 import argparse
 import base64
 import json
@@ -154,8 +155,8 @@ def _load_state(path: Path | None = None) -> dict[str, Any]:
         if isinstance(data, dict):
             data.setdefault("version", STATE_VERSION)
             return data
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return {"version": STATE_VERSION}
 
 

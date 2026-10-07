@@ -257,8 +257,8 @@ class HolographicMemoryProvider(MemoryProvider):
                     try:
                         self._store.add_fact(content[:400], category=category)
                         extracted += 1
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if extracted:
             logger.info("Auto-extracted %d facts from conversation", extracted)
 

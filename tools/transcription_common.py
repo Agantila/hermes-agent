@@ -104,8 +104,8 @@ def _lazy_ensure_quietly(extra: str) -> None:
     try:
         import pm
         pm.ensure_import(extra)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _process_error_detail(exc: "subprocess.CalledProcessError") -> str:

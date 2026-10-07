@@ -21,6 +21,7 @@ Recorded call names: ``get_me``, ``get_app``, ``list_commands``, ``bulk_commands
 
 from __future__ import annotations
 
+import logging
 import asyncio
 import datetime as _dt
 import itertools
@@ -188,8 +189,8 @@ class DiscordStandin(StandinServer):
         for sock in list(self._sockets):
             try:
                 await sock["ws"].close(code=1001)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     async def _attachment(self, request: web.Request) -> web.Response:
         att_id = request.match_info["att_id"]

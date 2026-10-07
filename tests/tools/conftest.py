@@ -8,6 +8,7 @@ depend on the registry being populated should use it explicitly or via
 ``@pytest.mark.usefixtures("web_registry_populated")``.
 """
 
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -68,8 +69,8 @@ def _materialize_mcp_sdk_symbols():
     try:
         from tools import mcp_tool
         mcp_tool._ensure_mcp_sdk()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     yield
 
 

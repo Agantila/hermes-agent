@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import contextlib
 import os
 import shutil
@@ -40,8 +41,8 @@ def _post_setup_no_window_flags(*, streams_to_console: bool = False) -> int:
     try:
         if flags and streams_to_console and sys.stdout is not None and sys.stdout.isatty():
             return 0
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return flags or 0
 
 

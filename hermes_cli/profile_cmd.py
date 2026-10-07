@@ -6,6 +6,7 @@ the module attributes.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 import os
 import sys
@@ -239,8 +240,8 @@ def _profile_create(args):
                     print(f"Honcho config cloned (peer: {name})")
             except honcho_cli.ConfigWriteRefused as e:
                 print(f"Honcho config not cloned: {e}")
-            except Exception:
-                pass  # Honcho not configured
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # Honcho not configured
     else:
         # Fresh profiles only: clones already carry the source's (user-curated) skills.
         result = seed_profile_skills(profile_dir)

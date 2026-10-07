@@ -46,8 +46,8 @@ def _interrupt_agent_for_signal(agent, signum) -> None:
             _grace = _float_env("HERMES_SIGTERM_GRACE", 1.5)
             if _grace > 0:
                 time.sleep(_grace)
-    except Exception:
-        pass  # never block signal handling
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # never block signal handling
 
 
 def _run_kanban_goal_loop_q(cli: "HermesCLI", first_response: str, run_turn=None, log=None) -> None:

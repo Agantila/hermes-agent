@@ -429,8 +429,8 @@ def _quietly(fn) -> None:
     """Call *fn* (a ``close``/``stop`` bound method) swallowing errors — teardown must never raise."""
     try:
         fn()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class _ManagedRotatingFileHandler(RotatingFileHandler):
@@ -975,6 +975,6 @@ def _read_logging_config():
         log_cfg = cfg.get("logging", {})
         if isinstance(log_cfg, dict):
             return (log_cfg.get("level"), log_cfg.get("max_size_mb"), log_cfg.get("backup_count"))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return (None, None, None)

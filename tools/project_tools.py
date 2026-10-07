@@ -7,6 +7,7 @@ tool call, never a side effect of ``cd``. GUI-only: the `project` toolset stays 
 session create/switch re-anchors only that session; it must not move the profile-global
 Desktop selection shared by concurrent chats."""
 
+import logging
 import json
 import os
 from typing import Callable, Optional
@@ -42,8 +43,8 @@ def _apply_workspace(task_id: Optional[str], path: Optional[str], name: str) -> 
     if cb and task_id and path:
         try:
             cb(task_id, path, name)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _resolve(conn, token: str):

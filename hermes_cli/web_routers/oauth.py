@@ -675,8 +675,8 @@ def _build_oauth_catalog() -> list[Dict[str, Any]]:
                 "id": d.slug, "name": d.label, "flow": "external",
                 "cli_command": f"hermes auth add {d.slug}", "docs_url": d.signup_url or "", "status_fn": None,
             })
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return rows
 
 

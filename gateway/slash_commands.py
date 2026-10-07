@@ -1276,8 +1276,8 @@ class GatewaySlashCommandsMixin(
             if method not in {"git", "unknown"}:
                 return t("gateway.update.not_applicable", method=method,
                          command=recommended_update_command_for_method(method))
-        except Exception:
-            pass  # config unreadable — fall through to the .git check below
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # config unreadable — fall through to the .git check below
 
         git_dir = project_root / '.git'
 

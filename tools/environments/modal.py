@@ -274,8 +274,8 @@ class ModalEnvironment(BaseEnvironment):
                     logger.warning("Modal: filesystem snapshot failed: %s", e)
         try:
             self._worker.run_coroutine(self._sandbox.terminate.aio(), timeout=15)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         finally:
             self._worker.stop()
             self._sandbox = self._app = None

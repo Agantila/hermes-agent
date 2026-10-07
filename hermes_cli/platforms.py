@@ -1,5 +1,6 @@
 """Shared platform registry for Hermes Agent."""
 
+import logging
 from collections import OrderedDict
 from typing import NamedTuple
 
@@ -50,8 +51,8 @@ def platform_label(key: str, default: str = "") -> str:
         entry = platform_registry.get(key)
         if entry:
             return _plugin_label(entry)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return default
 
 
@@ -63,6 +64,6 @@ def get_all_platforms() -> "OrderedDict[str, PlatformInfo]":
         for entry in platform_registry.plugin_entries():
             if entry.name not in merged:
                 merged[entry.name] = PlatformInfo(_plugin_label(entry), f"hermes-{entry.name}")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return merged

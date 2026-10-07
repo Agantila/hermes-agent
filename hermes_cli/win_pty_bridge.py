@@ -165,8 +165,8 @@ class WinPtyBridge:
                 "ConPTY write worker did not exit within %.1fs of terminate(); thread leaked",
                 _WRITE_SHUTDOWN_GRACE,
             )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def resize(self, cols: int, rows: int) -> None:
         if self._closed:
@@ -175,8 +175,8 @@ class WinPtyBridge:
         rows = _clamp(rows, _MAX_ROWS)
         try:
             self._proc.setwinsize(rows, cols)  # pywinpty: (rows, cols)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def close(self) -> None:
         if self._closed:
@@ -184,8 +184,8 @@ class WinPtyBridge:
         self._closed = True
         try:
             self._proc.terminate(force=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def __enter__(self) -> "WinPtyBridge":
         return self

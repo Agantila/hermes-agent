@@ -75,8 +75,8 @@ def _image_error_max_dimension(error: Exception) -> Optional[int]:
         if value:
             try:
                 parts.append(str(value))
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     text = " ".join(parts).lower()
     # OpenAI Codex Responses reports a tile-patch budget (ceil(w/32)×ceil(h/32))
     # instead of a pixel ceiling. A square image is the worst case for the budget,
@@ -263,8 +263,8 @@ def recover_before_classification(
     _err_body = ""
     try:
         _err_body = str(getattr(api_error, "body", None) or getattr(api_error, "message", None) or str(api_error))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     _err_status = getattr(api_error, "status_code", None)
     # 4xx-only gate: 5xx/timeouts are transient and take the retry path.
     _status_ok = _err_status is None or (400 <= int(_err_status) < 500)
@@ -325,8 +325,8 @@ def _print_nous_401_diagnostics(agent: Any, api_error: Exception) -> None:
         _body = getattr(api_error, "body", None) or getattr(api_error, "response", None)
         if _body is not None:
             _body_text = str(_body)[:200]
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     _plines(agent, "🔐 Nous 401 — Portal authentication failed.")
     if _body_text:
         _plines(agent, f"   Response: {_body_text}")
@@ -338,8 +338,8 @@ def _print_nous_401_diagnostics(agent: Any, api_error: Exception) -> None:
             _plines(agent, "   Your session ended and Hermes couldn't start a new one.",
                     "   Sign in with a Nous account (it's free), or switch providers with /model.")
             return
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if not _print_nous_entitlement_guidance(agent, "Nous model access"):
         _plines(agent, "   Most likely: Portal OAuth expired, account out of credits, or agent key revoked.")
     _plines(
@@ -770,8 +770,8 @@ def recover_after_classification(
         try:
             from hermes_cli.models_reasoning_caps import refresh_reasoning_caps_async
             refresh_reasoning_caps_async(agent.provider)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if agent._reasoning_floor_required:
             from agent.auxiliary_reasoning_floor import REASONING_FLOOR_EFFORT
             _vlines(agent, f"⚠️  {agent.model} cannot disable reasoning — using effort={REASONING_FLOOR_EFFORT} for this session, retrying...")
@@ -805,8 +805,8 @@ def recover_after_classification(
             agent._oauth_1m_beta_disabled = True
             try:
                 agent._anthropic_client.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             agent._rebuild_anthropic_client()
             _vlines(agent, "🔕 OAuth subscription doesn't support the 1M-context beta — disabled for this session and retrying...")
             return True, recovered_with_pool
@@ -1802,8 +1802,8 @@ def _is_genuine_nous_rate_limit(agent: Any, api_error: Exception, error_context:
                 "last-known state) -- not tripping "
                 "cross-session breaker."
             )
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _genuine
 
 

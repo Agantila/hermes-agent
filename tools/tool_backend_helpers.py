@@ -40,8 +40,8 @@ def nous_tool_gateway_unavailable_message(capability: str = "the Nous Tool Gatew
             in_chat=True)
         if message:
             return message
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return (f"{capability} is unavailable. Run `hermes model` to refresh your "
             "Nous Portal login and billing status.")
 
@@ -146,8 +146,8 @@ def resolve_provider_secret(env_var: str, provider_id: str, config_value: str = 
         from agent.secret_scope import is_multiplex_active
         if is_multiplex_active():
             return ""
-    except Exception:  # pragma: no cover — secret_scope is in-repo
-        pass
+    except Exception as _exc:  # pragma: no cover — secret_scope is in-repo
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if not env_suppressed:
         key = str(env_getter(env_var) or "").strip() if env_getter else _dotenv_value(env_var)
     if key or not provider_id:

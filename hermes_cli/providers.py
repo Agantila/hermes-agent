@@ -489,8 +489,8 @@ def _lossy_alias_registry_pdef(raw: str, canonical: str) -> Optional[ProviderDef
             return ProviderDef(id=_pcfg.id, name=_pcfg.name, transport="openai_chat",
                                api_key_env_vars=tuple(_pcfg.api_key_env_vars or ()), base_url=_pcfg.inference_base_url or "",
                                source="hermes-auth-registry")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return None
 
 
@@ -571,8 +571,8 @@ def resolve_provider_full(name: str, user_providers: Optional[Dict[str, Any]] = 
         if mdev_info is not None:
             return ProviderDef(id=canonical, name=mdev_info.name, transport="openai_chat", api_key_env_vars=mdev_info.env,
                                base_url=mdev_info.api, source="models.dev")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     # Plugin profiles whose endpoint is minted at runtime (empty base_url, e.g. a token exchange
     # that also returns the host) are still real providers: /model --provider, the model picker
     # and `hermes model` must not reject them as unknown. Last rung, so every user-configured

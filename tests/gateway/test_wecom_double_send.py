@@ -40,6 +40,7 @@ properties, it does not re-implement the delivery lifecycle.
 
 from __future__ import annotations
 
+import logging
 import asyncio
 from unittest.mock import MagicMock
 
@@ -163,8 +164,8 @@ async def _cleanup_adapter(adapter) -> None:
         task.cancel()
         try:
             await task
-        except (asyncio.CancelledError, Exception):
-            pass
+        except (asyncio.CancelledError, Exception) as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # ===========================================================================

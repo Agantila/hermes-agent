@@ -7,6 +7,7 @@ inside each method (``from cli import ...``) — never at module load time (impo
 
 from __future__ import annotations
 
+import logging
 import contextlib
 import os
 import shutil
@@ -276,8 +277,8 @@ class CLISessionMixin:
             approval_label = _get_approval_mode()
             if is_approval_bypass_active_for_session(getattr(self, "session_key", "") or ""):
                 approval_label += t("cli.session.yolo_bypass_suffix")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Context window usage: reuse the status-bar snapshot (tokens / max / percent).
         ctx_label = None
@@ -300,8 +301,8 @@ class CLISessionMixin:
 
             if free_tier_route():
                 lines.append(t("gateway.status.free_tier"))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         optional = ((t("cli.session.label_reasoning"), reasoning_label),
                     (t("cli.session.label_approvals"), approval_label),
                     (t("cli.session.label_context"), ctx_label))
@@ -1047,8 +1048,8 @@ class CLISessionMixin:
                         creationflags=windows_hide_flags(),
                         check=False,
                     )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _persist_active_session_before_close(self):
         """Best-effort flush of the agent's live ``_session_messages`` before ``end_session()``

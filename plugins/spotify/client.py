@@ -6,6 +6,7 @@ endpoint paths live with their tool handlers in ``tools.py``.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Iterable, Optional
 from urllib.parse import urlparse
 
@@ -93,8 +94,8 @@ def _extract_spotify_error_detail(response: httpx.Response, *, fallback: str) ->
             detail = str(error_obj.get("message") or detail)
         elif isinstance(error_obj, str):
             detail = error_obj
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return detail.strip()
 
 

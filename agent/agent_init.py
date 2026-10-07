@@ -1608,8 +1608,8 @@ def _warn_invalid_config_int(
             getattr(agent, "_notification_config", None),
         ):
             return
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     print(
         f"\n⚠ Invalid {what}: {value!r}\n"
         f"  {requirement[0].upper() + requirement[1:]}.\n"

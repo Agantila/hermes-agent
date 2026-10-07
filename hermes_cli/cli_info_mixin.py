@@ -579,8 +579,8 @@ class CLIInfoMixin:
             except Exception:
                 _tip_color = "#B8860B"
             self._console_print(f"[dim {_tip_color}]{t('cli.tip_line', tip=_tip)}[/]")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _toggle_verbose(self):
         """Cycle tool progress mode: off → new → all → verbose → off.
@@ -607,8 +607,8 @@ class CLIInfoMixin:
             try:
                 from hermes_cli.focus_view import FOCUS_CONFIG_KEY
                 save_config_value(FOCUS_CONFIG_KEY, False)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         if self.agent:
             self.agent.reasoning_callback = self._current_reasoning_callback()
@@ -992,8 +992,8 @@ class CLIInfoMixin:
             if self.agent is not None:
                 try:
                     self.agent._persist_session(self.conversation_history, self.conversation_history)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
             print(f"  {t('cli.reload_mcp.agent_updated', count=str(len(self.agent.tools if self.agent else [])))}")
         except Exception as e:

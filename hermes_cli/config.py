@@ -1304,8 +1304,8 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
         fixes = sanitize_env_file()
         if fixes and not quiet:
             print(f"  ✓ Normalized .env line formatting ({fixes} line(s) changed)")
-    except Exception:
-        pass  # best-effort; never block migration on sanitize failure
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort; never block migration on sanitize failure
 
     # Auto-migration support floor (v12): an EXPLICIT on-disk ``_config_version`` below the
     # floor is NOT migrated and NOT rewritten — surface a message and leave the file untouched
@@ -1901,8 +1901,8 @@ def _read_raw_config_impl(*, want_deepcopy: bool) -> Dict[str, Any]:
         hit = _raw_config_cache_hit(str(config_path), cache_key)
         if hit is not None:
             return copy.deepcopy(hit) if want_deepcopy else hit
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     with _CONFIG_LOCK:
         config_path = get_config_path()
@@ -2319,10 +2319,10 @@ def _load_config_impl(*, want_deepcopy: bool) -> Dict[str, Any]:
             hit = _load_config_cache_hit(path_key, fast_sig)
             if hit is not None:
                 return copy.deepcopy(hit) if want_deepcopy else hit
-    except Exception:
+    except Exception as _exc:
         # Any surprise here falls through to the locked path, which is the
         # original fully-defensive implementation.
-        pass
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     with _CONFIG_LOCK:
         ensure_hermes_home()
@@ -3115,8 +3115,8 @@ def _show_skill_settings() -> None:
             display_val = str(value) if value else color("(not set)", Colors.DIM)
             skill_tag = color(f"[{var.get('skill', '')}]", Colors.DIM)
             print(f"  {var['key']:<20s} {display_val}  {skill_tag}")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def show_config():
@@ -3537,8 +3537,8 @@ def _touch_skin_file(key: str, value: Any) -> None:
             skin_file = get_hermes_home() / "skins" / f"{value}.yaml"
             if skin_file.exists():
                 skin_file.touch()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _exit_invalid(msg: str) -> None:
@@ -4031,8 +4031,8 @@ def _inject_profile_env_vars() -> None:
                     "password": _is_key,
                     "category": "provider",
                     "advanced": True}
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 _inject_profile_env_vars()
@@ -4198,8 +4198,8 @@ def _inject_platform_plugin_env_vars() -> "frozenset[str] | None":
     for source in ("bundled", "user") if bundled is None else ("user",):
         try:
             manifests += list(_platform_plugin_manifests(source=source))
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     for dir_name, manifest in manifests:
         label = manifest.get("label") or manifest.get("name") or dir_name
         for name, is_secret, meta in _platform_manifest_env_entries(manifest):

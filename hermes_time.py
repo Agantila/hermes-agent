@@ -101,8 +101,8 @@ def _resolve_timezone_name() -> str:
             tz_cfg = cfg.get("timezone", "")
             if isinstance(tz_cfg, str) and tz_cfg.strip():
                 return tz_cfg.strip()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return ""
 
 

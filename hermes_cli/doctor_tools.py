@@ -3,6 +3,7 @@ Split out of ``hermes_cli/doctor.py``, which re-exports every name so ``hermes_c
 
 from __future__ import annotations
 
+import logging
 import importlib.util
 import os
 import shutil
@@ -452,8 +453,8 @@ def _audit_one(npm_bin: str, npm_dir, label: str, audit_extra: list[str], issues
             issues.append(f"{label} has {total} npm {_plural(total)}")
         else:
             check_ok(f"{label} deps", f"({moderate} moderate {_plural(moderate)})")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @doctor_check()

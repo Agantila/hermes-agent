@@ -4,6 +4,7 @@ Wraps the same config layer the CLI uses (hermes_cli.mcp_config); stdio ``env``
 secrets are redacted on read.
 """
 
+import logging
 import threading
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
@@ -177,8 +178,8 @@ def _run_dashboard_mcp_oauth(flow, cfg: dict) -> None:
             )
             if humanized:
                 msg = humanized
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         flow.mark_error(msg)
     finally:
         flow.mark_worker_done()

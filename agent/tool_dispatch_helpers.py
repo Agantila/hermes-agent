@@ -397,8 +397,8 @@ def _extract_error_preview(result: Any, max_len: int = 180) -> str:
             data = json.loads(stripped)
             if isinstance(data, dict) and isinstance(data.get("error"), str):
                 text = data["error"]
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     text = " ".join(text.split())
     if len(text) > max_len:
         text = text[: max_len - 1] + "…"

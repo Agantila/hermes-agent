@@ -17,6 +17,7 @@ path can. Cleanup of what it records goes through ``_reaper`` like every other s
 
 from __future__ import annotations
 
+import logging
 import json
 import re
 import threading
@@ -90,8 +91,8 @@ class WsTerm:
                     self.screen.feed(frame)
         except ConnectionClosed as exc:
             self.close_code = exc.rcvd.code if exc.rcvd else None
-        except Exception:  # noqa: BLE001 - socket torn down under us by close()
-            pass
+        except Exception as _exc:  # noqa: BLE001 - socket torn down under us by close()
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         finally:
             self._closed.set()
 
@@ -102,8 +103,8 @@ class WsTerm:
         """Client-side close (a browser tab refresh / transient drop)."""
         try:
             self.ws.close()
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as _exc:  # noqa: BLE001
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._closed.wait(10)
 
     @property

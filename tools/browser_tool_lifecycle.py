@@ -3,6 +3,7 @@
 Split out of ``tools/browser_tool.py``. Facade-owned state is read through ``_bt`` (``tools.browser_tool``, resolved per call) — no import cycle.
 """
 
+import logging
 import contextlib
 import os
 import shutil
@@ -514,8 +515,8 @@ def _legacy_kill_process_tree(proc: "subprocess.Popen") -> None:
         try:
             subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
                            check=False, capture_output=True, stdin=subprocess.DEVNULL)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return
     # POSIX-only below (the nt guard returned), but resolve killpg/SIGKILL via
     # getattr so a future refactor dropping that guard degrades to plain kill().
@@ -523,8 +524,8 @@ def _legacy_kill_process_tree(proc: "subprocess.Popen") -> None:
     if killpg is None:  # windows-footgun: ok - non-POSIX fallback
         try:
             proc.kill()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         return
     try:
         pgid = os.getpgid(proc.pid)
@@ -556,8 +557,8 @@ def _legacy_kill_process_tree(proc: "subprocess.Popen") -> None:
             descendants = []
     try:
         proc.kill()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     for child in descendants:
         with contextlib.suppress(Exception):
             child.kill()
@@ -752,8 +753,8 @@ def cleanup_all_browsers() -> None:
     try:  # tear down CDP supervisors so background threads exit
         from tools.browser_supervisor import SUPERVISOR_REGISTRY  # type: ignore[import-not-found]
         SUPERVISOR_REGISTRY.stop_all()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _stop_harness():
         from tools.browser_use_cli import stop_harness_daemons

@@ -6,6 +6,7 @@ maps. Split out of ``hermes_cli.models``.
 
 from __future__ import annotations
 
+import logging
 from typing import NamedTuple
 
 
@@ -137,8 +138,8 @@ def _xai_curated_models() -> list[str]:
             ids = [mid for mid in models if isinstance(mid, str)]
             if ids:
                 return _xai_finalize_catalog(sorted(ids))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _xai_finalize_catalog(list(_XAI_STATIC_FALLBACK))
 
 

@@ -223,8 +223,8 @@ def slash_command_metric_name(raw: object) -> str:
 
         if get_plugin_command_handler(name) is not None:
             return "plugin"
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return "unknown"
 
 

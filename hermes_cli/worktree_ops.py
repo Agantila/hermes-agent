@@ -1056,8 +1056,8 @@ def _prune_orphaned_branches(repo_root: str, protect: Optional[set] = None) -> N
         current = _git(["branch", "--show-current"], repo_root, timeout=5).stdout.strip()
         if current:
             active_branches.add(current)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     active_branches.add("main")
 
     orphaned = [b for b in all_branches if b not in active_branches and b not in (protect or ())

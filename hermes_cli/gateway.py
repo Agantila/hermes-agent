@@ -641,8 +641,8 @@ def _scan_gateway_pids(
                     for pid, command in _iter_proc_cmdlines(exclude_pids):
                         _consider(pid, command)
                     _found_via_proc = True
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
             if not _found_via_proc:
                 # ``-Aww`` not ``-A eww``: BSD/macOS ps rejects ``e``; ``-ww`` = unlimited width.
@@ -755,8 +755,8 @@ def find_gateway_pids(exclude_pids: set | None = None, all_profiles: bool = Fals
         try:
             from gateway.status import get_running_pid
             _append_unique_pid(pids, get_running_pid(), _exclude)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     for pid in _get_service_pids(all_profiles=all_profiles):
         _append_unique_pid(pids, pid, _exclude)
     try:
@@ -950,8 +950,8 @@ def _capture_gateway_argv(pid: int) -> list[str] | None:
         from gateway.status import looks_like_gateway_command_line
         if not looks_like_gateway_command_line(" ".join(argv)):
             return None
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return argv
 
 
@@ -1028,8 +1028,8 @@ def _restart_argv_is_host_gateway(argv: list[str]) -> bool:
         from agent.secret_scope import is_multiplex_active
         if is_multiplex_active():
             return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     # The publishing gateway's SETTLED served set, not this process's ambient home:
     # a host launched from a named profile must be replayed as the host even though
     # the replaying process (the updater) sits on the named profile's home.
@@ -1038,8 +1038,8 @@ def _restart_argv_is_host_gateway(argv: list[str]) -> bool:
         record = hr.read_record(hr.ROLE_GATEWAY)
         if record is not None and hr.liveness_is_proven(record) and len(record.profiles) > 1:
             return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from hermes_constants import get_default_hermes_root, get_hermes_home
         return get_hermes_home().resolve() == get_default_hermes_root().resolve()
@@ -1562,8 +1562,8 @@ def get_gateway_runtime_snapshot(system: bool = False) -> GatewayRuntimeSnapshot
             snapshot = _s6_gateway_snapshot(gateway_pids)
             if snapshot is not None:
                 return snapshot
-        except Exception:
-            pass  # Fall through to the legacy label on any detection error.
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Fall through to the legacy label on any detection error.
         return GatewayRuntimeSnapshot(manager="docker (foreground)", gateway_pids=gateway_pids)
 
     if supports_systemd_services():
@@ -1666,8 +1666,8 @@ def _print_other_profiles_gateway_status() -> None:
         print("Other profiles:")
         for proc in other_processes:
             print(f"  ✓ {proc.profile:<16s} — PID {proc.pid}")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _print_duplicate_credential_warnings() -> None:
@@ -1707,8 +1707,8 @@ def _gateway_list() -> None:
             try:
                 from gateway.status import get_running_pid
                 pid = get_running_pid(prof.path / "gateway.pid", cleanup_stale=False)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             if pid:
                 parts.append(f"PID {pid}")
             elif named_profile_served_by_running_multiplexer(prof.name):
@@ -1774,8 +1774,8 @@ def _reaper_candidate_is_supervisor_owned(pid: int) -> bool:
                 if (parent.name() or "").lower() == "services.exe":
                     return True
             parent = parent.parent()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 
@@ -1915,10 +1915,10 @@ def _reaper_exclusion_pids(extra_exclude: set | None) -> set[int]:
                 while parent is not None:
                     own.add(parent.pid)
                     parent = parent.parent()
-            except Exception:
-                pass
-    except Exception:
-        pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return own
 
 
@@ -1970,8 +1970,8 @@ def _mark_planned_stop(pid: int | None = None) -> None:
             pid = get_running_pid(cleanup_stale=False)
         if pid is not None:
             write_planned_stop_marker(pid)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def stop_profile_gateway() -> bool:
@@ -3138,8 +3138,8 @@ def _stable_service_working_dir() -> str:
         home = get_hermes_home()
         if home and Path(home).is_dir():
             return str(Path(home).resolve())
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return str(PROJECT_ROOT)
 
 
@@ -4468,8 +4468,8 @@ def _guard_existing_gateway_process_conflict(replace: bool = False) -> None:
                     "The old gateway may still be running under that profile.",
                     stale.get("hermes_home", "<unknown>"),
                 )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return
 
     print_error(f"A gateway is already running (PID {pid}), so your bots are most likely online already.")
@@ -4520,16 +4520,16 @@ def _apply_startup_watchdog_config() -> None:
             if ENV_STARTUP_WATCHDOG_TIMEOUT_S not in os.environ and _sw_timeout is not None:
                 os.environ[ENV_STARTUP_WATCHDOG_TIMEOUT_S] = str(_sw_timeout)
                 _sw_timeout_bridged = True
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if startup_watchdog_disabled():
             disarm_startup_watchdog()
         else:
             if _sw_timeout_bridged:
                 disarm_startup_watchdog()
             arm_startup_watchdog()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _absorb_windows_console_controls() -> None:
@@ -4567,8 +4567,8 @@ def _make_exit_diag():
             }
             with open(log_dir / "gateway-exit-diag.log", "a", encoding="utf-8") as f:
                 f.write(json.dumps(line, default=str) + "\n")
-        except Exception:
-            pass  # never let the diagnostic itself crash the gateway
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # never let the diagnostic itself crash the gateway
 
     return _exit_diag
 
@@ -4591,8 +4591,8 @@ def _respawn_storm_backoff() -> None:
                     _max_starts = _rs["max_starts"]
                 if isinstance(_rs.get("window_seconds"), (int, float)):
                     _win = float(_rs["window_seconds"])
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             _max_starts = int(os.environ["HERMES_GATEWAY_MAX_STARTS"])
         except (KeyError, ValueError):
@@ -4611,8 +4611,8 @@ def _respawn_storm_backoff() -> None:
             try:
                 from hermes_startup_watchdog import kick_startup_watchdog
                 kick_startup_watchdog(extra_s=_storm.backoff_s)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             time.sleep(_storm.backoff_s)
     except Exception as _be:
         logger.debug("respawn-storm breaker check failed (non-fatal): %s", _be)
@@ -4649,8 +4649,8 @@ def run_gateway(verbose: int = 0, quiet: bool = False, replace: bool = False, fo
     if supports_systemd_services():
         try:
             refresh_systemd_unit_if_needed(system=False)
-        except Exception:
-            pass  # best-effort; don't block gateway startup
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # best-effort; don't block gateway startup
 
     from gateway.run import start_gateway
     print("┌─────────────────────────────────────────────────────────┐")

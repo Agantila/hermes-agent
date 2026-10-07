@@ -44,6 +44,7 @@ Exit code: 0 if every file's pytest exited 0; 1 otherwise.
 
 from __future__ import annotations
 
+import logging
 import argparse
 import fnmatch
 import json
@@ -1025,8 +1026,8 @@ def _make_stdio_glyph_safe() -> None:
         except Exception:
             try:
                 reconfigure(errors="replace")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _pytest_flag_error(tokens: List[str]) -> Optional[str]:

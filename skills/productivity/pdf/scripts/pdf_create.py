@@ -18,6 +18,7 @@ Spec format (UTF-8 JSON):
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import sys
@@ -27,8 +28,8 @@ def _reconfigure_stdio() -> None:
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def build_pdf(spec: dict, out_path: str) -> int:

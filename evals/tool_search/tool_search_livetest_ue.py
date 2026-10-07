@@ -18,6 +18,7 @@ Env: TS_BENCH_REPS (default 2), TS_UE_MODES, TS_UE_SCALE, TS_UE_SUMMARY.
 """
 from __future__ import annotations
 
+import logging
 import json, os, re, shutil, sys, tempfile, time, traceback
 from pathlib import Path
 from typing import Any, Dict, List
@@ -202,8 +203,8 @@ def run_one(scenario, mode, scale, rep, out_dir: Path):
                 usage_log.append({"prompt_tokens": cu.prompt_tokens,
                                   "completion_tokens": getattr(cu, "output_tokens", 0) or 0,
                                   "cached_tokens": getattr(cu, "cache_read_tokens", 0) or 0})
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             return cu
         _cl.normalize_usage = _norm_spy
         result = agent.run_conversation(
@@ -226,8 +227,8 @@ def run_one(scenario, mode, scale, rep, out_dir: Path):
             try:
                 import agent.turn_usage as _cl2
                 _cl2.normalize_usage = _orig_norm
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     elapsed = time.time() - started
     bridge_call_log = base._extract_bridge_calls(messages_out)

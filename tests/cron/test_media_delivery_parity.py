@@ -25,6 +25,7 @@ Three defects, each pinned here:
    MEDIA paths under different policy than the gateway's scheduled tick.
 """
 
+import logging
 import os
 from pathlib import Path
 
@@ -99,8 +100,8 @@ def slack_platform_config(monkeypatch, tmp_path):
         for attr in ("_config_cache", "_CONFIG_CACHE", "_cached_config"):
             if hasattr(gwconfig, attr):
                 monkeypatch.setattr(gwconfig, attr, None)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return home
 
 

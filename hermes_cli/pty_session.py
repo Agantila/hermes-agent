@@ -6,6 +6,7 @@ opaque token replays the buffer and resumes live.
 """
 from __future__ import annotations
 
+import logging
 import asyncio
 import time
 from pathlib import Path
@@ -39,8 +40,8 @@ async def _close_ws(ws, code: int) -> None:
     try:
         if ws is not None:
             await ws.close(code=code)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _process_ancestors(pid: int) -> set[int]:
@@ -180,14 +181,14 @@ class PtySession:
             self._drain_task.cancel()
             try:
                 await self._drain_task
-            except (asyncio.CancelledError, Exception):
-                pass
+            except (asyncio.CancelledError, Exception) as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             # bridge.close() joins the child — blocking; keep it off the event loop.
             # See #53227.
             await asyncio.to_thread(self.bridge.close)
-        except Exception:  # health: allow BLE001 S110 -- teardown of an already-dead PTY must not mask the caller's error path
-            pass
+        except Exception as _exc:  # health: allow BLE001 S110 -- teardown of an already-dead PTY must not mask the caller's error path
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             if self.active_session_file is not None:
                 self.active_session_file.unlink(missing_ok=True)
@@ -196,8 +197,8 @@ class PtySession:
         if self.active_session_cleanup is not None:
             try:
                 self.active_session_cleanup()
-            except Exception:  # health: allow BLE001 S110 -- cleanup callback must not mask the close path; the PTY is dead either way
-                pass
+            except Exception as _exc:  # health: allow BLE001 S110 -- cleanup callback must not mask the close path; the PTY is dead either way
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             self.active_session_cleanup = None
 
 
@@ -214,8 +215,8 @@ async def run_reaper(registry: "PtySessionRegistry", *, interval: float = 60.0) 
         await asyncio.sleep(interval)
         try:
             await registry.reap_idle()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class PtySessionRegistry:

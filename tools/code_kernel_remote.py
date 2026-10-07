@@ -255,15 +255,15 @@ def _spawn_remote_kernel(env, env_type: str, owner: str, task_env_id: str,
                 try:
                     logger.warning("remote kernel died at spawn: %s",
                                    _sh(env, f"cat {q_dir}/runner.log", timeout=10)[:500])
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     except Exception:
         logger.warning("remote kernel spawn failed", exc_info=True)
     if kernel is None:
         try:
             _sh(env, f"rm -rf {q_dir}")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return kernel
 
 
@@ -374,8 +374,8 @@ def _run_attached_cell(kernel: RemoteKernel, key: Tuple, code: str, *, env, task
     q_rpc = shlex.quote(kernel.kernel_dir + '/rpc')
     try:
         kernel.sh(f"rm -f {q_rpc}/req_* {q_rpc}/res_*", timeout=10)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     tool_call_counter, tool_call_log, stop_event = [0], [], threading.Event()
     # Per-cell RPC thread carrying THIS call's approval/session context — the remote analogue
     # of CellAuthority: authority lives exactly as long as the cell's poll loop.

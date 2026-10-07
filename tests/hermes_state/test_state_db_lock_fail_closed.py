@@ -27,6 +27,7 @@ than monkeypatching the helpers, and assert the deferral is honoured at both
 the primitive and the behavior level.
 """
 
+import logging
 import sqlite3
 import sys
 from pathlib import Path
@@ -96,8 +97,8 @@ def test_rebuild_fts_defers_when_lock_file_is_unopenable(tmp_path):
     finally:
         try:
             db.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # ── Schema-surgery authority ────────────────────────────────────────────────

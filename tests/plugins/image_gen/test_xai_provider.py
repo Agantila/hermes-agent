@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -23,8 +24,8 @@ def _fake_api_key(monkeypatch, tmp_path):
 
         if hasattr(cfg_mod, "_invalidate_load_config_cache"):
             cfg_mod._invalidate_load_config_cache()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 @pytest.fixture(autouse=True)

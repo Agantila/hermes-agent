@@ -6,6 +6,7 @@ tests and mock patch points remain valid; this module only aggregates them.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Iterable, List, Optional
 
@@ -95,8 +96,8 @@ def _context_cache_threshold() -> int:
         raw = model_cfg.get("switch_context_confirm_tokens") if isinstance(model_cfg, dict) else None
         if raw is not None:
             return max(0, int(raw))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return DEFAULT_CONTEXT_CACHE_SWITCH_THRESHOLD
 
 

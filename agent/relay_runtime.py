@@ -257,8 +257,8 @@ def _load_segments_config() -> dict[str, Any]:
             max_turns = max(0, int(segments.get("max_turns", 0) or 0))
         except (TypeError, ValueError):
             max_turns = 0
-    except Exception:  # noqa: BLE001 - config absence (or a malformed section) must not crash
-        pass
+    except Exception as _exc:  # noqa: BLE001 - config absence (or a malformed section) must not crash
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return {"on_compaction": on_compaction, "max_turns": max_turns}
 
 

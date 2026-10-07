@@ -39,6 +39,7 @@ the scratch HERMES_HOME; ``--isolation on|off`` sets it. Run BOTH:
 
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import os
@@ -198,8 +199,8 @@ class ScratchDashboard:
         except Exception:
             try:
                 self.proc.kill()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _dump_tail(self, n: int = 40) -> None:
         with self._log_lock:
@@ -258,8 +259,8 @@ class WSClient:
     def close(self) -> None:
         try:
             self.ws.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 # ── heavy-turn lane ─────────────────────────────────────────────────────
@@ -369,13 +370,13 @@ def warmup_serving(port: int, token: str, rounds: int = 6) -> None:
         try:
             with urllib.request.urlopen(rest_url, timeout=30) as fh:
                 fh.read()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         if warm_ws is not None:
             try:
                 warm_ws.rpc("session.list", {"limit": 20}, timeout=30)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         time.sleep(0.2)
     if warm_ws is not None:
         warm_ws.close()

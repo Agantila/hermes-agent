@@ -103,8 +103,8 @@ class FalImageGenProvider(StaticImageGenProvider):
         if "model" not in response:
             try:
                 response["model"] = _it._resolve_fal_model()[0]
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as _exc:  # noqa: BLE001
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return response
 
 

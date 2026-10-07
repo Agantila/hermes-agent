@@ -660,8 +660,8 @@ def _bot_chat_prompt_stale(agent, stored_prompt: str | None) -> bool:
         try:
             from agent.system_prompt import _agent_home
             home = _agent_home(agent)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if stored_prompt_capability_stale(stored_prompt, home):
             return True
         if not getattr(agent, "_bot_mode_protocol", True):
@@ -774,8 +774,8 @@ def _restore_or_build_system_prompt(agent, system_message, conversation_history)
             try:
                 from agent.prompt_builder import clear_skills_system_prompt_cache
                 clear_skills_system_prompt_cache(clear_snapshot=True)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             _refresh_bot_chat_tools(agent)
             agent._cached_system_prompt = agent._build_system_prompt(system_message)
             record_cache_break(agent, "toolset_change")
@@ -1112,8 +1112,8 @@ def _compression_deferred_result(agent, messages: List[Dict], api_call_count: in
         )
     try:
         agent._flush_status_buffer()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _partial_turn_result(
         _final, messages, api_call_count,
         failed=False, compression_deferred=True, session_id=agent.session_id,
@@ -1352,8 +1352,8 @@ def _decode_inline_moa_turn(user_message, persist_user_message):
             if persist_user_message is None:
                 persist_user_message = _decoded_message
             return _decoded_message, _decoded_moa_config, persist_user_message
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return user_message, None, persist_user_message
 
 

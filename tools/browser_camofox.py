@@ -85,8 +85,8 @@ def _config_cdp_url() -> str:
         browser_cfg = read_raw_config().get("browser", {})
         if isinstance(browser_cfg, dict):
             return str(browser_cfg.get("cdp_url", "") or "").strip()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return ""
 
 
@@ -412,8 +412,8 @@ def camofox_navigate(url: str, task_id: Optional[str] = None) -> str:
                                   "Share this link with the user so they can watch the browser live.")
         try:  # Auto-take a compact snapshot so the model can act immediately.
             result["snapshot"], result["element_count"] = _fetch_snapshot(session)
-        except Exception:
-            pass  # Navigation succeeded; snapshot is a bonus
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Navigation succeeded; snapshot is a bonus
         return json.dumps(result)
     except requests.HTTPError as e:
         return tool_error(f"Navigation failed: {e}", success=False)
@@ -574,8 +574,8 @@ def camofox_vision(question: str, annotate: bool = False, task_id: Optional[str]
             try:
                 snapshot = _snapshot_data(session).get("snapshot", "")
                 annotation_context = f"\n\nAccessibility tree (element refs for interaction):\n{snapshot[:3000]}"
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         # The screenshot itself cannot be redacted, but the text-based accessibility snippet
         # sent alongside it must not leak secret values.
         from agent.redact import redact_sensitive_text

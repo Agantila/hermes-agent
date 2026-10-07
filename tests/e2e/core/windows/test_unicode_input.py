@@ -12,6 +12,7 @@ Three real input paths a Windows user hits:
 
 from __future__ import annotations
 
+import logging
 import re
 import subprocess
 import threading
@@ -111,8 +112,8 @@ class _Console:
         tree = process_tree(self.proc.pid)
         try:
             self.proc.terminate(force=True)
-        except Exception:  # noqa: BLE001 - teardown of an already-dead console
-            pass
+        except Exception as _exc:  # noqa: BLE001 - teardown of an already-dead console
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         kill_tree(tree)
 
 

@@ -8,6 +8,7 @@ CRLF endings while the replacement is LF-only).
 See issue #507 (Roo Code deep-dive, item 2c).
 """
 
+import logging
 import json
 
 import pytest
@@ -37,14 +38,14 @@ def hermes_home(monkeypatch, tmp_path):
         clear_file_ops_cache()
         with _read_tracker_lock:
             _read_tracker.clear()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from tools.terminal_tool import _active_environments, _env_lock
         with _env_lock:
             _active_environments.clear()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _crlf_count(b: bytes) -> int:

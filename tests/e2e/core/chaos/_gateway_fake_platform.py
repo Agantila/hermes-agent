@@ -20,6 +20,7 @@ carrying JSON lines.
 
 from __future__ import annotations
 
+import logging
 import asyncio
 import json
 import os
@@ -118,15 +119,15 @@ class ChaosFakeAdapter(BasePlatformAdapter):
         for task in self._tasks:
             try:
                 await task
-            except (asyncio.CancelledError, Exception):
-                pass
+            except (asyncio.CancelledError, Exception) as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._tasks = []
         if self._writer is not None:
             try:
                 await self._writer.drain()
                 self._writer.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             self._writer = None
 
     async def send(self, chat_id: str, content: str, reply_to: Optional[str] = None,

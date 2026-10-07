@@ -29,8 +29,8 @@ def _model_section_has_credentials(config: dict) -> bool:
         from hermes_cli.auth import get_active_provider
         if get_active_provider():
             return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from hermes_cli.auth import PROVIDER_REGISTRY
     except Exception:

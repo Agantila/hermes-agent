@@ -7,6 +7,7 @@ re-reading the whole thread.
 
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 
@@ -31,8 +32,8 @@ def fresh_home(tmp_path, monkeypatch):
     try:
         import hermes_constants
         hermes_constants._cached_default_hermes_root = None  # type: ignore[attr-defined]
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     kb._INITIALIZED_PATHS.clear()
     return home
 

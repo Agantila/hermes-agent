@@ -1028,8 +1028,8 @@ class SessionSessionsMixin:
             tip_id = self.get_compression_tip(session_id) or session_id
             if tip_id != session_id:
                 tip = self.get_session(tip_id) or row
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         if (tip.get("end_reason") or "") not in self.RECOVERABLE_END_REASONS:
             return False
         if not self.set_session_archived(session_id, False):

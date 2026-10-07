@@ -1,5 +1,6 @@
 """Dump command for hermes CLI."""
 
+import logging
 import json
 import os
 import platform
@@ -284,8 +285,8 @@ def _api_key_lines(show_keys: bool) -> list[str]:
                 from agent.credential_pool import load_pool as _load_pool
                 if _load_pool("openrouter").has_credentials():
                     display = "set (auth pool)"
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         lines.append(f"  {label:<20} {display}")
     return lines
 

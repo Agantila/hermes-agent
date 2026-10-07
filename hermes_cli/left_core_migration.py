@@ -90,8 +90,8 @@ def homeassistant_in_use(home: Path, *, process_env: bool = False) -> bool:
             from agent.secret_scope import get_secret
             if (get_secret("HASS_TOKEN", "") or "").strip():
                 return True
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if platform_configured_on(home, "homeassistant"):
         return True
     return _toolset_listed(_read_config(home), frozenset({"homeassistant", "hermes-homeassistant"}))

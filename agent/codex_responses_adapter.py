@@ -1009,8 +1009,8 @@ def _preflight_codex_api_kwargs(
         try:
             from tools.schema_sanitizer import strip_slash_enum
             normalized["tools"], _ = strip_slash_enum(normalized["tools"])
-        except Exception:
-            pass  # Best-effort — the caller-level sanitization should have handled it
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Best-effort — the caller-level sanitization should have handled it
     allowed_keys = _PREFLIGHT_ALLOWED_KEYS | ({"stream"} if allow_stream else set())
     if unexpected := sorted(key for key in api_kwargs if key not in allowed_keys):
         raise ValueError(f"Codex Responses request has unsupported field(s): {', '.join(unexpected)}.")

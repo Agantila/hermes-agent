@@ -1484,8 +1484,8 @@ class SessionMessagesMixin:
             return session_id
         try:
             session_id = self.get_compression_tip(session_id) or session_id
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         with self._read_ctx() as conn:
             current = session_id
             seen = {current}

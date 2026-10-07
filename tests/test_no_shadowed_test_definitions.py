@@ -23,6 +23,7 @@ This guard is cheap and catches the whole class at collection time.
 
 from __future__ import annotations
 
+import logging
 import ast
 from pathlib import Path
 
@@ -43,8 +44,8 @@ def _decorator_names(node: ast.AST) -> list[str]:
     for dec in getattr(node, "decorator_list", []):
         try:
             out.append(ast.unparse(dec))
-        except Exception:  # pragma: no cover - defensive
-            pass
+        except Exception as _exc:  # pragma: no cover - defensive
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return out
 
 

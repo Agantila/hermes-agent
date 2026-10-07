@@ -103,8 +103,8 @@ def _is_opencode_responses_backend(params: dict[str, Any]) -> bool:
 
         if opencode_provider_family(params.get("provider")) is not None:
             return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         from utils import base_url_hostname
 

@@ -95,8 +95,8 @@ def _warn_config_parse_failure(
     try:
         sys.stderr.write(f"⚠️  hermes config: {msg}\n    Details: {_yaml_error_details(exc)}\n")
         sys.stderr.flush()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def get_active_config_parse_failure() -> Optional[str]:

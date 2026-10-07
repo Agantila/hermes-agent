@@ -18,6 +18,7 @@ Four fixes under test:
      returns an empty-but-keyed row instead of None.
 """
 
+import logging
 import json
 import time
 import uuid
@@ -34,8 +35,8 @@ def db(tmp_path):
     yield d
     try:
         d.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 PEER = dict(

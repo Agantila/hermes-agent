@@ -313,5 +313,5 @@ def _init_logging_and_display_from_config() -> None:
     ):
         try:
             step()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)

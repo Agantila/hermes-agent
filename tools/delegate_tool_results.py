@@ -339,8 +339,8 @@ def _notify_memory_manager(results, task_list, child_by_index, parent_agent) -> 
                 task=task_list[task_index]["goal"] if in_range else "", result=entry.get("summary", "") or "",
                 child_session_id=getattr(child_by_index.get(task_index), "session_id", ""),
             )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 def _fire_subagent_stop_hooks(results, child_by_index, parent_agent) -> float:
     """Pop the model-hidden ``_child_role`` / ``_child_cost_usd`` fields from every

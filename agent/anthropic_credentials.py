@@ -408,8 +408,8 @@ def _oauth_http_error(exc: Any, *, what: str) -> AnthropicOAuthError:
         payload = json.loads(exc.read().decode() or "{}")
         code = str(payload.get("error") or "")
         description = str(payload.get("error_description") or "")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return AnthropicOAuthError(int(exc.code), code, description, what=what)
 
 

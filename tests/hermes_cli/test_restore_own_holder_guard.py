@@ -8,6 +8,7 @@ connection — leaving the process on deleted-inode fds (the split-brain
 fingerprint from issue #90837's field reports).
 """
 
+import logging
 import os
 import sqlite3
 import sys
@@ -75,8 +76,8 @@ def live_held_db(tmp_path):
     finally:
         try:
             held.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def test_safe_restore_fallback_refuses_under_own_live_connection(live_held_db):

@@ -3,6 +3,7 @@
 Run with: python -m pytest tests/test_interrupt.py -v
 """
 
+import logging
 import threading
 import time
 import pytest
@@ -328,8 +329,8 @@ class TestRunToolCleanupOnBaseException:
         # worker, but the finally block should still clean up.
         try:
             agent._execute_tool_calls_concurrent(assistant_msg, [], "default")
-        except Exception:
-            pass  # ThreadPoolExecutor may re-raise
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # ThreadPoolExecutor may re-raise
 
         # After the worker finishes (even with BaseException), the worker
         # tid should have been removed from _interrupted_threads and

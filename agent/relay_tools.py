@@ -85,8 +85,8 @@ def _jsonable(value: Any) -> Any:
                 return _jsonable(model_dump(mode="json", warnings=False))
             except TypeError:
                 return _jsonable(model_dump())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         return _jsonable(vars(value))
     except (TypeError, AttributeError):

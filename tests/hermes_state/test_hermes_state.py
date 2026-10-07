@@ -1,6 +1,6 @@
 """Tests for hermes_state.py — SessionDB SQLite CRUD, FTS5 search, export."""
 
-import contextlib
+import logging, contextlib
 import re
 import sqlite3
 import time
@@ -231,8 +231,8 @@ class TestConnectionLifecycle:
             for conn in opened:
                 try:
                     conn.close()
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def test_failed_wal_read_open_does_not_leak_tracked_connection(
         self, tmp_path, monkeypatch
@@ -270,8 +270,8 @@ class TestConnectionLifecycle:
             for conn in opened:
                 try:
                     conn.close()
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             db.close()
 
     def test_read_only_close_never_requests_wal_checkpoint(self, tmp_path):

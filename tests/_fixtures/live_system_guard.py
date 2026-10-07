@@ -4,6 +4,7 @@ Imported into ``tests/conftest.py`` so pytest registers the fixture there;
 ``pytest_plugins`` is not an option because ``tests/conftest.py`` is not the
 rootdir conftest (the rootdir is the repo root, where ``pyproject.toml`` lives).
 """
+import logging
 from pathlib import Path
 
 import pytest
@@ -436,8 +437,8 @@ def _live_system_guard(request, monkeypatch):
                 return real_pty_spawn(argv, *args, **kwargs)
 
             monkeypatch.setattr(_pty, "spawn", _guarded_pty_spawn)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # asyncio.create_subprocess_* — bypasses subprocess module entirely.
     try:
@@ -459,7 +460,7 @@ def _live_system_guard(request, monkeypatch):
         monkeypatch.setattr(
             _asyncio, "create_subprocess_shell", _guarded_async_shell
         )
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     yield

@@ -121,8 +121,8 @@ def _detect_openclaw_processes() -> list[str]:
             pid = (result.stdout or "").strip() if result is not None else ""
             if pid:
                 found.append(f"node.exe process with openclaw in command line (PID {pid})")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         return found
     result = _posix_probe(["systemctl", "--user", "is-active", "openclaw-gateway.service"], 5)
     if result is not None and result.stdout.strip() == "active":

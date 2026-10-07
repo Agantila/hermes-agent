@@ -493,8 +493,8 @@ def _accepted_mimes() -> frozenset:
 
         if is_managed_provider(str(_runtime_main_value("provider") or ""), str(_runtime_main_value("base_url") or "")):
             return ACCEPTED_IMAGE_MIMES
-    except Exception:  # noqa: BLE001 — best-effort narrowing only
-        pass
+    except Exception as _exc:  # noqa: BLE001 — best-effort narrowing only
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return _UNIVERSALLY_SUPPORTED_MIMES
 
 
@@ -510,8 +510,8 @@ def _file_to_data_url(path: Path) -> Optional[str]:
     except ValueError as exc:
         logger.warning("image_routing: blocked local image attachment %s -- %s", path, exc)
         return None
-    except Exception:
-        pass  # Keep attachment routing best-effort if the guard itself is unavailable.
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Keep attachment routing best-effort if the guard itself is unavailable.
     try:
         raw = path.read_bytes()
     except Exception as exc:

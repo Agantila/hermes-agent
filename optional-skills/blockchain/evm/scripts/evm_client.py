@@ -4,6 +4,7 @@ evm_client.py — EVM blockchain CLI tool for the Hermes Agent project.
 Zero external dependencies. Uses stdlib only: urllib, json, argparse, time, os, sys, typing.
 """
 
+import logging
 import argparse
 import json
 import os
@@ -343,8 +344,8 @@ def _http_post(url: str, payload: Any, retries: int = 5, timeout: int = 20) -> A
             body_text = ""
             try:
                 body_text = e.read().decode()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             raise RuntimeError(f"HTTP {e.code}: {body_text}") from e
         except Exception as e:
             last_err = e
@@ -371,8 +372,8 @@ def _http_get(url: str, retries: int = 5, timeout: int = 20) -> Any:
             body_text = ""
             try:
                 body_text = e.read().decode()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             raise RuntimeError(f"HTTP {e.code}: {body_text}") from e
         except Exception as e:
             last_err = e
@@ -625,8 +626,8 @@ def cmd_stats(args: argparse.Namespace) -> None:
                 tx_count = len(latest_block.get("transactions", []))
                 if t1 > t0:
                     tps = round(tx_count / (t1 - t0), 2)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     native_price = get_native_price(chain)
 
@@ -696,8 +697,8 @@ def cmd_wallet(args: argparse.Namespace) -> None:
                     if token_price is not None:
                         token_usd = round(bal_human * token_price, 4)
                         portfolio_usd += token_usd
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
             tokens_out.append({
                 "symbol":       symbol,
@@ -741,8 +742,8 @@ def cmd_tx(args: argparse.Namespace) -> None:
         blk = rpc_call(chain, "eth_getBlockByNumber", [hex(block_num), False])
         if blk:
             timestamp = hex_to_int(blk.get("timestamp", "0x0"))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     value_wei  = hex_to_int(tx.get("value", "0x0"))
     value_eth  = wei_to_native(value_wei, cfg["decimals"])
@@ -1253,8 +1254,8 @@ def cmd_decode(args: argparse.Namespace) -> None:
             try:
                 amount = int(amount_hex, 16)
                 decoded_args = {"to": to_addr, "amount_raw": amount}
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     print_json({
         "chain": chain,
@@ -1331,16 +1332,16 @@ def cmd_contract(args: argparse.Namespace) -> None:
         erc165_data = "0x01ffc9a701ffc9a700000000000000000000000000000000000000000000000000000000"
         erc165_raw = rpc_call(chain, "eth_call", [{"to": address, "data": erc165_data}, "latest"])
         supports_erc165 = bool(erc165_raw and erc165_raw != "0x" and int(erc165_raw, 16) == 1)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Try to detect ERC-20 (has totalSupply)
     is_erc20 = False
     try:
         ts_raw = eth_call_erc20(chain, address, "totalSupply()")
         is_erc20 = ts_raw is not None and ts_raw != "0x" and int(ts_raw, 16) > 0
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Try to detect ERC-721 (supportsInterface 0x80ac58cd)
     is_erc721 = False
@@ -1348,8 +1349,8 @@ def cmd_contract(args: argparse.Namespace) -> None:
         erc721_data = "0x01ffc9a780ac58cd00000000000000000000000000000000000000000000000000000000"
         erc721_raw = rpc_call(chain, "eth_call", [{"to": address, "data": erc721_data}, "latest"])
         is_erc721 = bool(erc721_raw and erc721_raw != "0x" and int(erc721_raw, 16) == 1)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     detected_standards = []
     if is_erc20:

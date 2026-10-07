@@ -618,8 +618,8 @@ def _unlink_quietly(path: Optional[Path]) -> None:
     if path is not None:
         try:
             path.unlink(missing_ok=True)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 class _ImagePrepError(ValueError):
@@ -764,8 +764,8 @@ def _aux_call_kwargs(messages: list, model: Optional[str], default_timeout: floa
             timeout = max(float(_vision_cfg["timeout"]), float("-inf") if min_timeout is None else min_timeout)
         if _vision_cfg.get("temperature") is not None:
             temperature = float(_vision_cfg["temperature"])
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return {"task": "vision", "messages": messages, "temperature": temperature, "timeout": timeout,
             **({"model": model} if model else {})}
 

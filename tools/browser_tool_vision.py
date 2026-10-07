@@ -3,6 +3,7 @@
 Split out of ``tools/browser_tool.py``. Facade-owned state is read through ``_bt`` (``tools.browser_tool``, resolved per call) — no import cycle.
 """
 
+import logging
 import os
 import shutil
 from pathlib import Path
@@ -114,8 +115,8 @@ def _analyze_screenshot_with_aux_llm(screenshot_path: Path, question: str) -> st
             vision_timeout = float(_vision_cfg["timeout"])
         if _vision_cfg.get("temperature") is not None:
             vision_temperature = float(_vision_cfg["temperature"])
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     from agent.auxiliary_client import call_llm  # lazy: heavy client, only needed on the vision path
 

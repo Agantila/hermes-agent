@@ -123,8 +123,8 @@ def encode(value: Any, refs: Optional[Callable[[Any], Optional[dict]]] = None, _
     if callable(dump) and not isinstance(value, type):
         try:
             return {"__record__": type(value).__name__, "fields": encode(dump(), refs, _depth + 1)}
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     try:
         text = repr(value)[:200]
     except Exception:

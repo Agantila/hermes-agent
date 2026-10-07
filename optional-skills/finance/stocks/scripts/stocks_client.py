@@ -4,6 +4,7 @@ stocks_client.py - Stock market data CLI tool for the Hermes Agent project.
 Zero external dependencies - Python stdlib only.
 """
 
+import logging
 import argparse
 import json
 import os
@@ -158,8 +159,8 @@ def _fetch_crumb() -> str | None:
         req = _build_request("https://finance.yahoo.com/")
         with _opener.open(req, timeout=10) as resp:
             resp.read()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Step 2: fetch crumb
     crumb_url = f"{YF_BASE}/v1/test/getcrumb"
@@ -170,8 +171,8 @@ def _fetch_crumb() -> str | None:
             if crumb_raw and crumb_raw != "":
                 _crumb = crumb_raw
                 return _crumb
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return None
 

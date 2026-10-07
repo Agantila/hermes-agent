@@ -2149,8 +2149,8 @@ class ConnectionManager:
             except asyncio.TimeoutError:
                 # No close-frame echo in time; websockets force-closes the transport on cancel.
                 logger.debug("[%s] WS close handshake exceeded %.1fs — dropping connection", self._adapter.name, WS_CLOSE_TIMEOUT_S)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _read_local_file(adapter, label: str, path: str, default_name: str, default_mime: str,
@@ -2324,8 +2324,8 @@ class HeartbeatManager:
                 await self.send_heartbeat_once(chat_id, WS_HEARTBEAT_RUNNING)
         except asyncio.CancelledError:
             cancelled = True
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         finally:
             if not cancelled:
                 await self.send_heartbeat_once(chat_id, WS_HEARTBEAT_FINISH)

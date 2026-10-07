@@ -86,8 +86,8 @@ def _arm_exit_watchdog(timeout_s: float | None = None, *, from_signal: bool = Fa
                 "(a cleanup step or non-daemon thread is wedged).",
                 timeout_s,
             )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         _flush_logging_and_stdio()
         # os._exit skips cleanup: a foreground command in its own process group would outlive us.
         with suppress(Exception):

@@ -263,8 +263,8 @@ def _get_provider(stt_config: dict) -> str:
             from tools.tool_backend_helpers import read_selection
             if read_selection("stt") is None:
                 explicit = False
-        except Exception:  # pragma: no cover — helpers are in-repo
-            pass
+        except Exception as _exc:  # pragma: no cover — helpers are in-repo
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     if explicit:
         return _resolve_explicit_provider(provider)
     backend = _detect_local_backend()

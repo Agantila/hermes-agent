@@ -9,6 +9,7 @@ as agent/deadline.py kill_process_tree) and sweeps any snapshotted survivor
 outside the (now-dead) group with SIGKILL afterwards.
 """
 
+import logging
 import os
 import signal
 import subprocess
@@ -104,8 +105,8 @@ def test_timeout_kill_reaps_setsid_grandchild(tmp_path):
             pass
         try:
             env.cleanup()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _sh_quote(s: str) -> str:

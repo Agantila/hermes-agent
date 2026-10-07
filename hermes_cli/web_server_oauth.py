@@ -87,8 +87,8 @@ def _claude_code_only_status() -> Dict[str, Any]:
         creds = read_claude_code_credentials()
         if creds and is_claude_code_token_valid(creds):
             return _token_status("claude_code_cli", "~/.claude/.credentials.json", creds)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return dict(_LOGGED_OUT)
 
 
@@ -130,8 +130,8 @@ def _external_process_cli_command(provider_id: str, default: str) -> str:
             parts = default.split(" ", 1)
             tail = f" {parts[1]}" if len(parts) > 1 else ""
             return f"{command}{tail}"
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return default
 
 

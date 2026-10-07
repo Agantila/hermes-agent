@@ -374,8 +374,8 @@ def _not_configured_error(platform_name, platform, entry):
             msg += (f", so its credentials live only in that process's environment; add {names} to {env_path}."
                     if gw_home is home else
                     f"; this shell is scoped to profile home {home} whose .env has no {names}.")
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return msg
 
 

@@ -56,8 +56,8 @@ def _all_file_destinations() -> list[str]:
         listener = getattr(hermes_logging, "_queue_listener", None)
         if listener is not None:
             collect(getattr(listener, "handlers", ()))
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     return seen
 

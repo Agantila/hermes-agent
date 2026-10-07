@@ -303,8 +303,8 @@ def clear_session(session_key: str) -> None:
                              ("tools.code_kernel_remote", "shutdown_remote_kernels_for_owner")):
         try:
             getattr(importlib.import_module(module), shutdown)(session_key)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def is_session_yolo_enabled(session_key: str) -> bool:

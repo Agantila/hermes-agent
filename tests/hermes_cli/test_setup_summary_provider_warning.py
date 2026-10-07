@@ -6,6 +6,7 @@ continued through the remaining sections and finished "successfully" with no
 working model configured (consumer-onboarding audit finding #7, Aug 2026).
 """
 
+import logging
 from unittest.mock import patch
 
 from hermes_cli.auth import AuthError
@@ -30,11 +31,11 @@ def _summary_output(capsys, provider_ready: bool):
         feats.side_effect = Exception("stubbed")
         try:
             setup_mod._print_setup_summary({}, "/tmp/nowhere")
-        except Exception:
+        except Exception as _exc:
             # Downstream summary sections may fail from the stubbed
             # features — the provider warning prints first and is what
             # this test asserts on.
-            pass
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return capsys.readouterr().out
 
 

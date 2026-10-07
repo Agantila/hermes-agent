@@ -34,8 +34,8 @@ def _probe(argv: list, timeout: int, ok, *, missing: str | None = None) -> bool:
     except FileNotFoundError:
         if missing:
             logger.debug(missing)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     return False
 
 

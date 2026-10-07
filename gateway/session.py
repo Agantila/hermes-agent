@@ -215,8 +215,8 @@ def _slack_tools_loaded() -> bool:
         from tools.mcp_tool_discovery import get_registered_mcp_server_names
         if any("slack" in name.lower() for name in get_registered_mcp_server_names()):
             return True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Profile secret scope, not bare env: under multiplex the env may hold another
     # profile's token. Only the unscoped default-profile path (UnscopedSecretError)
@@ -882,8 +882,8 @@ class SessionStore(
         if self._db:
             try:
                 return self._db.session_count_ge(2)
-            except Exception:
-                pass  # fall through to heuristic
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # fall through to heuristic
         with self._lock:
             self._ensure_loaded_locked()
             return len(self._entries) > 1

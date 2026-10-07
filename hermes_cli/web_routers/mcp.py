@@ -5,6 +5,7 @@ web_server — reached via the late-binding seam so tests that mutate
 ``web_server._mcp_oauth_flows`` or monkeypatch its helpers keep working.
 """
 
+import logging
 import asyncio
 import hashlib
 from contextlib import contextmanager
@@ -464,8 +465,8 @@ async def list_mcp_catalog(profile: Optional[str] = None, detect_apps: bool = Fa
     diagnostics = []
     try:
         diagnostics = [{"name": n, "kind": k, "message": m} for (n, k, m) in mcp_catalog.catalog_diagnostics()]
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     result = {"entries": entries, "diagnostics": diagnostics}
     if detect_apps:
         import sys

@@ -9,6 +9,7 @@ The fix adds an explicit sweep of ``_agent_cache`` after
 ``_finalize_shutdown_agents`` in the ``_stop_impl`` coroutine.
 """
 
+import logging
 import asyncio
 import threading
 from collections import OrderedDict
@@ -109,13 +110,13 @@ class _FakeGateway:
         try:
             if hasattr(agent, "shutdown_memory_provider"):
                 agent.shutdown_memory_provider()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             if hasattr(agent, "close"):
                 agent.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _evict_cached_agent(self, key):
         pass

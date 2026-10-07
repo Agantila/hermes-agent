@@ -6,6 +6,7 @@ process dies without running any Python cleanup. A mocked parent death proves
 nothing about the guarantee.
 """
 
+import logging
 import asyncio
 import contextlib
 import io
@@ -730,8 +731,8 @@ def test_scoped_teardown_of_one_owner_keeps_the_other_owner_supervised(monkeypat
             _kill(p.pid)
             try:
                 p.wait(timeout=10)
-            except Exception:  # noqa: BLE001 - best-effort cleanup
-                pass
+            except Exception as _exc:  # noqa: BLE001 - best-effort cleanup
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
         with mcp_tool._lock:
             for p in (a, b):
                 _mcp_lifecycle._stdio_pids.pop(p.pid, None)

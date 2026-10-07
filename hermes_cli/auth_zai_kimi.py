@@ -91,8 +91,8 @@ def detect_zai_endpoint(api_key: str, timeout: float = 8.0) -> Optional[Dict[str
                 result = future.result()
                 if result is not None:
                     results[futures[future]] = result
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             winner = _first_ready(require_done=True)
             if winner is not None:
                 return winner

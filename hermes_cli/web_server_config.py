@@ -338,8 +338,8 @@ def _custom_provider_options(kind: str, builtin_names: List[str], cfg: Dict[str,
             from agent.transcription_registry import list_providers as _list_voice_providers
         for _p in _list_voice_providers():
             _add(getattr(_p, "name", None))
-    except Exception:  # pragma: no cover - registry import should not break schema
-        pass
+    except Exception as _exc:  # pragma: no cover - registry import should not break schema
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # ``cfg_get`` takes *keys*, not dotted paths.
     _add(cfg_get(cfg, kind, "provider"))
@@ -936,8 +936,8 @@ def _infer_provider_on_model_change(model_val: str, prev_provider: str) -> tuple
             # user has no key for — that silently writes a metered provider into config.yaml.
             if not cur_is_aggregator and provider_has_credentials("openrouter"):
                 return "openrouter", name
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return "", name
 
 

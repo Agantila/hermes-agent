@@ -209,8 +209,8 @@ def _fan_out(
                 all_results.extend(results)
                 if on_source_done:
                     on_source_done(sid, len(results))
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
     except TimeoutError:
         late = [futures[f] for f in futures if not f.done()]
         timed_out_ids.extend(late)

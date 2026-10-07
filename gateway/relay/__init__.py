@@ -304,8 +304,8 @@ def relay_relevance_policy(platform: Optional[str] = None) -> Optional[dict]:
             free_response = [str(c).strip() for c in frc if str(c).strip()]
         elif isinstance(frc, str) and frc.strip():
             free_response = [c.strip() for c in frc.split(",") if c.strip()]
-    except Exception:  # noqa: BLE001 - config absence/parse must never crash boot
-        pass
+    except Exception as _exc:  # noqa: BLE001 - config absence/parse must never crash boot
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Same gate as the gateway's own authz_mixin DISCORD_ALLOW_BOTS bypass.
     allow_bots_env = os.environ.get(f"{platform.upper()}_ALLOW_BOTS", "").lower().strip()
@@ -358,8 +358,8 @@ def _post_provision(
         detail = ""
         try:
             detail = (json.loads(exc.read().decode()) or {}).get("error", "")
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as _exc:  # noqa: BLE001
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         raise RuntimeError(
             f"connector returned HTTP {exc.code}" + (f": {detail}" if detail else "")
         ) from exc

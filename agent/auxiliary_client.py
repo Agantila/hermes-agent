@@ -1333,9 +1333,9 @@ class _CodexStreamGuard:
                 raise InterruptedError("Codex auxiliary Responses stream interrupted")
         except InterruptedError:
             raise
-        except Exception:
+        except Exception as _exc:
             # Interrupt state is best-effort UX; never a new failure mode.
-            pass
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     def _watchdog_fire(self) -> None:
         # Re-armable: if progress moved the deadline forward, reschedule instead of killing a
@@ -2138,8 +2138,8 @@ def _read_codex_singleton_token() -> Optional[str]:
             if exp and time.time() > exp:
                 logger.debug("Codex access token expired (exp=%s), skipping", exp)
                 return None
-        except Exception:
-            pass  # Non-JWT token or decode error — use as-is
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Non-JWT token or decode error — use as-is
         return access_token.strip()
     except Exception as exc:
         logger.debug("Could not read Codex auth for auxiliary client: %s", exc)
@@ -5915,8 +5915,8 @@ def _schedule_async_close(close_result: Any, client: Any) -> None:
     async def _await_close() -> None:
         try:
             await close_result
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         finally:
             _force_close_async_httpx(client)
     runner = _await_close()
@@ -7069,8 +7069,8 @@ def _provider_requires_stream(provider: str, base_url: Optional[str]) -> bool:
             return any(
                 isinstance(marker, str) and marker.strip() and marker.strip().lower() in _url
                 for marker in markers)
-    except Exception:
-        pass  # Config read is best-effort; never break an aux call over it.
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Config read is best-effort; never break an aux call over it.
     return False
 
 

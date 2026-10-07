@@ -7,6 +7,7 @@ provenance; category estimates are not exact tokenizer counts or gate authority.
 
 from __future__ import annotations
 
+import logging
 import json
 import re
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -96,8 +97,8 @@ def _memory_blocks(agent: Any) -> Tuple[str, str]:
             memory_block = store.format_for_system_prompt("memory") or ""
         if store is not None and getattr(agent, "_user_profile_enabled", True):
             user_block = store.format_for_system_prompt("user") or ""
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
     return memory_block, user_block
 
 

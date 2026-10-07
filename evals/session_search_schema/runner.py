@@ -19,6 +19,7 @@ Results append to results/<label>/<model-slug>.jsonl (resume-safe: completed
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import importlib.util
 import json
@@ -126,8 +127,8 @@ def exec_tool(arm_mod, args, main_db_path: Path):
     finally:
         try:
             db.close()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def run_one(client, model, arm_name, arm_mod, task_id, prompt, oracle,
@@ -227,8 +228,8 @@ def main():
                 try:
                     r = json.loads(line)
                     done.add((r["task"], r["arm"], r["rep"]))
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         with open(outpath, "a", encoding="utf-8") as f:
             for task_id, (prompt, oracle, _note) in TASKS.items():

@@ -116,8 +116,8 @@ class _SdkLogGuard(logging.Filter):
             if len(self._seen) >= 256:
                 self._seen.clear()
             self._seen[key] = [now, 0]
-        except Exception:
-            pass  # a logging filter must never break the caller
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # a logging filter must never break the caller
         return True
 _SESSION_WEBHOOKS_MAX = 500
 _DINGTALK_WEBHOOK_RE = re.compile(r'^https://(?:api|oapi)\.dingtalk\.com/')

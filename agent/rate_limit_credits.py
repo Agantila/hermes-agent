@@ -42,8 +42,8 @@ class RateLimitCreditsMixin:
             state = parse_rate_limit_headers(headers, provider=self.provider)
             if state is not None:
                 self._rate_limit_state = state
-        except Exception:
-            pass  # Never let header parsing break the agent loop
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Never let header parsing break the agent loop
 
     def get_rate_limit_state(self):
         """Return the last captured RateLimitState, or None."""
@@ -59,8 +59,8 @@ class RateLimitCreditsMixin:
         try:
             from hermes_cli.anon_auth import note_model_switch
             note_model_switch(self, headers)
-        except Exception:
-            pass  # Never let header parsing break the agent loop
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Never let header parsing break the agent loop
 
     def _capture_anthropic_response_headers(self, http_response: Any) -> None:
         """Capture rate-limit + credits state from Anthropic Messages response headers (the SDK's
@@ -168,8 +168,8 @@ class RateLimitCreditsMixin:
             display = (load_config() or {}).get("display")
             if isinstance(display, dict) and "credits_notices" in display:
                 enabled = bool(display["credits_notices"])
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         self._credits_notices_enabled_cache = enabled
         return enabled
 
@@ -197,5 +197,5 @@ class RateLimitCreditsMixin:
                 logger.info("OpenRouter response cache HIT (total: %d)", self._or_cache_hits)
             else:
                 logger.debug("OpenRouter response cache %s", status.upper())
-        except Exception:
-            pass  # Never let header parsing break the agent loop
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # Never let header parsing break the agent loop

@@ -213,8 +213,8 @@ class GatewaySessionCommandsMixin:
             _invoke_hook("on_session_reset", session_id=_new_sid, reason="new_session",
                          platform=source.platform.value if source.platform else "",
                          old_session_id=_old_sid, new_session_id=_new_sid)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         try:
             from hermes_cli.tips import get_random_tip
             _tip_line = t("gateway.reset.tip", tip=get_random_tip())
@@ -238,8 +238,8 @@ class GatewaySessionCommandsMixin:
                 header = t("gateway.reset.header_titled", title=sanitized)
             except ValueError as e:
                 note = t("gateway.reset.title_error_untitled", error=str(e))
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
         elif not note:  # sanitize_title returned empty (whitespace-only / unprintable)
             note = t("gateway.reset.title_empty_untitled")
         return header + note

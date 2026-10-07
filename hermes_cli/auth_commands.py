@@ -1,6 +1,7 @@
 """Credential-pool auth subcommands."""
 
 from __future__ import annotations
+import logging
 from pm import install_hint
 from hermes_cli.cli_output import line_input
 
@@ -116,8 +117,8 @@ def _migrate_legacy_custom_pool_key(provider: str, legacy_key: str) -> None:
     try:
         from hermes_cli.models import clear_provider_models_cache
         clear_provider_models_cache(legacy_key)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _provider_base_url(provider: str) -> str:
@@ -354,8 +355,8 @@ def _unsuppress_provider_sources(provider: str) -> None:
         suppressed = auth_mod._load_auth_store().get("suppressed_sources", {})
         for src in list(suppressed.get(provider, []) or []):
             auth_mod.unsuppress_credential_source(provider, src)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _add_api_key_credential(args, provider: str, pool) -> PooledCredential:
@@ -769,8 +770,8 @@ def _print_azure_entra_status() -> None:
                 if info.get("hint"):
                     print(f"  Hint: {info['hint']}")
         print()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _interactive_auth() -> None:

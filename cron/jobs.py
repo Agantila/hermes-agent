@@ -1245,8 +1245,8 @@ def _write_marker(name: str, text: str, tmp_prefix: str) -> None:
     try:
         ensure_dirs()
         atomic_write_text(_current_cron_store().cron_dir / name, text, tmp_prefix=tmp_prefix, mode=0o600)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def record_ticker_heartbeat(success: bool = False) -> None:

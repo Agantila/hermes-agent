@@ -9,6 +9,7 @@ Verifies that the agent cache correctly:
 - Preserves frozen system prompt across turns
 """
 
+import logging
 import threading
 from unittest.mock import MagicMock, patch
 
@@ -482,8 +483,8 @@ class TestAgentCacheSpilloverLive:
         for a in agents + [newcomer]:
             try:
                 a.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 class TestAgentCacheIdleResume:
     """End-to-end: idle-TTL-evicted session resumes cleanly with task state.
@@ -534,8 +535,8 @@ class TestAgentCacheIdleResume:
             bt_lifecycle.cleanup_browser = original_browser
             try:
                 agent.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         assert vm_calls == [], (
             f"release_clients() tore down terminal sandbox — user's cwd, "
@@ -586,8 +587,8 @@ class TestAgentCacheIdleResume:
             _ra.cleanup_vm = original_vm
             try:
                 agent_a.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
         # Only agent_b's task_id should appear in cleanup calls.
         assert "hard-session" in vm_calls

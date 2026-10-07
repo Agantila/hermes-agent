@@ -8,6 +8,7 @@ own ``model_setup_flows_*`` modules.
 
 from __future__ import annotations
 
+import logging
 import contextlib
 import argparse
 import os
@@ -333,9 +334,9 @@ def _model_flow_nous(config, current_model="", args=None):
         from hermes_cli.auth import resolve_nous_runtime_credentials
         try:
             creds = resolve_nous_runtime_credentials(force_refresh=True) or creds
-        except Exception:
+        except Exception as _exc:
             # Runtime inference has its own paid-entitlement recovery; don't block.
-            pass
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
     # Portal URL is needed for upgrade links and the recommendations endpoints.
     _nous_portal_url = ""

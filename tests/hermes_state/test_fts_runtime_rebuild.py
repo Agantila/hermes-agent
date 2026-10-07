@@ -35,8 +35,8 @@ def db(tmp_path):
     yield d
     try:
         d.close()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logging.debug("Suppressed exception: %s", _exc, exc_info=True)
 
 
 def _corrupt_fts(db_path):
