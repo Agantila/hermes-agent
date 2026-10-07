@@ -651,7 +651,7 @@ import sys
 from pathlib import Path
 from hermes_cli.env_loader import selected_config_backend_name
 print(selected_config_backend_name(Path(sys.argv[1])))
-' "$HERMES_HOME" 2>/dev/null) || _config_backend=""
+' "$HERMES_HOME") || _config_backend=""  # its stderr reaches the container log
 if [ "$_config_backend" = "remote" ]; then
     echo "[stage2] HERMES_CONFIG_BACKEND=remote: skipping docker_config_migrate.py"
 elif [ -z "$_config_backend" ]; then
