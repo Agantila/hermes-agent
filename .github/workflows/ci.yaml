@@ -489,4 +489,8 @@ jobs:
           report-path: '.github/ctrf/*.json'
           flaky-rate-report: true
           previous-results-max: 100
+          upload-artifact: true
+          fetch-previous-results: true
         if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
