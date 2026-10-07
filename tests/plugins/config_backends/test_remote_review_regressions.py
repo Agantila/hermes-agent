@@ -53,15 +53,26 @@ def test_cloud_boot_in_a_fresh_interpreter_does_not_hang(plane, tmp_path):
     assert "RESULT=remote" in proc.stdout + proc.stderr  # tui_gateway.server routes print() to stderr
 
 
-def test_reloading_dotenv_expands_a_plane_url_once(plane, monkeypatch):
+def test_reloading_dotenv_expands_each_value_once_across_layers(plane, monkeypatch, tmp_path):
+    from hermes_cli.config_backend import bootstrap_deployment
     from hermes_cli.env_loader import load_hermes_dotenv
+    project, managed = tmp_path / "project.env", tmp_path / "managed"
+    managed.mkdir()
+    monkeypatch.setenv("HERMES_MANAGED_DIR", str(managed))
     monkeypatch.setenv("HERMES_CONFIG_REMOTE_URL", plane.url)
+    for name in ("MANAGED_TOKEN_URL", "PLANE_HOST"):  # undone after the test, like the loads' writes
+        monkeypatch.setenv(name, "")
+        monkeypatch.delenv(name)
     (plane.home / ".env").write_text("HERMES_CONFIG_REMOTE_URL=${HERMES_CONFIG_REMOTE_URL}/\n")
+    project.write_text("PLANE_HOST=https://plane.example\n")
+    (managed / ".env").write_text("MANAGED_TOKEN_URL=${PLANE_HOST}/token\n")
 
     for _ in range(3):
-        load_hermes_dotenv(hermes_home=plane.home, load_external_secrets=False)
+        bootstrap_deployment(plane.home, project)  # the boot's own pass, as load_hermes_dotenv runs it
+        load_hermes_dotenv(hermes_home=plane.home, project_env=project, load_external_secrets=False)
 
-    assert os.environ["HERMES_CONFIG_REMOTE_URL"] == plane.url + "/"
+    assert os.environ["HERMES_CONFIG_REMOTE_URL"] == plane.url + "/"  # a self-reference expands once
+    assert os.environ["MANAGED_TOKEN_URL"] == "https://plane.example/token"  # an earlier layer is seen
 
 
 def test_provider_switch_with_a_locked_route_changes_nothing(plane, capsys):

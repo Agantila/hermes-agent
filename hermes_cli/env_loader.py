@@ -357,7 +357,10 @@ def _load_dotenv_with_fallback(
                 value = "".join(atom.resolve(lookup) for atom in parse_variables(value))
             resolved[name] = value
         for name, value in resolved.items():
-            if value is None or (not override and name in os.environ):
+            # A gap is judged against the peeled view: a value an earlier pass published is not a
+            # gap-filler's competitor, so this layer re-publishes it under this pass and a later
+            # layer of the same load (managed ``${VAR}``) still sees it.
+            if value is None or (not override and name in lookup_env):
                 continue
             _publish_dotenv_value(name, value, load_pass)
     # Every key this file defines, for the launch-residue strip: dotenv never unsets, so a key later
