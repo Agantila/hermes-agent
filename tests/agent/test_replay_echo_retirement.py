@@ -150,7 +150,7 @@ def test_placeholder_before_a_reply_is_dropped_and_exact_items_retired(tmp_path,
     assert not any(m.get("display_kind") == "hidden" for m in out), out
 
     # A thinking-only follower never reaches the wire, so the placeholder stays as the tool tail's closer.
-    thinking = {"role": "assistant", "content": "", "reasoning_content": "hmm"}
+    thinking = {"role": "assistant", "content": [{"type": "thinking", "thinking": "hmm"}], "reasoning_content": "hmm"}
     out = _prepare(tmp_path, monkeypatch, [{"role": "user", "content": "hi"}, _hidden_row(LEGACY), thinking,
                                            {"role": "user", "content": "continue"}])
     assert any(m.get("display_kind") == "hidden" and m.get("role") == "assistant" for m in out), out

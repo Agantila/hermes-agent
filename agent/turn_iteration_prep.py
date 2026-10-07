@@ -130,21 +130,23 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
     # slack tolerates surrounding whitespace), so long replies are rejected before ``strip()`` copies
     # them, and the list is copied only once a row actually needs neutralising.
     max_len = max(map(len, hazards)) + 64
-    from agent.agent_runtime_helpers import (  # late: heavy facade
-        _content_has_payload, _remember_own_row, _retire_leading_drops)
+    from agent.agent_runtime_helpers import _remember_own_row, _retire_leading_drops  # late: heavy facade
+    from agent.conversation_compression_archive import ABSORBED_ROW_IDS, RETIRED_DURABLE_ROWS
+    from run_agent import AIAgent
 
     def isolated(row: Dict[str, Any]) -> Dict[str, Any]:
         # Copy with fresh retirement lists: the bookkeeping below must not reach the stored dict.
-        return {**row, **{k: list(row[k]) for k in ("_absorbed_row_ids", "_retired_durable_rows")
+        return {**row, **{k: list(row[k]) for k in (ABSORBED_ROW_IDS, RETIRED_DURABLE_ROWS)
                           if isinstance(row.get(k), list)}}
 
     def reaches_wire_after(i: int) -> bool:
-        # The assistant run after *i* holds a row the request keeps (thinking-only rows are dropped
-        # from the request copy); repair would fold the whole run into a kept placeholder and hide it.
+        # The assistant run after *i* holds a row the request keeps (the same thinking-only test the
+        # request filter drops by); repair would fold the whole run into a kept placeholder and hide it.
         for nxt in seq[i + 1:]:
             if not isinstance(nxt, dict) or nxt.get("role") != "assistant":
                 return False
-            if nxt.get("tool_calls") or _content_has_payload(nxt.get("content")):
+            if nxt.get("tool_calls") or (not AIAgent._is_thinking_only_assistant(nxt)
+                                         and AIAgent._content_has_real_payload(nxt.get("content"))):
                 return True
         return False
 
