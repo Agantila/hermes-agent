@@ -306,8 +306,9 @@ def _run_heartbeat(job_name: str):
                 return
             try:
                 activity_cb(f"cronjob: running job '{job_name}' ({int(elapsed)}s elapsed)")
-            except Exception:
-                continue  # one transient callback error must not drop protection
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # one transient callback error must not drop protection
+                continue
 
     if activity_cb is not None:
         thread = threading.Thread(target=_heartbeat_loop, daemon=True, name="cronjob-run-heartbeat")

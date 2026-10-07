@@ -12,6 +12,7 @@ Per transcript:
 
 Usage: codex_arm.py <lineage_json> <questions_json> <workdir> <out_json>
 """
+import logging
 import glob
 import json
 import os
@@ -74,7 +75,8 @@ def rollout_session_id(path: str) -> str:
     for line in open(path, encoding="utf-8", errors="replace"):
         try:
             d = json.loads(line)
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if d.get("type") == "session_meta":
             return d.get("payload", {}).get("session_id", "")
@@ -86,7 +88,8 @@ def last_agent_message(path: str) -> str:
     for line in open(path, encoding="utf-8", errors="replace"):
         try:
             d = json.loads(line)
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         p = d.get("payload", {})
         if p.get("type") == "agent_message":
@@ -100,7 +103,8 @@ def rollout_stats(path: str) -> dict:
     for line in open(path, encoding="utf-8", errors="replace"):
         try:
             d = json.loads(line)
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         p = d.get("payload", {})
         if d.get("type") == "compacted" or p.get("type") == "compacted":

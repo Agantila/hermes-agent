@@ -294,7 +294,8 @@ class CDPSupervisor(DialogSupervisionMixin, FrameTrackingMixin):
                     if t.get("type") == "page" and url.startswith(("http://", "https://")) \
                             and (not origin or normalize_origin(url) == origin):
                         candidates.append((t["targetId"], url))
-                except Exception:
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
             for target_id, url in candidates:
                 sid = await _attach(target_id)

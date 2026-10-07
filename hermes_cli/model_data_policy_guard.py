@@ -7,6 +7,7 @@ a ProviderProfile hook) because the guard runs inside core selection code (``aut
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Callable, Optional
 
@@ -70,6 +71,7 @@ def data_training_warning(
         try:
             if predicate(model_lower, provider_lower):
                 return DataTrainingWarning(model=model, provider=(provider or "").strip(), message=message)
-        except Exception:
-            continue  # a misbehaving predicate must never break model selection
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)  # a misbehaving predicate must never break model selection
+            continue
     return None

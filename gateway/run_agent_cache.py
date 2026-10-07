@@ -427,7 +427,8 @@ class GatewayAgentCacheMixin:
         ):
             try:
                 clear = getattr(importlib.import_module(mod), attr)
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             try:
                 clear(session_key)

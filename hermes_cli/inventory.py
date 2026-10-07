@@ -660,7 +660,8 @@ def _apply_custom_aliases(rows: list[dict]) -> None:
         try:
             row["aliases"] = sorted(
                 custom_provider_aliases(str(row.get("name", "")), str(row.get("slug", ""))))
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
 
 

@@ -2149,7 +2149,8 @@ def _finalize_cron_session(session_db, agent, job_id: str, job_name: str, cron_s
             try:
                 if _set_cron_session_title(_session_db, _final_cron_session_id, _fallback):
                     break
-            except (Exception, KeyboardInterrupt):
+            except (Exception, KeyboardInterrupt) as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
     # Book cron_complete only when the last row is a real assistant reply ([SILENT] counts). Only a
     # POSITIVELY recognized bad status downgrades (keep tuple in sync with
@@ -4075,7 +4076,8 @@ def _worktree_maintenance_repos() -> List[str]:
                     errors="replace", timeout=5, cwd=workdir)
                 if probe.returncode == 0 and probe.stdout.strip():
                     repos.add(probe.stdout.strip())
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
 
     return [r for r in sorted(repos) if (Path(r) / ".worktrees").is_dir()]

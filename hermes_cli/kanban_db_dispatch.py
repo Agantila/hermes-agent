@@ -1926,7 +1926,8 @@ def count_running_tasks_other_boards(board: Optional[str] = None) -> int:
             finally:
                 with contextlib.suppress(Exception):
                     other.close()
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return total
 

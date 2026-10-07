@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import argparse
 import asyncio
 import json
@@ -206,7 +207,8 @@ def _cmd_subscriptions(args) -> None:
     for sub in subscriptions:
         try:
             sync_graph_subscription_record(store, sub, status="active")
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     _print_records("Microsoft Graph subscription(s)", "No Microsoft Graph subscriptions found.", [
         (sub.get("id") or "unknown", [

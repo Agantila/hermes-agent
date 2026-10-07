@@ -827,8 +827,9 @@ def compute_task_diagnostics(
     for rule in _RULES:
         try:
             out.extend(rule(task, events, runs, now_ts, cfg))
-        except Exception:
+        except Exception as _exc:
             # A broken rule must never 500 a whole /board request.
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     severity_idx = {s: i for i, s in enumerate(SEVERITY_ORDER)}
     out.sort(key=lambda d: (-severity_idx.get(d.severity, -1), -(d.last_seen_at or 0)))

@@ -77,7 +77,8 @@ def _updated_at_sort_key(value: Any) -> float:
     for parse in (lambda s: datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp(), float):
         try:
             return parse(raw)
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return float("-inf")
 

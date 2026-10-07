@@ -59,7 +59,8 @@ def _probe_gateway_health() -> tuple[bool, dict | None]:
             with urllib.request.urlopen(req, timeout=_GATEWAY_HEALTH_TIMEOUT) as resp:
                 if resp.status == 200:
                     return True, _read_dashboard_json_response(resp)
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return False, None
 
@@ -185,7 +186,8 @@ def _collect_profile_gateway_topology() -> Dict[str, Any]:
             # gateway per served profile beside the host.
             if not (_check_gateway_running(home) if name == "default" else _has_own_gateway(home)):
                 continue
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         try:
             runtime = read_runtime_status(home / "gateway_state.json")

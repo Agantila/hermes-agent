@@ -550,7 +550,8 @@ class WhatsAppAdapter(WhatsAppBehaviorMixin, BasePlatformAdapter):
                         if data.get("status") == "connected":
                             print(f"[{self.name}] Bridge ready (status: connected)")
                             return True, http_ready, data
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
         return None, http_ready, data
 

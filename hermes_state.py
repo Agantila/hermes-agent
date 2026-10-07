@@ -224,7 +224,8 @@ def _ensure_test_isolation(db_path: Path) -> None:
     for extra in _STATE_DB_GUARD_EXTRA_DENY_ROOTS:
         try:
             roots.append(Path(extra).expanduser().resolve())
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     for root in roots:
         if _is_production_state_db(resolved, root):

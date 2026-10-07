@@ -2532,7 +2532,8 @@ def _resolve_runtime_with_fallback(resolve_kwargs: dict | None = None) -> _Runti
                     "Primary %s (%s), falling back to %s model %s",
                     primary_failure_wording(primary_exc)[0], primary_exc, fb_provider, fb_model)
                 return _RuntimeFallbackResolution(runtime, fb_model, True)
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
         raise
 

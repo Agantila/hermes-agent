@@ -843,7 +843,8 @@ def _prune_candidates(worktrees_dir: Path, max_age_hours: int, now: float) -> li
             mtime = entry.stat().st_mtime
             if mtime > now - (tier_hours * 3600):
                 continue  # Too recent — skip
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         candidates.append((entry, mtime, mtime <= now - (tier_hours * 3 * 3600)))
     return candidates

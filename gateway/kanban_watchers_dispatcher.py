@@ -7,6 +7,7 @@ the singleton lock and the health telemetry; everything that only needs the
 
 from __future__ import annotations
 
+import logging
 import contextlib
 import os
 import sqlite3
@@ -236,7 +237,8 @@ class _KanbanDispatcher:
                     conn = _kbc().connect(board=slug)
                     if kbd.has_spawnable_ready(conn) or (_review_probe and kbd.has_spawnable_review(conn)):
                         return True
-                except Exception:
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
                 finally:
                     if conn is not None:

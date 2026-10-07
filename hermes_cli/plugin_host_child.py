@@ -281,7 +281,8 @@ class HostRuntime:
                     try:
                         captured.append(value())
                         break
-                    except Exception:
+                    except Exception as _exc:
+                        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                         continue
         if not captured:
             return None

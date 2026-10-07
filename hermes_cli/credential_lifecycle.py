@@ -29,7 +29,8 @@ def _providers_for_env_var(env_var: str) -> List[str]:
         try:
             if env_var in (cfg.api_key_env_vars or ()):
                 hits.append(pid)
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return hits
 

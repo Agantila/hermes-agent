@@ -3,6 +3,7 @@ projection. Bodies are rebound onto server.py's globals (method_ctx.bind_module)
 
 from __future__ import annotations
 
+import logging
 from .method_ctx import bind_module
 
 # Verbose tool text is capped to the Ink render budget (a hair more, so the "[omitted …]" label
@@ -197,7 +198,8 @@ def _todo_state_from_history(history) -> dict | None:
                 continue
             try:
                 return _normalize_todo_state(json.loads(content))
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
         return None
     except Exception:

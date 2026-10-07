@@ -2672,7 +2672,8 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                 if msg.type == web.WSMsgType.TEXT:
                     try:
                         frame = msg.json()
-                    except Exception:
+                    except Exception as _exc:
+                        logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                         continue
                     if isinstance(frame, dict):
                         reply = await asyncio.to_thread(

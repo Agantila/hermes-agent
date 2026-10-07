@@ -369,7 +369,8 @@ class EventBridge:
                     continue
                 try:
                     latest = _latest_ts(db.get_messages(session_id))
-                except Exception:
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
                 if latest > 0.0:
                     self._last_poll_timestamps[session_key] = latest
@@ -416,7 +417,8 @@ class EventBridge:
             last_seen = self._last_poll_timestamps.get(session_key, 0.0)
             try:
                 messages = db.get_messages(session_id)
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             if not messages:
                 continue

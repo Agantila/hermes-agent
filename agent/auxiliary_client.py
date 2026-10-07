@@ -4790,7 +4790,8 @@ def _named_custom_api_key(custom_entry: Dict[str, Any], provider: str, custom_ba
             for pool_key in custom_provider_pool_key_candidates(custom_base, pool_name):
                 try:
                     pool = load_pool(pool_key)
-                except Exception:
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
                 if not pool.has_credentials():
                     continue

@@ -136,7 +136,8 @@ def _brief_in_transcript(store, sid):
         try:
             if "PRs need review" in p.read_text():
                 return True
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return False
 

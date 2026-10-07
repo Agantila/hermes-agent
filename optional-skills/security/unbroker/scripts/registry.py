@@ -18,6 +18,7 @@ the only network call and can be bypassed by passing csv_text directly to refres
 """
 from __future__ import annotations
 
+import logging
 import csv
 import datetime
 import io
@@ -224,7 +225,8 @@ def _fetch_ca_latest() -> tuple[str, list[dict]]:
     for url in ca_candidate_urls():
         try:
             recs = parse(fetch(url), jurisdiction="US-CA", has_drop=True)
-        except Exception:  # noqa: BLE001 - a missing year 404s; fall through to older years
+        except Exception as _exc:  # noqa: BLE001 - a missing year 404s; fall through to older years
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if recs:
             return url, recs

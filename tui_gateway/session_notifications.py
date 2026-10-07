@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import contextlib
+import queue as _queue_mod
 
 from .method_ctx import bind_module
 
@@ -752,7 +753,10 @@ def _notification_poller_scoped_loop(stop_event: threading.Event, sid: str, sess
             _notif_poll_kanban(sid, session)
         try:
             evt = queue.get(timeout=0.5)
-        except Exception:
+        except _queue_mod.Empty:
+            continue  # poll timeout: the session is idle, not failed
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         ready = [evt]
         for _ in range(queue.qsize()):

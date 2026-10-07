@@ -121,8 +121,9 @@ def _drain(root: Path) -> None:
                 owner = find_canonical_owner(home)
                 if owner is not None and find_canonical_live_owner(home) is None:
                     continue
-            except Exception:
+            except Exception as _exc:
                 # Discovery uncertainty is not permission to launch.
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             record["status"] = "claimed"
             atomic_json_write(path, record, fsync_dir=True, mode=0o600)

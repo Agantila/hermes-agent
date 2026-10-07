@@ -355,7 +355,8 @@ def _plugin_terminal_backend_rows() -> List[Dict[str, str]]:
             try:
                 rows.append({"name": provider.name.strip().lower(), "label": provider.display_name,
                              "description": provider.description})
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
     except Exception:
         return rows

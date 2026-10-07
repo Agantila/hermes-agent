@@ -934,7 +934,8 @@ def _get_plugin_toolset_key(name: str) -> Optional[str]:
         try:
             if toolset := lookup():
                 return toolset
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return None
 

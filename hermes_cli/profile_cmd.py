@@ -142,7 +142,8 @@ def _shared_credential_warnings(profiles) -> list:
             continue
         try:
             shared = shared_channel_credentials(p.path, default.path)
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if shared:
             lines.append(shared_credential_warning(p.name, shared))

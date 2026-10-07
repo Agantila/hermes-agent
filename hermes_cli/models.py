@@ -1310,7 +1310,8 @@ def _first_exchangeable_copilot_token(raw_tokens) -> str:
             continue
         try:
             api_token = exchange_copilot_token(raw)[0]  # (api_token, expires_at, base_url)
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if api_token:
             return api_token
@@ -1350,7 +1351,8 @@ def _resolve_copilot_catalog_api_key() -> str:
     for source in sources:
         try:
             token = source()
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if token:
             return token
@@ -2363,7 +2365,8 @@ def fetch_github_model_catalog(
     for headers in attempts:
         try:
             items = _payload_items(_get_json(COPILOT_MODELS_URL, timeout=timeout, headers=headers))
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         models = _copilot_text_models(items)
         if not models and items:

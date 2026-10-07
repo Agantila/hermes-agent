@@ -802,7 +802,8 @@ def _resolve_shell_init_files() -> list[str]:
             path = os.path.expandvars(os.path.expanduser(raw))
             if path and os.path.isfile(path):
                 resolved.append(path)
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return resolved
 
@@ -853,7 +854,8 @@ def _sweep_escaped_descendants(descendants: list, pgid: int) -> None:
             except OSError:  # ProcessLookupError / PermissionError included
                 pass
             child.kill()
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
 
 

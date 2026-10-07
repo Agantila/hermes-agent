@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import shlex
 import shutil
@@ -347,7 +348,8 @@ def valid_post_setup_keys() -> Set[str]:
                     _plugin_video_gen_providers, _plugin_browser_providers):
         try:
             keys.update(ps for prov in builder() if (ps := prov.get("post_setup")))
-        except Exception:  # pragma: no cover — defensive; plugins optional
+        except Exception as _exc:  # pragma: no cover — defensive; plugins optional
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return keys
 

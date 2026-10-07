@@ -934,7 +934,8 @@ async def _probe_openai_compatible_models(base_url: str, headers: Optional[dict]
         for candidate in (base, alternate):
             try:
                 candidate_resp = await client.get(candidate + "/models", headers=headers)
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             # Keep the most telling failure: a 401/403 from the /v1 alternate says "server is
             # there, key rejected", which beats the typed root's 404 (wrong path).

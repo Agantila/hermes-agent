@@ -6,6 +6,7 @@ cached agent, dispatching through the REAL delegate_task background rail
 tests/tools/test_async_delegation.py).
 """
 
+import logging
 import time
 from unittest.mock import MagicMock
 
@@ -108,7 +109,8 @@ async def test_review_command_dispatches_background_subagent(monkeypatch):
         try:
             evt = process_registry.completion_queue.get(timeout=0.2)
             break
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     assert evt is not None
     assert evt["type"] == "async_delegation"

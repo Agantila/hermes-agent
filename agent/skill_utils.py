@@ -758,7 +758,8 @@ def discover_all_skill_config_vars() -> List[Dict[str, Any]]:
         for skill_file in iter_skill_index_files(skills_dir, "SKILL.md"):
             try:
                 frontmatter, _ = parse_frontmatter(skill_file.read_text(encoding="utf-8-sig"))
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             skill_name = str(frontmatter.get("name") or skill_file.parent.name)
             if skill_name in disabled or not skill_matches_platform(frontmatter):

@@ -850,7 +850,8 @@ def cmd_activity(args: argparse.Namespace) -> None:
             break
         try:
             blk = rpc_call(chain, "eth_getBlockByNumber", [hex(bn), True])
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if not blk:
             continue
@@ -1040,7 +1041,8 @@ def cmd_whale(args: argparse.Namespace) -> None:
     for bn in range(latest, max(0, latest - blocks), -1):
         try:
             blk = rpc_call(chain, "eth_getBlockByNumber", [hex(bn), True])
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if not blk:
             continue
@@ -1116,7 +1118,8 @@ def cmd_multichain(args: argparse.Namespace) -> None:
                     continue
                 try:
                     bal_int = int(raw, 16)
-                except Exception:
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
                 if bal_int == 0:
                     continue
@@ -1186,7 +1189,8 @@ def cmd_allowance(args: argparse.Namespace) -> None:
                 continue
             try:
                 allowance_int = int(raw, 16)
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             if allowance_int == 0:
                 continue

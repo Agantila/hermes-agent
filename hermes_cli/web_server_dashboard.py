@@ -434,7 +434,8 @@ def _discover_user_themes() -> list:
     for f in sorted(themes_dir.glob("*.yaml")):
         try:
             data = yaml.safe_load(f.read_text(encoding="utf-8-sig"))
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         normalised = _normalise_theme_definition(data)
         if normalised is not None:

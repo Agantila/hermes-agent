@@ -48,7 +48,8 @@ def stream_diag_capture_response(agent: Any, diag: Dict[str, Any], http_response
             try:
                 if val := headers.get(name):
                     captured[name] = str(val)[:120]  # keep log lines bounded
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
         diag["headers"] = captured
     except Exception as _exc:

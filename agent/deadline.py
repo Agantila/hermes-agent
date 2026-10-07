@@ -452,7 +452,8 @@ def kill_process_tree(pid: int, *, sig: Optional[int] = None) -> bool:
                 if child.is_running():
                     child.send_signal(sig)
                     signalled = True
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
         try:
             # getpgid→killpg has an inherent TOCTOU shared by every killpg site; the psutil

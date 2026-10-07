@@ -311,8 +311,9 @@ def _preflight_check_skills(job: dict) -> Optional[str]:
     for skill_name in skill_names:
         try:
             payload = json.loads(skill_view(skill_name))
-        except Exception:
-            continue  # unreadable/missing skill → existing skip handling
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # unreadable/missing skill → existing skip handling
+            continue
         if not isinstance(payload, dict) or not payload.get("success"):
             continue
         if payload.get("setup_needed") or payload.get("readiness_status") == "setup_needed":

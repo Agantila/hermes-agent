@@ -312,7 +312,8 @@ def _check_manifest_v2(report: "DoctorReport", manifest: Any) -> None:
             importlib.metadata.version(dist)
         except importlib.metadata.PackageNotFoundError:
             missing.append(req)
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     for req in unpinned:
         report.warning(

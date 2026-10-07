@@ -907,7 +907,8 @@ def _toolset_enabled_for_reconfigure(ts_key: str, config: dict) -> bool:
         try:
             if ts_key in _current_platform_tools(config, platform):
                 return True
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return False
 

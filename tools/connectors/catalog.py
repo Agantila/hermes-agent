@@ -105,7 +105,8 @@ class HostInstaller:
             for source in _sources():
                 try:
                     meta = source.inspect(identifier)
-                except Exception:
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
                 if meta is not None:
                     return {"name": meta.name, "description": meta.description, "source": meta.source,

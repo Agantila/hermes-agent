@@ -537,7 +537,8 @@ def _stop_desktop_processes_locking_build(desktop_dir: Path, *, also_posix: bool
             if not exe or pid is None or pid == me or pid in spared:
                 continue
             exe_path = Path(exe).resolve()
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if release_dir in exe_path.parents:
             victims.append(proc)
@@ -547,7 +548,8 @@ def _stop_desktop_processes_locking_build(desktop_dir: Path, *, also_posix: bool
         try:
             proc.terminate()
             stopped.append(int(proc.pid))
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     if stopped:
         # Wait for the handles (and thus the file locks) to actually release.
@@ -558,7 +560,8 @@ def _stop_desktop_processes_locking_build(desktop_dir: Path, *, also_posix: bool
                 try:
                     proc.kill()
                     killed.append(proc)
-                except Exception:
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
             if killed:
                 psutil.wait_procs(killed, timeout=5)

@@ -149,7 +149,8 @@ def selection_warnings(
     for guard in _GUARDS:
         try:
             warning = guard(model_name, provider, base_url, api_key, model_info, selection_context)
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if warning is not None and (wanted is None or warning.kind in wanted):
             results.append(warning)

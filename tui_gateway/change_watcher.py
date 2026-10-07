@@ -316,7 +316,8 @@ def _broadcast_watched_changes(now: float | None = None) -> None:
         _change_checked_at[event] = now
         try:
             sig = sig_fn()
-        except Exception:  # noqa: BLE001 - a broken probe must not kill the loop
+        except Exception as _exc:  # noqa: BLE001 - a broken probe must not kill the loop
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if event not in _change_sigs:
             _change_sigs[event] = sig

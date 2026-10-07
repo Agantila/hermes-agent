@@ -4,6 +4,7 @@ when the model tries to finish right after editing code without fresh evidence."
 
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -86,7 +87,8 @@ def _candidate_cwds(paths: Iterable[str]) -> list[Path]:
         try:
             path = Path(raw).expanduser()
             seen.setdefault(str((path if path.is_dir() else path.parent).resolve()))
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return [Path(p) for p in seen]
 

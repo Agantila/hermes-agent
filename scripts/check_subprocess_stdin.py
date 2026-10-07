@@ -24,6 +24,7 @@ violation (does not modify files).
 
 from __future__ import annotations
 
+import logging
 import ast
 import os
 import sys
@@ -235,7 +236,8 @@ def main() -> int:
 
             try:
                 content = py_file.read_text(encoding="utf-8-sig")
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             violations = find_subprocess_calls(content, rel)
             all_violations.extend(violations)

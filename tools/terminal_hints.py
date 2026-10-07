@@ -9,6 +9,7 @@ in 1-2 sentences; pure function, no I/O or config reads.
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Callable, Optional
 
@@ -155,6 +156,7 @@ def annotate_failure(command: str, exit_code: int, output: str) -> Optional[str]
         try:
             if hint := fn(command or "", window):
                 return hint
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return _EXIT_CODE_HINTS.get(exit_code)

@@ -148,7 +148,8 @@ def _rasterize_svg_to_png(svg_path: Path, out_path: Path) -> bool:
                 subprocess.run(cmd, check=True, capture_output=True, timeout=30, stdin=subprocess.DEVNULL)
                 if _nonempty_file(out_path):
                     return True
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
     return False
 

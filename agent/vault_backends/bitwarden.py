@@ -100,7 +100,8 @@ class BitwardenLoginBackend(LoginBackend):
                     continue
                 try:
                     origin = normalize_origin(str(uri.get("uri") or ""))
-                except Exception:
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
                 if origin and origin not in origins:
                     origins.append(origin)

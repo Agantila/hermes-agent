@@ -6,6 +6,7 @@ Single-shot, on-demand, never daily — see ``references/security-disclosure-tri
 
 from __future__ import annotations
 
+import logging
 import argparse
 import concurrent.futures
 import json
@@ -61,7 +62,8 @@ def _discover_venv() -> list[Component]:
     for dist in distributions():
         try:
             name = (dist.metadata["Name"] or "").strip()
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         version = (dist.version or "").strip()
         if name.lower().replace("_", "-") == "hermes-agent" and version == "0.0.0":

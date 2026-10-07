@@ -49,8 +49,11 @@ def analyse(files):
     mods = {}; edges = collections.defaultdict(set)
     t0 = time.perf_counter()
     for p in files:
-        try: src = open(p, encoding="utf-8", errors="replace").read()
-        except Exception: continue
+        try:
+            src = open(p, encoding="utf-8", errors="replace").read()
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
+            continue
         lines = src.count("\n") + (0 if src.endswith("\n") else 1)
         code, comm, doc = code_lines(src)
         m["files"] = m.get("files", 0) + 1; m["lines"] = m.get("lines", 0) + lines; m["code"] = m.get("code", 0) + code; m["comment"] = m.get("comment", 0) + comm; m["docstring"] = m.get("docstring", 0) + doc; m["bytes"] = m.get("bytes", 0) + len(src.encode())

@@ -80,7 +80,8 @@ def _process_looks_like_pytest(proc: Any) -> bool:
         try:
             # Split on both separators on every host so the answer is platform-independent.
             name = str(arg).strip('"').strip("'").replace("\\", "/").rsplit("/", 1)[-1].lower()
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if name in _PYTEST_LAUNCHER_NAMES:
             return True

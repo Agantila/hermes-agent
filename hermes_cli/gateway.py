@@ -2984,8 +2984,9 @@ def legacy_launchd_labels_for_install(exclude=()) -> list[str]:
             label = data["Label"]
             pinned = Path(str(data["EnvironmentVariables"]["HERMES_HOME"])).expanduser().resolve()
             rel = pinned.relative_to(root).parts
-        except Exception:
-            continue  # unreadable plist, no pinned home, or a home outside this root: not ours — fail closed
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)  # unreadable plist, no pinned home, or a home outside this root: not ours — fail closed
+            continue
         if not isinstance(label, str) or label in excluded or not label.startswith("ai.hermes.gateway"):
             continue
         if not rel or (len(rel) == 2 and rel[0] == "profiles"):

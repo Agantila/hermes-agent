@@ -50,6 +50,7 @@ EXIT CODES
 
 from __future__ import annotations
 
+import logging
 import argparse
 import json
 import os
@@ -182,7 +183,8 @@ def which_binary() -> Optional[Path]:
                     )
                     if out.returncode != 0 or "ast-grep" not in (out.stdout + out.stderr).lower():
                         continue
-                except Exception:
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
             return p
     return None

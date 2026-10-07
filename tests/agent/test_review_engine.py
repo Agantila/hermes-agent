@@ -6,6 +6,7 @@ delegate_task (including the internal per-call ``credentials_cfg``
 override), and the shared dispatch-note formatter.
 """
 
+import logging
 import json
 import time
 from unittest.mock import MagicMock
@@ -239,7 +240,8 @@ def test_start_review_dispatches_background_and_completes(monkeypatch):
         try:
             evt = process_registry.completion_queue.get(timeout=0.2)
             break
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     assert evt is not None and evt["type"] == "async_delegation"
     assert evt["results"][0]["summary"] == "REVIEW: looks good"

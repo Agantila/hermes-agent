@@ -1,3 +1,4 @@
+import logging
 from types import SimpleNamespace
 
 import pytest
@@ -314,7 +315,8 @@ def _aux_call(task, client, attempts):
         try:
             return auxiliary_client._validate_llm_response(
                 auxiliary_client._relay_sync_completion(client, {"model": "m", "messages": []}), task)
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     return auxiliary_client._validate_llm_response(
         auxiliary_client._relay_sync_completion(client, {"model": "m", "messages": []}), task)

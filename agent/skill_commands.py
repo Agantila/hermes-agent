@@ -498,7 +498,8 @@ def scan_skill_commands() -> Dict[str, Dict[str, Any]]:
             if entry["status"] == "unique":
                 try:
                     _scan_skill_md(Path(entry["path"]), disabled, seen_names, commands)
-                except Exception:
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
     except Exception:
         logger.debug("Skill command scan failed", exc_info=True)

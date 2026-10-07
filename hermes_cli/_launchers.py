@@ -187,7 +187,8 @@ def exe_is_venv_bound(exe: Path, venv_dir: Path | None) -> bool:
         for enc in ("utf-8", "utf-16-le"):
             try:
                 needles.add(str(interpreter).encode(enc))
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
     try:
         data = Path(exe).read_bytes()

@@ -8,6 +8,7 @@ appear as secondary detail for toolsets with a single obvious key.
 
 from __future__ import annotations
 
+import logging
 from typing import Callable, Iterable, Optional
 
 # Toolsets whose ``env_vars`` list is a multi-provider dump that means nothing to a user; render one
@@ -37,7 +38,8 @@ def filter_to_enabled_toolsets(unavailable: list[dict], enabled: Iterable[str],
     for name in names:
         try:
             enabled_tools.update(str(t) for t in (resolve(name) or ()))
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     name_set = set(names)
 

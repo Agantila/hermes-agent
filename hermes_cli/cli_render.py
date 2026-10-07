@@ -618,7 +618,8 @@ def _output_history_lines() -> list[str]:
         if callable(entry):
             try:
                 lines = entry()
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             if isinstance(lines, str):
                 lines = lines.splitlines()

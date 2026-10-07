@@ -240,7 +240,8 @@ class WSClient:
                 continue
             try:
                 obj = json.loads(raw)
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             if pred(obj):
                 return obj

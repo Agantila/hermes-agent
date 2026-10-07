@@ -203,7 +203,8 @@ class SessionGatewayMixin:
                     ephemeral_backend=_is_ephemeral_port_zero_backend(process.cmdline()),
                     connection_statuses=statuses):
                     continue
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             candidates.append(process)
         signalled: List[int] = []
@@ -372,7 +373,8 @@ class SessionGatewayMixin:
         for row in self._read_all("SELECT entry_json FROM gateway_routing"):
             try:
                 entry = json.loads(row["entry_json"] or "{}")
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             if isinstance(entry, dict) and entry.get("session_id") == session_id:
                 return entry
@@ -387,7 +389,8 @@ class SessionGatewayMixin:
         for row in self._read_all("SELECT scope, session_key, entry_json FROM gateway_routing"):
             try:
                 entry = json.loads(row["entry_json"] or "{}")
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             if isinstance(entry, dict) and entry.get("session_id") in session_ids:
                 doomed.append((row["scope"], row["session_key"]))

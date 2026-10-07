@@ -228,8 +228,9 @@ class StatusOutputMixin:
         for item in notice if isinstance(notice, list) else [notice]:
             try:
                 self._emit_diagnostic_status(item)
-            except Exception:
+            except Exception as _exc:
                 # One surface failure must not hide later switches from the same chain.
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
 
     def _flush_status_buffer(self) -> None:

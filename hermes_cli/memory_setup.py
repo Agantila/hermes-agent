@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
 import shlex
@@ -133,7 +134,8 @@ def _get_available_providers() -> list:
             provider = load_memory_provider(name)
             if not provider:
                 continue
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         schema = _schema_of(provider)
         has_secrets = any(f.get("secret") for f in schema)

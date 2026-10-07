@@ -6,6 +6,7 @@ Usage:
 """
 from __future__ import annotations
 
+import logging
 import argparse
 import collections
 import glob
@@ -23,7 +24,8 @@ def summarize(files):
         for line in open(f, encoding="utf-8"):
             try:
                 r = json.loads(line)
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             k = (r["task"], r["arm"])
             a = agg[k]

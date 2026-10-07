@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Dict, Iterable, Optional, Set
 
@@ -174,7 +175,8 @@ def _toolset_enabled(config: Dict[str, object], toolset_key: str) -> bool:
             if isinstance(toolset_name, str) and toolset_name:
                 try:
                     available_tools.update(resolve_toolset(toolset_name))
-                except Exception:
+                except Exception as _exc:
+                    logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
         if target_tools.issubset(available_tools):
             return True

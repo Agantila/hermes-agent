@@ -400,7 +400,8 @@ class CLIAgentSetupMixin:
                 self.model = _fb_model
                 # reasoning_config follows the swap in _ensure_runtime_credentials (the only caller).
                 return runtime
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
         return None
 

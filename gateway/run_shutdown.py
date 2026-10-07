@@ -942,7 +942,8 @@ class GatewayShutdownMixin:
             for target in targets or ():
                 try:
                     platform = Platform(str(target.get("platform", "")).lower())
-                except Exception:
+                except Exception as _exc:
+                    logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                     continue
                 adapter = self.adapters.get(platform)
                 if adapter is None or not self._restart_notification_allowed(platform):

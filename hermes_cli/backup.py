@@ -258,7 +258,8 @@ def _collect_memory_provider_external_paths() -> List[Path]:
     for raw in declared:
         try:
             p = Path(raw).expanduser()
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if not p.exists():
             continue

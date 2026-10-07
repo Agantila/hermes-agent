@@ -41,7 +41,8 @@ def get_terminal_id() -> Optional[str]:
     for fd in (sys.stdin, sys.stdout):
         try:
             name = os.ttyname(fd.fileno())
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if name:
             return f"tty-{_sanitize(name)}"

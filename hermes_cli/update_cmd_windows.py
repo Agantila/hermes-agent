@@ -173,7 +173,8 @@ def _detect_venv_python_processes(*, exclude_pids: set[int] | None = None) -> li
     for proc in proc_iter:
         try:
             info = proc.info
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         pid, exe = info.get("pid"), info.get("exe")
         if not exe or pid is None or int(pid) in skip:

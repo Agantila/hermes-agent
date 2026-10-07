@@ -1153,7 +1153,8 @@ def list_async_delegations() -> List[Dict[str, Any]]:
             continue
         try:
             token, in_tool = fn()
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         activity = _children_activity_from_token(token, now)
         if activity is not None:

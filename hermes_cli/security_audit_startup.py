@@ -45,7 +45,8 @@ def _iter_sshd_config_lines() -> list[str]:
     for p in paths:
         try:
             raw_lines = p.read_text(encoding="utf-8-sig", errors="replace").splitlines()
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         lines.extend(s for s in map(str.strip, raw_lines) if s and not s.startswith("#"))
     return lines
@@ -148,7 +149,8 @@ def run_security_audit(*, hermes_home: Optional[Path] = None, config: Optional[d
                   lambda: _network_listener_without_auth(config)):
         try:
             r = check()
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if isinstance(r, list):
             findings.extend(r)

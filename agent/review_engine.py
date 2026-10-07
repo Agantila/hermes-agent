@@ -83,7 +83,8 @@ def collect_parent_loaded_skills(parent_agent, messages: List[Dict[str, Any]], l
                 continue
             try:
                 args = json.loads(fn.get("arguments") or "{}")
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             # Only whole-skill loads seed the reviewer; a reference-file read is a detail
             # of the parent's task covered by loading the SKILL.md.

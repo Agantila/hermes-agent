@@ -111,7 +111,8 @@ def _on_post_tool_call(tool_name: str = "", args: Optional[Dict[str, Any]] = Non
         try:
             p = Path(path_str).expanduser()
             created = str(p) in absent and p.exists()
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         category = dg.guess_category(p) if created else None
         if category is not None and dg.track(str(p), category, silent=True) and category == "test":

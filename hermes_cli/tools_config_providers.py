@@ -61,7 +61,8 @@ def _plugin_provider_rows(
                 continue
         try:
             schema = provider.get_setup_schema()
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if not isinstance(schema, dict):
             continue
@@ -271,7 +272,8 @@ def _any_plugin_provider_available(registry_module: str) -> bool:
             try:
                 if provider.is_available():
                     return True
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
     except Exception as _exc:
         logger.debug("Suppressed exception: %s", _exc, exc_info=True)

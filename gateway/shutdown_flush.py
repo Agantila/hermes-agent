@@ -162,7 +162,8 @@ def drain_transcript_spool(session_id: str, replay, *, db_known_failing: bool = 
             continue
         try:
             payload = json.loads(path.read_text(encoding="utf-8-sig"))
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         # A parseable non-object file (scalar/list) cannot be attributed to any session: skip it
         # like unparseable JSON instead of letting ``.get`` abort the whole drain.
@@ -487,7 +488,8 @@ def flush_agent_history_to_file(session_id: Optional[str], history: list) -> Non
             try:
                 plain = isinstance(_m, (dict, list, str, int, float, bool, type(None)))
                 snapshot.append(_m if plain else str(_m))
-            except Exception:
+            except Exception as _exc:
+                logger.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
         _write_payload(flush_dir, {
             "reason": AGENT_HISTORY_REASON, "issue": "#72680",

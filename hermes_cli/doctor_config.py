@@ -3,6 +3,7 @@ Split out of ``hermes_cli/doctor.py``."""
 
 from __future__ import annotations
 
+import logging
 import os
 from hermes_cli.doctor_report import (
     Finding, _fail_and_issue, _section, check_bool, check_fail, check_info, check_ok, check_warn, doctor_check,
@@ -263,7 +264,8 @@ def _validate_model_config(config_path, issues: list) -> None:
     for known_provider in known_providers if normalize is not None else ():
         try:
             valid_provider_ids.add(normalize(known_provider))
-        except Exception:
+        except Exception as _exc:
+            logging.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
     runtime_provider = catalog_provider = provider
     if provider and provider not in {"auto", "custom"}:

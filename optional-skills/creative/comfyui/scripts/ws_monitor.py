@@ -183,7 +183,8 @@ def main(argv: list[str] | None = None) -> int:
 
             try:
                 payload = json.loads(msg)
-            except Exception:
+            except Exception as _exc:
+                logging.debug("Suppressed exception: %s", _exc, exc_info=True)
                 continue
             mtype = payload.get("type", "")
             mdata = payload.get("data", {}) or {}

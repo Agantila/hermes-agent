@@ -150,7 +150,8 @@ def _all_origins(urls: List[str]) -> List[str]:
     for u in urls:
         try:
             origin = normalize_origin(u)
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         if origin not in out:
             out.append(origin)

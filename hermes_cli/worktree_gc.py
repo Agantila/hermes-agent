@@ -257,7 +257,8 @@ def audit_worktrees(repo_root: str, *, with_sizes: bool = True,
             continue
         try:
             age_days = (now - entry.stat().st_mtime) / 86400.0
-        except Exception:
+        except Exception as _exc:
+            logger.debug("Suppressed exception: %s", _exc, exc_info=True)
             continue
         try:
             branch = _git(["branch", "--show-current"], cwd=str(entry), timeout=5).stdout.strip()
