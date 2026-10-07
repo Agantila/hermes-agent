@@ -35,11 +35,14 @@ from hermes_cli.backup_restore import (
     _default_new_file_mode,
     _detect_prefix,
     _extract_member_atomically,
+    _get_config_path_value,
     _import_db_member,
     _restore_auth_json,
     _safe_restore_db,
+    _set_config_path_value,
     _validate_backup_zip,
 )
+from hermes_cli.config_backend import require_file_tooling
 
 logger = logging.getLogger(__name__)
 
@@ -594,7 +597,6 @@ def run_backup(args) -> bool:
     the caller turns False into exit status 1 so a cron/systemd timer never publishes a "successful"
     archive that is missing state.db. Hard failures keep raising ``SystemExit``.
     """
-    from hermes_cli.config_backend import require_file_tooling
     require_file_tooling("`hermes backup`")
     hermes_root = get_default_hermes_root()
 
@@ -732,7 +734,6 @@ def _import_member_rel(member: str, prefix: str) -> tuple[str, bool]:
 
 def run_import(args) -> Optional[int]:
     """Restore a Hermes backup; return 1 on damaged archives or incomplete restores."""
-    from hermes_cli.config_backend import require_file_tooling
     require_file_tooling("`hermes import`")
     zip_path = Path(args.zipfile).expanduser().resolve()
 
@@ -744,11 +745,8 @@ def run_import(args) -> Optional[int]:
         print(f"Error: Not a valid zip file: {zip_path}")
         sys.exit(1)
 
-    # The restore target must be the home the command operates under — the
-    # same path printed as "Target:" via display_hermes_home(). Resolving
-    # through get_default_hermes_root() instead maps a profile home
-    # (<root>/profiles/<name>) back to <root>, silently retargeting the
-    # restore at the live root while the profile directory stays empty.
+    # The home this command operates under (the "Target:" display_hermes_home() prints):
+    # get_default_hermes_root() would map a profile home back to <root> and restore the live root.
     hermes_root = get_hermes_home()
 
     with zipfile.ZipFile(zip_path, "r") as zf:
@@ -1509,7 +1507,6 @@ def restore_quick_snapshot(
     Returns True if at least one file was restored and the listed auth.json
     was not refused or skipped.
     """
-    from hermes_cli.config_backend import require_file_tooling
     require_file_tooling("Snapshot restore")
     home = hermes_home or get_hermes_home()
     root = _quick_snapshot_root(home)
@@ -1986,26 +1983,6 @@ def _read_raw_yaml_dict(path: Path) -> Optional[Dict[str, Any]]:
     except Exception:
         return None
     return data if isinstance(data, dict) else None
-
-
-def _get_config_path_value(data: Dict[str, Any], dotted: Tuple[str, ...]) -> Any:
-    node: Any = data
-    for key in dotted:
-        if not isinstance(node, dict):
-            return None
-        node = node.get(key)
-    return node
-
-
-def _set_config_path_value(data: Dict[str, Any], dotted: Tuple[str, ...], value: Any) -> None:
-    node = data
-    for key in dotted[:-1]:
-        child = node.get(key)
-        if not isinstance(child, dict):
-            child = {}
-            node[key] = child
-        node = child
-    node[dotted[-1]] = value
 
 
 def restore_config_model_settings_if_rewritten(
