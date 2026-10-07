@@ -18,7 +18,7 @@ from .stub_plane import INSTANCE
 
 
 def test_document_save_sends_exactly_the_edit_made_to_its_own_read(plane):
-    from hermes_cli.config import read_raw_config, save_config
+    from hermes_cli.config import load_config, read_raw_config, save_config
     profile = plane.profile("default")
     profile.update(values={"display": {"personality": "a"}, "agent": {"max_turns": 10}}, version=1)
     backend = get_config_backend()
@@ -34,6 +34,12 @@ def test_document_save_sends_exactly_the_edit_made_to_its_own_read(plane):
     stale["display"]["personality"] = "b"
     save_config(stale)  # a read from before another writer's change keeps that change
     assert profile["values"] == {"display": {"personality": "b"}, "agent": {"max_turns": 99}}
+
+    merged = load_config()  # untagged (a merged copy): matched to the read it came from
+    land(("agent", "max_turns"), 7)
+    merged["display"]["personality"] = "m"
+    save_config(merged)
+    assert profile["values"] == {"display": {"personality": "m"}, "agent": {"max_turns": 7}}
 
     land(("display", "personality"), "c")
     current = read_config_doc(plane.home / "config.yaml")

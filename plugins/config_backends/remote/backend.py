@@ -536,12 +536,15 @@ class RemoteBackend:
 
         if changes.document is not None:
             # A whole document is the caller's read plus its edits, and a poll or another write may
-            # have advanced the doc since. Diff it against the doc that read returned: what another
-            # writer changed meanwhile is then not part of this edit, and _patch_body applies only
-            # the edit. An untagged or long-expired read falls back to the current doc.
+            # have advanced the doc since. Diff it against the doc that read returned, so what
+            # another writer changed meanwhile is not part of this edit (_patch_body applies only
+            # the edit). A tagged read names its doc exactly; an untagged one (load_config() is a
+            # merged copy, a caller may rebuild the dict) is matched to the recent doc it differs
+            # from least, the current one on a tie.
             read = st.read_bases.get(changes.document.read_version) if isinstance(changes.document, UserDoc) else None
-            if read is not None:
-                base = copy.deepcopy(read)
+            if read is None:
+                read = min([base, *reversed(st.read_bases.values())], key=lambda seen: _edit_size(seen, new))
+            base = copy.deepcopy(read)
             base, new, dropped = strip_locked(base, new, st.locks)
             if dropped:
                 print(f"Note: {len(dropped)} setting(s) locked by Remote Config were not saved: "
@@ -784,6 +787,11 @@ def _diff_base(st: _ProfileState) -> Dict[str, Any]:
     base = copy.deepcopy(st.base if st.base is not None else st.server_config)
     base.pop("_config_version", None)
     return base
+
+
+def _edit_size(base: Dict[str, Any], new: Dict[str, Any]) -> int:
+    sets, unsets = diff(base, new)
+    return len(sets) + len(unsets)
 
 
 def _record_read_base(st: _ProfileState) -> None:

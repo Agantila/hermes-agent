@@ -47,7 +47,7 @@ class UserDoc(dict):
     landed meanwhile is never sent back as the caller's edit. A dict subclass so the tag survives
     the read -> deepcopy -> mutate -> save round trip; the file backend never creates one."""
 
-    def __init__(self, data: Any = (), *, read_version: int):
+    def __init__(self, data: Any = (), *, read_version: Optional[int] = None):
         super().__init__(data)
         self.read_version = read_version
 
