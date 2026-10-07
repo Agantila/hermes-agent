@@ -16,9 +16,10 @@ import random
 import sys
 import threading
 import time
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Deque, Dict, List, Optional, Tuple
 
 from hermes_cli.config_backend import (
     Changes, ConfigBackendUnavailable, ConfigLockedError, ConfigValueError, ConfigWriteError, UserLayer)
@@ -62,6 +63,9 @@ class _FetchFailed(Exception):
         self.status = status
 
 
+_HISTORY = 4  # reader documents kept per profile for whole-document saves (_intent)
+
+
 @dataclass
 class _ProfileState:
     home: Path
@@ -83,6 +87,9 @@ class _ProfileState:
     fetched_at: float = 0.0
     last_error: Optional[str] = None
     next_poll: float = 0.0
+    # The diff bases readers were recently handed (newest last), so a whole-document save made
+    # from an older read is diffed against the doc it came from, not a newer one (see _intent).
+    history: Deque[Dict[str, Any]] = field(default_factory=lambda: deque(maxlen=_HISTORY))
     lock: threading.RLock = field(default_factory=threading.RLock)
 
 
@@ -283,6 +290,7 @@ class RemoteBackend:
         st.postprocessed = False
         st.fetched_at, st.last_error = time.time(), None
         st.next_poll = time.monotonic() + poll_interval() * random.uniform(0.9, 1.1)
+        st.history.append(_diff_base(st))
 
     _MAX_POSTPROCESS = 8  # passes when polls keep installing newer docs mid-migration
 
@@ -390,6 +398,7 @@ class RemoteBackend:
         st.base = base
         st.changed_ns = time.time_ns()
         st.gen += 1
+        st.history.append(_diff_base(st))
 
     # --- ConfigBackend: reads ---------------------------------------------------------------
 
@@ -508,14 +517,9 @@ class RemoteBackend:
                 raise ConfigWriteError("Remote Config write not sent: the profile's config kept changing "
                                        "while the write was prepared", code="config_version_conflict")
 
-    def _diff_base(self, st: _ProfileState) -> Dict[str, Any]:
-        base = copy.deepcopy(st.base if st.base is not None else st.server_config)
-        base.pop("_config_version", None)
-        return base
-
     def _intent(self, st: _ProfileState, changes: Changes) -> Tuple[Dict[KeyPath, Any], List[KeyPath]]:
         """The key-level edit ``changes`` makes to the last read doc (§15.2 steps 1-5)."""
-        base = self._diff_base(st)
+        base = _diff_base(st)
         if changes.document is not None:
             new = to_wire(copy.deepcopy(changes.document))
             if not isinstance(new, dict):
@@ -530,6 +534,11 @@ class RemoteBackend:
         new.pop("_config_version", None)
 
         if changes.document is not None:
+            # A whole document is the caller's last read plus its edits, and a poll or another
+            # write may have advanced the doc since that read. Diff it against the recent reader
+            # doc it differs from least (the newest on a tie): anything another writer changed
+            # meanwhile is then not part of this edit, and _patch_body applies only the edit.
+            base = min(reversed(st.history), key=lambda seen: _edit_size(seen, new), default=base)
             base, new, dropped = strip_locked(base, new, st.locks)
             if dropped:
                 print(f"Note: {len(dropped)} setting(s) locked by Remote Config were not saved: "
@@ -541,7 +550,7 @@ class RemoteBackend:
     def _patch_body(self, st: _ProfileState, sets: Dict[KeyPath, Any], unsets: List[KeyPath]
                     ) -> Optional[Tuple[Dict[str, Any], Dict[KeyPath, Any], List[KeyPath]]]:
         """The PATCH body applying the intent to the current doc, or None when that is no change."""
-        base = self._diff_base(st)
+        base = _diff_base(st)
         new = copy.deepcopy(base)
         apply_intent(new, sets, unsets)
         sets, unsets = diff(base, new)
@@ -752,6 +761,17 @@ class RemoteBackend:
     def poll_all(self) -> None:
         for st in self._roster():
             self.poll_one(st)
+
+
+def _diff_base(st: _ProfileState) -> Dict[str, Any]:
+    base = copy.deepcopy(st.base if st.base is not None else st.server_config)
+    base.pop("_config_version", None)
+    return base
+
+
+def _edit_size(base: Dict[str, Any], new: Dict[str, Any]) -> int:
+    sets, unsets = diff(base, new)
+    return len(sets) + len(unsets)
 
 
 def managed_config_file() -> Optional[Path]:

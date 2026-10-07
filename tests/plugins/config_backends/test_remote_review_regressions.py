@@ -17,6 +17,20 @@ from .conftest import _config_cmd
 from .stub_plane import INSTANCE
 
 
+def test_document_save_from_an_older_read_keeps_a_newer_write(plane):
+    plane.profile("default").update(values={"display": {"personality": "a"}, "agent": {"max_turns": 10}}, version=1)
+    doc = read_config_doc(plane.home / "config.yaml")
+    plane.profile("default")["values"]["agent"]["max_turns"] = 99
+    plane.profile("default")["version"] = 2
+    backend = get_config_backend()
+    backend.poll_one(backend._state(plane.home))
+
+    doc["display"]["personality"] = "b"
+    write_config_document(plane.home / "config.yaml", doc)
+
+    assert plane.profile("default")["values"] == {"display": {"personality": "b"}, "agent": {"max_turns": 99}}
+
+
 def test_cloud_boot_in_a_fresh_interpreter_does_not_hang(plane, tmp_path):
     expires = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + 3600))
     (plane.home / "auth.json").write_text(json.dumps({"version": 1, "active_provider": "nous", "providers": {
