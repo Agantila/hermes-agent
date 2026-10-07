@@ -63,20 +63,27 @@ def plane_token(home: Path) -> str:
 
 def _stored_nous_token(home: Path) -> str:
     """The profile's stored Nous access token while it is not near expiry, read straight from
-    ``auth.json`` (the profile's, then the root's, like ``hermes_cli.auth``), else ``""``.
+    ``auth.json``, else ``""``. The state is the profile's own when its store has a ``nous`` entry
+    (a guest identity saved before its first token exchange included) and the root's only when it
+    has none, like ``hermes_cli.auth._load_provider_state_with_source``.
 
     Config-independent on purpose: importing ``hermes_cli.auth`` reads config (plugin discovery),
     and in remote mode that read is this very fetch, so the boot fetch cannot need that module
-    while the token is still good. A token near expiry is refreshed through the full resolver."""
+    while the token is still good. Anything else is resolved through the full resolver."""
     from hermes_cli.auth_constants import ACCESS_TOKEN_REFRESH_SKEW_SECONDS
     from hermes_constants import get_default_hermes_root
-    for path in (Path(home) / "auth.json", get_default_hermes_root() / "auth.json"):
+    for path in dict.fromkeys((Path(home) / "auth.json", get_default_hermes_root() / "auth.json")):
         try:
-            state = json.loads(path.read_text(encoding="utf-8-sig"))["providers"]["nous"]
-            token, expires_at = state["access_token"], state["expires_at"]
-            expires = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
-        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            providers = json.loads(path.read_text(encoding="utf-8-sig")).get("providers")
+        except (OSError, ValueError, AttributeError):
             continue
+        state = providers.get("nous") if isinstance(providers, dict) else None
+        if not isinstance(state, dict):
+            continue
+        try:  # this store owns the login from here on: a gap means the resolver, never the root
+            token, expires = state["access_token"], datetime.fromisoformat(state["expires_at"].replace("Z", "+00:00"))
+        except (KeyError, ValueError, TypeError, AttributeError):
+            return ""
         if expires.tzinfo is None:
             expires = expires.replace(tzinfo=timezone.utc)
         fresh = expires.timestamp() > time.time() + ACCESS_TOKEN_REFRESH_SKEW_SECONDS

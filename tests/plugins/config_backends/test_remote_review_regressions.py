@@ -53,6 +53,19 @@ def test_cloud_boot_in_a_fresh_interpreter_does_not_hang(plane, tmp_path):
     assert "RESULT=remote" in proc.stdout + proc.stderr  # tui_gateway.server routes print() to stderr
 
 
+def test_profile_guest_login_never_borrows_the_root_token(profile_plane, monkeypatch):
+    from plugins.config_backends.remote import credentials
+    expires = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + 3600))
+    (profile_plane.home / "auth.json").write_text(json.dumps({"providers": {"nous": {
+        "access_token": "root-token", "expires_at": expires}}}))
+    guest = profile_plane.home / "profiles" / "guest"
+    guest.mkdir(parents=True)
+    (guest / "auth.json").write_text(json.dumps({"providers": {"nous": {"guest_id": "g-1"}}}))
+
+    assert credentials._stored_nous_token(guest) == ""  # its own login: exchanged by the resolver
+    assert credentials._stored_nous_token(profile_plane.home / "profiles" / "fresh") == "root-token"
+
+
 def test_reloading_dotenv_expands_each_value_once_across_layers(plane, monkeypatch, tmp_path):
     from hermes_cli.config_backend import bootstrap_deployment
     from hermes_cli.env_loader import load_hermes_dotenv
