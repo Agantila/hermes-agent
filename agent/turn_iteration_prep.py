@@ -110,8 +110,8 @@ class IterationPrep:
     current_turn_user_idx: Any
 
 
-# Retire hidden interrupt placeholders whose text the model echoes on replay
-# (#81841 for the scaffold, #132949 for the placeholder). A hidden row still
+# Retire interrupt placeholders (hidden rows, and replies that already echoed one) whose text the model
+# echoes on replay (#81841 for the scaffold, #132949 for the placeholder). A hidden row still
 # reaches the provider as assistant content; a natural-language phrase in that
 # position is reproduced verbatim. The row is never dropped: removal can form
 # ``tool -> user`` (#48879) or ``user -> user``, which repair then merges —
@@ -128,12 +128,20 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
     # placeholder is the post-fix value — it stays (this is also what
     # neutralisation rewrites to, so the rewrite does not retrigger the filter).
     hazards = {_INTERRUPT_SCAFFOLD_MARKER, _LEGACY_INTERRUPTED_PLACEHOLDER}
+    # Runs every iteration over the whole transcript: only short bodies can be a placeholder,
+    # so long replies are rejected before ``strip()`` copies them.
+    max_len = max(map(len, hazards)) + 64
     neutralised = 0
     out: List[Dict[str, Any]] = []
     for m in seq:
+        # Hidden placeholders AND the visible replies a model already echoed them into: either one
+        # replayed seeds the next echo. A row with tool calls is real model output, never a placeholder.
         if (
-            m.get("display_kind") == "hidden" and m.get("role") == "assistant"
-            and any(isinstance(m.get(k), str) and m[k].strip() in hazards for k in ("content", "api_content"))
+            m.get("role") == "assistant" and not m.get("tool_calls")
+            and any(
+                isinstance(v := m.get(k), str) and len(v) <= max_len and v.strip() in hazards
+                for k in ("content", "api_content")
+            )
         ):
             m = {**m, "content": "", "api_content": _INTERRUPTED_PLACEHOLDER}
             neutralised += 1

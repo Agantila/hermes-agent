@@ -92,3 +92,26 @@ def test_tool_tail_row_is_kept_and_neutralised(tmp_path, monkeypatch):
             assert out[i + 1].get("role") != "user", (
                 f"role-alternation violation: tool -> user at index {i}: {out}"
             )
+
+
+def test_visible_echoed_reply_is_neutralised_but_tool_call_rows_are_not(tmp_path, monkeypatch):
+    """A reply the model already produced as just the legacy placeholder is a visible row; replayed, it
+    seeds the same echo. It is neutralised on the copy like a hidden row; a tool-call row never is."""
+    import copy
+    tool_row = {"role": "assistant", "content": LEGACY, "tool_calls": [
+        {"id": "c1", "type": "function", "function": {"name": "patch", "arguments": "{}"}}]}
+    messages = [
+        {"role": "user", "content": "summarise the log"},
+        {"role": "assistant", "content": LEGACY},
+        {"role": "user", "content": "now fix it"},
+        tool_row,
+        {"role": "tool", "tool_call_id": "c1", "content": "ok"},
+        {"role": "user", "content": "thanks"},
+    ]
+    stored = copy.deepcopy(messages)
+    out = _prepare(tmp_path, monkeypatch, messages)
+    assert messages == stored, "stored rows were rewritten in place"
+    echoed = out[1]
+    assert echoed["role"] == "assistant" and echoed.get("content") == ""
+    assert echoed.get("api_content") == NEW_PLACEHOLDER
+    assert any(m.get("tool_calls") and m.get("content") == LEGACY for m in out), out

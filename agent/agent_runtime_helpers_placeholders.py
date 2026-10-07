@@ -4,8 +4,7 @@ Split out of ``agent/agent_runtime_helpers.py`` (code-health size ratchet); a le
 imports so every reader (runtime helpers, turn prep, the conversation loop) can import it directly.
 """
 
-# Placeholder for an empty non-final message the provider would reject. Kept identical to the stub
-# placeholder in chat_completion_helpers so healed transcripts read consistently.
+# Placeholder for an empty non-final message the provider would reject.
 #
 # Wording matters: this text is substituted into an assistant row's ``content`` on the wire copy
 # (``fill_empty_non_final_wire_payload``, ``repair_empty_non_final_messages``, and the projection in
