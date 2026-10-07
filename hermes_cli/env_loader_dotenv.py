@@ -50,9 +50,9 @@ def _dotenv_assignments(path: Path) -> list:
 
 
 def _resolve_layer(assignments: list, env: dict[str, str | None], *, override: bool) -> dict[str, str]:
-    """The values one dotenv layer contributes over *env*: ``${VAR}`` / ``${VAR:-default}`` resolved like
-    ``dotenv.main.resolve_variables`` (minus the live ``os.environ``), and with ``override=False`` only
-    the names *env* lacks. Shared by the loader and the read-only bootstrap, so both resolve alike."""
+    """The values one dotenv layer defines, ``${VAR}`` / ``${VAR:-default}`` resolved against *env* like
+    ``dotenv.main.resolve_variables`` (minus the live ``os.environ``); *override* picks which side wins a
+    lookup. Callers apply the gap rule. Shared by the loader and the read-only bootstrap."""
     from dotenv.variables import parse_variables
 
     resolved: dict[str, str | None] = {}
@@ -61,8 +61,15 @@ def _resolve_layer(assignments: list, env: dict[str, str | None], *, override: b
             lookup = {**env, **resolved} if override else {**resolved, **env}
             value = "".join(atom.resolve(lookup) for atom in parse_variables(value))
         resolved[name] = value
-    return {name: value for name, value in resolved.items()
-            if value is not None and (override or name not in env)}
+    return {name: value for name, value in resolved.items() if value is not None}
+
+
+def _restates_published(name: str, value: str) -> bool:
+    """Whether *value* is exactly what an earlier pass published for *name* and still holds: a
+    gap-filling layer that states it again owns it in this pass too (so a later layer of the same
+    load still sees it), without ever replacing a value someone else set. Call under ``_DOTENV_LOCK``."""
+    record = _DOTENV_PUBLISHED.get(name)
+    return record is not None and record[1] == value == os.environ.get(name)
 
 
 def _peeled_environ(load_pass: int) -> dict[str, str | None]:

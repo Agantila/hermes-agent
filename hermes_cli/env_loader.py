@@ -18,7 +18,8 @@ import dotenv  # noqa: F401
 from utils import atomic_replace, mkstemp_beside
 
 from hermes_cli.env_loader_dotenv import (
-    _DOTENV_LOCK, _DOTENV_PASSES, _dotenv_assignments, _peeled_environ, _publish_dotenv_value, _resolve_layer)
+    _DOTENV_LOCK, _DOTENV_PASSES, _dotenv_assignments, _peeled_environ, _publish_dotenv_value, _resolve_layer,
+    _restates_published)
 
 logger = logging.getLogger(__name__)
 
@@ -331,10 +332,9 @@ def _load_dotenv_with_fallback(
     with _DOTENV_LOCK:
         if load_pass is None:
             load_pass = next(_DOTENV_PASSES)
-        # A gap is judged against the peeled view: a value an earlier pass published is not a
-        # gap-filler's competitor, so this layer re-publishes it under this pass and a later layer of
-        # the same load (managed ``${VAR}``) still sees it.
         for name, value in _resolve_layer(assignments, _peeled_environ(load_pass), override=override).items():
+            if not override and name in os.environ and not _restates_published(name, value):
+                continue
             _publish_dotenv_value(name, value, load_pass)
     # Every key this file defines, for the launch-residue strip: dotenv never unsets, so a key later
     # removed from the launch .env stays in os.environ and a re-parse of the file no longer names it.
@@ -373,7 +373,8 @@ def _bootstrap_env(home: Path | None = None, project_env: Path | None = None,
             assignments = _dotenv_assignments(path)
         except OSError:
             continue
-        env.update(_resolve_layer(assignments, env, override=override))
+        env.update({name: value for name, value in _resolve_layer(assignments, env, override=override).items()
+                    if override or name not in env})
     return env
 
 

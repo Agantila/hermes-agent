@@ -84,11 +84,12 @@ def test_reloading_dotenv_expands_each_value_once_across_layers(plane, monkeypat
     managed.mkdir()
     monkeypatch.setenv("HERMES_MANAGED_DIR", str(managed))
     monkeypatch.setenv("HERMES_CONFIG_REMOTE_URL", plane.url)
-    for name in ("MANAGED_TOKEN_URL", "PLANE_HOST"):  # undone after the test, like the loads' writes
+    for name in ("MANAGED_TOKEN_URL", "PLANE_HOST", "OP_SERVICE_ACCOUNT_TOKEN", "OP_ONLY"):  # undone after the test
         monkeypatch.setenv(name, "")
         monkeypatch.delenv(name)
     (plane.home / ".env").write_text("HERMES_CONFIG_REMOTE_URL=${HERMES_CONFIG_REMOTE_URL}/\n")
-    project.write_text("PLANE_HOST=https://plane.example\n")
+    (plane.home / ".op.env").write_text("OP_SERVICE_ACCOUNT_TOKEN=tok-op\nOP_ONLY=from-op\n")
+    project.write_text("PLANE_HOST=https://plane.example\nOP_ONLY=from-project\n")
     (managed / ".env").write_text("MANAGED_TOKEN_URL=${PLANE_HOST}/token\n")
 
     for _ in range(3):
@@ -97,6 +98,7 @@ def test_reloading_dotenv_expands_each_value_once_across_layers(plane, monkeypat
 
     assert os.environ["HERMES_CONFIG_REMOTE_URL"] == plane.url + "/"  # a self-reference expands once
     assert os.environ["MANAGED_TOKEN_URL"] == "https://plane.example/token"  # an earlier layer is seen
+    assert os.environ["OP_ONLY"] == "from-op"  # a gap-filler never takes over an earlier layer's value
 
 
 def test_provider_switch_with_a_locked_route_changes_nothing(plane, capsys):
