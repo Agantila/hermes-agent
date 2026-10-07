@@ -130,10 +130,19 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
     # slack tolerates surrounding whitespace), so long replies are rejected before ``strip()`` copies
     # them, and the list is copied only once a row actually needs neutralising.
     max_len = max(map(len, hazards)) + 64
+    from agent.agent_runtime_helpers import _retire_leading_drops  # late: heavy facade
+
     out: List[Dict[str, Any]] | None = None
+    dropped: List[Dict[str, Any]] = []
     neutralised = 0
     for i, m in enumerate(seq):
         nxt = seq[i + 1] if i + 1 < len(seq) else None
+        if dropped and m.get("role") == "assistant":
+            # The reply right after a dropped durable placeholder stands for its row, as repair's own
+            # drops do; unnamed, an in-place compaction would re-sequence it behind the running turn.
+            m = dict(m)
+            _retire_leading_drops([m], dropped)
+            dropped = []
         # Hidden placeholders AND the visible replies a model already echoed them into: either one
         # replayed seeds the next echo. A row with tool calls is real model output, never a placeholder.
         if (
@@ -147,6 +156,7 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
                 out = list(seq[:i])
             neutralised += 1
             if isinstance(nxt, dict) and nxt.get("role") == "assistant":
+                dropped.append(m)
                 continue
             # The hidden placeholder shape, also for an echoed visible reply (content cleared, so it
             # is not rendered as an empty bubble). Exact Responses message items would otherwise be

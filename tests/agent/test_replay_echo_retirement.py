@@ -132,6 +132,15 @@ def test_placeholder_before_a_reply_is_dropped_and_exact_items_retired(tmp_path,
         assistants = [m for m in out if m.get("role") == "assistant"]
         assert len(assistants) == 1 and assistants[0].get("display_kind") != "hidden", out
 
+    # The dropped durable placeholder is retired onto the reply that replaces it (not left unnamed for an
+    # in-place compaction to re-sequence), and the stored reply dict itself is untouched.
+    reply = {"role": "assistant", "content": "real answer", "_row_id": 12}
+    stored = [{"role": "user", "content": "hi", "_row_id": 10}, {**_hidden_row(LEGACY), "_row_id": 11}, reply,
+              {"role": "user", "content": "continue", "_row_id": 13}]
+    out = _prepare(tmp_path, monkeypatch, stored)
+    survivor = next(m for m in out if m.get("content") == "real answer")
+    assert 11 in survivor.get("_absorbed_row_ids", []) and "_absorbed_row_ids" not in reply, out
+
     echoed = {"role": "assistant", "content": LEGACY,
               "codex_message_items": [{"type": "message", "content": [{"type": "output_text", "text": LEGACY}]}]}
     out = _prepare(tmp_path, monkeypatch, [{"role": "user", "content": "a"}, echoed, {"role": "user", "content": "b"}])
