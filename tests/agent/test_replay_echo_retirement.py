@@ -115,3 +115,18 @@ def test_visible_echoed_reply_is_neutralised_but_tool_call_rows_are_not(tmp_path
     assert echoed["role"] == "assistant" and echoed.get("content") == ""
     assert echoed.get("api_content") == NEW_PLACEHOLDER
     assert any(m.get("tool_calls") and m.get("content") == LEGACY for m in out), out
+
+
+def test_real_reply_after_a_kept_placeholder_stays_visible(tmp_path, monkeypatch):
+    """The neutralised placeholder is kept, so repair folds a following real reply into it; the merged
+    row must not inherit the placeholder's hidden display_kind and vanish from rendered history."""
+    messages = [
+        {"role": "user", "content": "hi"},
+        _hidden_row(LEGACY),
+        {"role": "assistant", "content": "real answer"},
+        {"role": "user", "content": "continue"},
+    ]
+    out = _prepare(tmp_path, monkeypatch, messages)
+    visible = [m for m in out if m.get("role") == "assistant" and m.get("display_kind") != "hidden"]
+    assert [m.get("content") for m in visible] == ["real answer"], out
+
