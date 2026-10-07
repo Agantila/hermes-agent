@@ -103,3 +103,10 @@ jobs:
         run: |
           set -uo pipefail
           bash scripts/run_tests.sh tests/pm/test_long_paths_windows_live.py -- -m "platforms and integration" -v
+
+      - name: TEMP F10-zip ZIP update long-path live E2E with long paths off (#129299)
+        if: ${{ !cancelled() && steps.long_paths_off.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          bash scripts/run_tests.sh tests/hermes_cli/test_update_zip_long_paths_windows_live.py -- -m "platforms and integration" -v
