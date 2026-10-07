@@ -17,3 +17,9 @@ _INTERRUPTED_PLACEHOLDER = "[interrupt: no assistant output for this turn]"
 # The spelling shipped before #132949. Models reproduce it verbatim, so rows already carrying it
 # stay poisoned after the wording change; the replay filters reference this name to retire them.
 _LEGACY_INTERRUPTED_PLACEHOLDER = "[response interrupted]"
+
+
+def hidden_interrupt_row() -> dict:
+    """The assistant row an interrupt leaves when there is no real text: nothing rendered,
+    the structural placeholder on the wire (so the pre-call sanitizer does not re-heal it)."""
+    return {"role": "assistant", "content": "", "display_kind": "hidden", "api_content": _INTERRUPTED_PLACEHOLDER}

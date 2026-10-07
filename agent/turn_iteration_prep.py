@@ -9,6 +9,7 @@ imports ``agent.conversation_loop`` at module level (cycle)."""
 
 from __future__ import annotations
 
+from agent.agent_runtime_helpers_placeholders import _LEGACY_INTERRUPTED_PLACEHOLDER, hidden_interrupt_row
 import logging
 import random
 import sys
@@ -118,22 +119,19 @@ class IterationPrep:
 # losing the second row's checkpoint ``api_content``. Neutralise a copy instead.
 def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], int]:
     """(new list, neutralised); never mutates ``seq`` or its row dicts."""
-    from agent.agent_runtime_helpers_placeholders import (
-        _INTERRUPTED_PLACEHOLDER,
-        _LEGACY_INTERRUPTED_PLACEHOLDER,
-    )
-    from agent.conversation_loop import _INTERRUPT_SCAFFOLD_MARKER
+    from agent.conversation_loop import _INTERRUPT_SCAFFOLD_MARKER  # late: conversation_loop imports this module
     # Retire only spellings that predate the #132949 wording change: the scaffold
     # (#81841) and the old placeholder, both reproduced verbatim. The current
     # placeholder is the post-fix value — it stays (this is also what
     # neutralisation rewrites to, so the rewrite does not retrigger the filter).
     hazards = {_INTERRUPT_SCAFFOLD_MARKER, _LEGACY_INTERRUPTED_PLACEHOLDER}
-    # Runs every iteration over the whole transcript: only short bodies can be a placeholder,
-    # so long replies are rejected before ``strip()`` copies them.
+    # Runs every iteration over the whole transcript: only short bodies can be a placeholder (the
+    # slack tolerates surrounding whitespace), so long replies are rejected before ``strip()`` copies
+    # them, and the list is copied only once a row actually needs neutralising.
     max_len = max(map(len, hazards)) + 64
+    out: List[Dict[str, Any]] | None = None
     neutralised = 0
-    out: List[Dict[str, Any]] = []
-    for m in seq:
+    for i, m in enumerate(seq):
         # Hidden placeholders AND the visible replies a model already echoed them into: either one
         # replayed seeds the next echo. A row with tool calls is real model output, never a placeholder.
         if (
@@ -143,10 +141,16 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
                 for k in ("content", "api_content")
             )
         ):
-            m = {**m, "content": "", "api_content": _INTERRUPTED_PLACEHOLDER}
+            if out is None:
+                out = list(seq[:i])
+            # The hidden placeholder shape, also for an echoed visible reply: its content is cleared
+            # (an alternation merge drops ``api_content`` and would put the legacy text back on the
+            # wire), so it is hidden rather than rendered as an empty bubble.
+            out.append({**m, **hidden_interrupt_row()})
             neutralised += 1
-        out.append(m)
-    return (out if neutralised else seq), neutralised
+        elif out is not None:
+            out.append(m)
+    return (seq if out is None else out), neutralised
 
 
 def prepare_iteration(

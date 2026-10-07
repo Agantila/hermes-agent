@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from hermes_cli.timeouts import get_provider_request_timeout
+from agent.agent_runtime_helpers_placeholders import _INTERRUPTED_PLACEHOLDER
 from agent.message_sanitization import (
     _FULL_ARGS_LOG_BOUND, coalesce_tool_call_id, coerce_tool_name, tool_call_id_variants, tool_result_id_variants
 )
@@ -2736,7 +2737,6 @@ def fill_empty_non_final_wire_payload(msg: Dict[str, Any], *, is_final: bool) ->
         return False
     if _msg_has_payload(msg):
         return False
-    from agent.agent_runtime_helpers_placeholders import _INTERRUPTED_PLACEHOLDER
     msg["content"] = _INTERRUPTED_PLACEHOLDER
     return True
 
@@ -2839,7 +2839,6 @@ def repair_empty_non_final_messages(messages: List[Dict[str, Any]]) -> List[Dict
     deletion) keeps role alternation and tool-call pairing intact. The final message is untouched."""
     if not messages or len(messages) < 2:
         return messages
-    from agent.agent_runtime_helpers_placeholders import _INTERRUPTED_PLACEHOLDER
     repaired: List[Dict[str, Any]] = []
     healed = 0
     last_idx = len(messages) - 1

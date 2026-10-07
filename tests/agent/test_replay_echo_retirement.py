@@ -113,6 +113,7 @@ def test_visible_echoed_reply_is_neutralised_but_tool_call_rows_are_not(tmp_path
     assert messages == stored, "stored rows were rewritten in place"
     echoed = out[1]
     assert echoed["role"] == "assistant" and echoed.get("content") == ""
+    assert echoed.get("display_kind") == "hidden"  # not an empty visible bubble
     assert echoed.get("api_content") == NEW_PLACEHOLDER
     assert any(m.get("tool_calls") and m.get("content") == LEGACY for m in out), out
 
