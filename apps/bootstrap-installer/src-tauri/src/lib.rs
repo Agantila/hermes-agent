@@ -9,6 +9,7 @@
 //! flags of the executable that consumes it.
 
 mod bootstrap;
+mod console_decode;
 mod events;
 mod install_script;
 mod marker;

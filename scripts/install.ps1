@@ -614,15 +614,28 @@ function Ensure-Git {
 # OutputEncoding covers both directions of PowerShell's pipe; PYTHONUTF8 /
 # PYTHONIOENCODING cover Python's redirected stdio, which follows the ANSI
 # codepage and ignores the console one. Mirrors the same pins in
-# scripts/desktop-update/windows.ps1. Best-effort: a host with no attached
-# console must still install.
+# scripts/desktop-update/windows.ps1. BOM-less: Windows PowerShell 5.1 would
+# otherwise prefix a BOM to whatever it pipes into a native stdin. Best-effort:
+# a host with no attached console must still install. The caller's values are
+# kept so an `irm | iex` run hands the user's own session back unchanged.
 function Set-ConsoleUtf8 {
+    $script:CallerEncoding = @{ Pipe = $global:OutputEncoding; Utf8 = $env:PYTHONUTF8; Io = $env:PYTHONIOENCODING }
+    $utf8 = New-Object System.Text.UTF8Encoding($false)
     try {
-        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-        $global:OutputEncoding = [System.Text.Encoding]::UTF8
+        $script:CallerEncoding.Console = [Console]::OutputEncoding
+        [Console]::OutputEncoding = $utf8
     } catch {}
+    $global:OutputEncoding = $utf8
     $env:PYTHONUTF8 = "1"
     $env:PYTHONIOENCODING = "utf-8"
+}
+
+function Restore-CallerEncoding {
+    if (-not $script:CallerEncoding) { return }
+    try { if ($script:CallerEncoding.Console) { [Console]::OutputEncoding = $script:CallerEncoding.Console } } catch {}
+    $global:OutputEncoding = $script:CallerEncoding.Pipe
+    $env:PYTHONUTF8 = $script:CallerEncoding.Utf8
+    $env:PYTHONIOENCODING = $script:CallerEncoding.Io
 }
 
 # The pre-pm installer's line style. ASCII glyphs: Windows PowerShell 5.1
@@ -1446,4 +1459,5 @@ try {
 } finally {
     # Ctrl-C stops the run without reaching catch; finally still runs (no-op after a receipt).
     Write-InstallReceipt "failed" $script:InstallStage "interrupted"
+    if (-not $script:RunAsFile) { Restore-CallerEncoding }
 }

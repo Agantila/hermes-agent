@@ -102,6 +102,13 @@ try {
         Assert-Equal 'utf-8' ($global:OutputEncoding.WebName) 'Set-ConsoleUtf8 repairs the pipeline output encoding'
         Assert-Equal '1' $env:PYTHONUTF8 'Set-ConsoleUtf8 exports PYTHONUTF8 for Python children'
         Assert-Equal 'utf-8' $env:PYTHONIOENCODING 'Set-ConsoleUtf8 exports PYTHONIOENCODING for Python children'
+
+        # An `irm | iex` run hands the user's own session back unchanged.
+        Restore-CallerEncoding
+        Assert-Equal 'iso-8859-1' ([Console]::OutputEncoding.WebName) 'Restore-CallerEncoding restores the console output encoding'
+        Assert-Equal 'iso-8859-1' ($global:OutputEncoding.WebName) 'Restore-CallerEncoding restores the pipeline output encoding'
+        Assert-True ($null -eq $env:PYTHONUTF8) 'Restore-CallerEncoding drops the PYTHONUTF8 it added'
+        Assert-True ($null -eq $env:PYTHONIOENCODING) 'Restore-CallerEncoding drops the PYTHONIOENCODING it added'
     } else {
         Write-Host "SKIP: Case 1 (console encoding not settable on this host)" -ForegroundColor Yellow
     }
