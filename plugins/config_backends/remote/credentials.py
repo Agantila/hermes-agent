@@ -17,6 +17,8 @@ import urllib.request
 from pathlib import Path
 from typing import Dict, Tuple
 
+from hermes_cli.urllib_security import open_credentialed_url
+
 IDP_ENV_PREFIX = "GATEWAY_RELAY_IDP_"
 _IDP_KEYS = ("token_url", "client_id", "client_secret", "scope")
 
@@ -98,7 +100,7 @@ def _idp_token() -> str:
         token_url, data=urllib.parse.urlencode(form).encode(), method="POST",
         headers={"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT_S) as resp:
+        with open_credentialed_url(req, timeout=_HTTP_TIMEOUT_S) as resp:
             payload = json.loads(resp.read().decode() or "{}")
     except Exception as exc:  # noqa: BLE001 — HTTP and network errors alike; the message has no secret
         raise PlaneCredentialError(f"IdP token request to {token_url} failed: {exc}", retryable=True) from exc

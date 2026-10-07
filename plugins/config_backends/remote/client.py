@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from hermes_cli.urllib_security import open_credentialed_url
+
 from .credentials import plane_token
 
 DEFAULT_URL = "https://config-config.nousresearch.com"
@@ -84,7 +86,7 @@ def request(method: str, home: Path, profile: str, *, etag: Optional[str] = None
         headers["If-None-Match"] = etag
     req = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT_S) as resp:
+        with open_credentialed_url(req, timeout=_HTTP_TIMEOUT_S) as resp:
             return Response(resp.status, _parse_body(resp.read()), resp.headers.get("ETag"),
                             _retry_after(resp.headers.get("Retry-After")))
     except urllib.error.HTTPError as exc:  # every non-2xx, including 304
