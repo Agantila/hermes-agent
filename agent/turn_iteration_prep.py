@@ -135,13 +135,24 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
 
     def isolated(row: Dict[str, Any]) -> Dict[str, Any]:
         # Copy with fresh retirement lists: the bookkeeping below must not reach the stored dict.
-        return {**row, **{k: list(row[k]) for k in ("_absorbed_row_ids", "_retired_durable_rows") if row.get(k)}}
+        return {**row, **{k: list(row[k]) for k in ("_absorbed_row_ids", "_retired_durable_rows")
+                          if isinstance(row.get(k), list)}}
+
+    def reaches_wire_after(i: int) -> bool:
+        # The assistant run after *i* holds a row the request keeps (thinking-only rows are dropped
+        # from the request copy); repair would fold the whole run into a kept placeholder and hide it.
+        for nxt in seq[i + 1:]:
+            if not isinstance(nxt, dict) or nxt.get("role") != "assistant":
+                return False
+            if nxt.get("tool_calls") or _content_has_payload(nxt.get("content")):
+                return True
+        return False
+
 
     out: List[Dict[str, Any]] | None = None
     dropped: List[Dict[str, Any]] = []
     neutralised = 0
     for i, m in enumerate(seq):
-        nxt = seq[i + 1] if i + 1 < len(seq) else None
         if dropped and m.get("role") == "assistant":
             # The reply right after a dropped durable placeholder stands for its row, as repair's own
             # drops do; unnamed, an in-place compaction would re-sequence it behind the running turn.
@@ -160,10 +171,9 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
             if out is None:
                 out = list(seq[:i])
             neutralised += 1
-            # Only a follower that reaches the wire replaces it: a thinking-only one is dropped from the
-            # request copy, which would leave the ``tool -> user`` pair this row exists to prevent.
-            if (isinstance(nxt, dict) and nxt.get("role") == "assistant"
-                    and (nxt.get("tool_calls") or _content_has_payload(nxt.get("content")))):
+            # Only an assistant run that reaches the wire replaces it: thinking-only rows alone are
+            # dropped from the request copy, which would leave the ``tool -> user`` pair it prevents.
+            if reaches_wire_after(i):
                 dropped.append(m)
                 continue
             # The hidden placeholder shape, also for an echoed visible reply (content cleared, so it
