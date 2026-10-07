@@ -37,3 +37,14 @@ def test_cloud_boot_in_a_fresh_interpreter_does_not_hang(plane, tmp_path):
 
     assert proc.returncode == 0, proc.stderr[-3000:]
     assert "RESULT=remote" in proc.stdout + proc.stderr  # tui_gateway.server routes print() to stderr
+
+
+def test_reloading_dotenv_expands_a_plane_url_once(plane, monkeypatch):
+    from hermes_cli.env_loader import load_hermes_dotenv
+    monkeypatch.setenv("HERMES_CONFIG_REMOTE_URL", plane.url)
+    (plane.home / ".env").write_text("HERMES_CONFIG_REMOTE_URL=${HERMES_CONFIG_REMOTE_URL}/\n")
+
+    for _ in range(3):
+        load_hermes_dotenv(hermes_home=plane.home, load_external_secrets=False)
+
+    assert os.environ["HERMES_CONFIG_REMOTE_URL"] == plane.url + "/"

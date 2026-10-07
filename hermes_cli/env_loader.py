@@ -349,13 +349,7 @@ def _load_dotenv_with_fallback(
     with _DOTENV_LOCK:
         if load_pass is None:
             load_pass = next(_DOTENV_PASSES)
-        lookup_env: dict[str, str | None] = dict(os.environ)
-        for name, (baseline, published, published_pass) in _DOTENV_PUBLISHED.items():
-            if published_pass != load_pass and lookup_env.get(name) == published:
-                if baseline is None:
-                    del lookup_env[name]  # absent, so ``${VAR:-default}`` takes the default again
-                else:
-                    lookup_env[name] = baseline
+        lookup_env = _peeled_environ(load_pass)
         resolved: dict[str, str | None] = {}
         for name, value in assignments:
             if value is not None:  # mirrors dotenv.main.resolve_variables, minus the live os.environ
@@ -365,20 +359,40 @@ def _load_dotenv_with_fallback(
         for name, value in resolved.items():
             if value is None or (not override and name in os.environ):
                 continue
-            current = os.environ.get(name)
-            record = _DOTENV_PUBLISHED.get(name)
-            ours = record is not None and current == record[1]
-            if name in _SPAWN_CREDENTIAL_KEYS and current and not ours:
-                continue  # parent-minted per-process credential: .env must not split it from the parent
-            # Ours and untouched since → keep the original baseline; anything else is a newer outside value.
-            baseline = record[0] if ours else current
-            os.environ[name] = value
-            _DOTENV_PUBLISHED[name] = (baseline, value, load_pass)
+            _publish_dotenv_value(name, value, load_pass)
     # Every key this file defines, for the launch-residue strip: dotenv never unsets, so a key later
     # removed from the launch .env stays in os.environ and a re-parse of the file no longer names it.
     # Managed keys are recorded separately: they are administrator policy, not launch-profile residue.
     (_MANAGED_DOTENV_KEYS if managed else _LOADED_DOTENV_KEYS).update(name for name, _value in assignments)
     _sanitize_loaded_credentials()  # httpx encodes headers as ASCII
+
+
+def _peeled_environ(load_pass: int) -> dict[str, str | None]:
+    """``os.environ`` with every value an OTHER pass published peeled back to the value it replaced,
+    so ``${VAR}`` resolves against the pre-dotenv value and a reload never expands a value twice.
+    Call under ``_DOTENV_LOCK``."""
+    env: dict[str, str | None] = dict(os.environ)
+    for name, (baseline, published, published_pass) in _DOTENV_PUBLISHED.items():
+        if published_pass != load_pass and env.get(name) == published:
+            if baseline is None:
+                del env[name]  # absent, so ``${VAR:-default}`` takes the default again
+            else:
+                env[name] = baseline
+    return env
+
+
+def _publish_dotenv_value(name: str, value: str, load_pass: int) -> None:
+    """Set one dotenv-derived value in ``os.environ`` and record it for :func:`_peeled_environ`.
+    Call under ``_DOTENV_LOCK``."""
+    current = os.environ.get(name)
+    record = _DOTENV_PUBLISHED.get(name)
+    ours = record is not None and current == record[1]
+    if name in _SPAWN_CREDENTIAL_KEYS and current and not ours:
+        return  # parent-minted per-process credential: .env must not split it from the parent
+    # Ours and untouched since → keep the original baseline; anything else is a newer outside value.
+    baseline = record[0] if ours else current
+    os.environ[name] = value
+    _DOTENV_PUBLISHED[name] = (baseline, value, load_pass)
 
 
 def _dotenv_assignments(path: Path) -> list:
@@ -399,17 +413,19 @@ def _dotenv_assignments(path: Path) -> list:
     return list(DotEnv(dotenv_path=None, stream=io.StringIO(text), interpolate=False).parse())
 
 
-def _bootstrap_env(home: Path | None = None, project_env: Path | None = None) -> dict:
+def _bootstrap_env(home: Path | None = None, project_env: Path | None = None,
+                   base: dict[str, str | None] | None = None) -> dict:
     """The process env as ``load_hermes_dotenv`` leaves it for the names its dotenv layers define:
     the home's ``.env`` (override), ``.op.env`` (fills gaps, only without a process
     ``OP_SERVICE_ACCOUNT_TOKEN``), the caller's *project_env* (fills gaps when the home has a
     ``.env``, else overrides) and the managed ``.env`` (override, last); ``${VAR}`` resolved, the
     loader's parser. Read-only: nothing is published and no file is rewritten (sanitizing imports
-    hermes_cli.config, whose import-time config read must not run before the backend is decided)."""
+    hermes_cli.config, whose import-time config read must not run before the backend is decided).
+    *base* is the environment the layers resolve against (default: ``os.environ``)."""
     from dotenv.variables import parse_variables
 
     home = Path(home) if home is not None else _process_hermes_home()
-    env = dict(os.environ)
+    env = dict(os.environ) if base is None else dict(base)
     user_env = home / ".env"
     layers: list[tuple[Path, bool]] = [(user_env, True)]
     if not os.environ.get("OP_SERVICE_ACCOUNT_TOKEN"):
@@ -460,15 +476,19 @@ def apply_config_bootstrap_env(remote_names, home: Path | None = None, project_e
     no file defines are left alone; ``load_hermes_dotenv`` later publishes the same values."""
     from hermes_cli.config_backend import BACKEND_ENV
 
-    env = _bootstrap_env(home, project_env)
-    if (env.get(BACKEND_ENV) or "").strip().lower() == "remote":
-        names = remote_names()
-    else:
-        names = {BACKEND_ENV}  # the selector itself, so a file deployment is not read as remote meanwhile
-    for name in names:
-        value = env.get(name)
-        if value is not None and os.environ.get(name) != value:
-            os.environ[name] = value
+    with _DOTENV_LOCK:
+        # Resolved and published like the dotenv loader's own pass, so the loader's later pass (and
+        # every reload) peels these values back and expands ``${VAR}`` exactly once.
+        load_pass = next(_DOTENV_PASSES)
+        env = _bootstrap_env(home, project_env, base=_peeled_environ(load_pass))
+        if (env.get(BACKEND_ENV) or "").strip().lower() == "remote":
+            names = remote_names()
+        else:
+            names = {BACKEND_ENV}  # the selector itself, so a file deployment is not read as remote meanwhile
+        for name in names:
+            value = env.get(name)
+            if value is not None and os.environ.get(name) != value:
+                _publish_dotenv_value(name, value, load_pass)
 
 
 def _sanitize_env_file_if_needed(path: Path) -> None:
