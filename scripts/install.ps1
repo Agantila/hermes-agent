@@ -574,7 +574,8 @@ function Get-PinnedGit {
         # nothing, so the exit code is all there is. Bound the wait like pm's
         # timeout; kill the whole tree, since the stub's post-install children
         # would otherwise keep $tmpDir held past the cleanup below.
-        $sfx = [System.Diagnostics.Process]::Start($sfxPath, "-o`"$extractDir`" -y")
+        try { $sfx = [System.Diagnostics.Process]::Start($sfxPath, "-o`"$extractDir`" -y") }
+        catch { Assert-LaunchAllowed $_.Exception $sfxPath git_extract_failed; throw }
         if (-not $sfx.WaitForExit(600000)) {
             Invoke-Native { taskkill.exe /T /F /PID $sfx.Id 2>&1 | Out-Null }
             $sfx.WaitForExit()
@@ -723,10 +724,29 @@ function Invoke-Logged {
 # in 0.7), and a broken shim can exist without running.
 function Test-UvAtLeastPin([string]$Path) {
     $global:LASTEXITCODE = 0
-    $out = Invoke-Native { & $Path --version 2>$null }
+    try { $out = Invoke-Native { & $Path --version 2>$null } }
+    catch { Assert-LaunchAllowed $_.Exception $Path uv_unusable; return $false }
     if ($LASTEXITCODE -or -not $out) { return $false }
     $have = ("$out".Trim() -split '\s+')[1] -replace '[^0-9.].*$', ''
     try { return ([version]$have -ge [version]$script:UvPinVersion) } catch { return $false }
+}
+# Windows itself refused to start one of our pinned tools: 5 =
+# ERROR_ACCESS_DENIED (AppLocker/SRP path rules, an execute-deny ACL,
+# antivirus), 1260 = ERROR_ACCESS_DISABLED_BY_POLICY, 4551 =
+# ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION (App Control/WDAC, Smart App
+# Control). That is not a broken download -- fetching it again lands in the
+# same blocked folder -- and Hermes never swaps in another copy of its tools
+# (#60132), so say which policy class refused which path and what to allow.
+function Assert-LaunchAllowed($Exception, [string]$Exe, [string]$Class) {
+    for ($e = $Exception; $e; $e = $e.InnerException) {
+        if ($e -is [System.ComponentModel.Win32Exception] -and $e.NativeErrorCode -in 5, 1260, 4551) {
+            Fail ("Windows refused to start $Exe ($($e.Message.Trim()), error $($e.NativeErrorCode)). " +
+                "An application-control policy (AppLocker, App Control for Business/WDAC, Smart App Control) " +
+                "or antivirus is blocking programs in this user-writable folder. Hermes runs only its own " +
+                "pinned tools, so ask your administrator to allow programs under $(Get-PmStoreRoot) and " +
+                "$HermesHome, then run the installer again.") $Class
+        }
+    }
 }
 function Fail([string]$msg, [string]$Class = "other") {
     # Throw, never exit: the entry points below own reporting and the exit
