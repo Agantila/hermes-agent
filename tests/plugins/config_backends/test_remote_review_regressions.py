@@ -73,3 +73,18 @@ def test_provider_switch_with_a_locked_route_changes_nothing(plane, capsys):
 
     assert code == 1 and "model.base_url" in err
     assert plane.patches() == []
+
+
+def test_deleted_profile_is_no_longer_polled(profile_plane):
+    from hermes_constants import mark_named_profile_deleted
+    gone = profile_plane.home / "profiles" / "gone"
+    gone.mkdir(parents=True)
+    backend = get_config_backend()
+    backend._state(gone)
+    mark_named_profile_deleted(gone)
+    before = len(profile_plane.requests)
+
+    backend._poll_due()
+
+    assert backend._key(gone) not in backend._states
+    assert not any(r["profile"] == "gone" for r in profile_plane.requests[before:])

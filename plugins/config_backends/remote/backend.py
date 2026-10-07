@@ -726,16 +726,30 @@ class RemoteBackend:
     def _poll_loop(self) -> None:
         while not self._stop.is_set():
             try:
-                now = time.monotonic()
-                roster = self._roster()  # a snapshot: a lazily added profile must not break iteration
-                for st in roster:
-                    if st.next_poll <= now:
-                        self.poll_one(st)
-                wake = min((st.next_poll for st in self._roster()), default=now + poll_interval())
+                wake = self._poll_due()
             except Exception:  # noqa: BLE001 — the only poller thread must survive anything
                 logger.warning("Remote Config: poll loop error; retrying", exc_info=True)
                 wake = time.monotonic() + MIN_POLL_SECONDS
             self._stop.wait(max(1.0, wake - time.monotonic()))
+
+    def _poll_due(self) -> float:
+        """One poller tick: release deleted profiles, poll the due ones; returns the next wake time."""
+        now = time.monotonic()
+        for st in self._roster():  # a snapshot: a lazily added profile must not break iteration
+            if not _home_is_live(st.home):
+                self._release(st)
+            elif st.next_poll <= now:
+                self.poll_one(st)
+        return min((st.next_poll for st in self._roster()), default=now + poll_interval())
+
+    def _release(self, st: _ProfileState) -> None:
+        """Forget a profile whose home was deleted (by this process or another): no more polls,
+        no cached document. A later read of a recreated home fetches afresh."""
+        key = self._key(st.home)
+        with self._lock:
+            if self._states.get(key) is st:
+                del self._states[key]
+                self._fetch_locks.pop(key, None)
 
     def poll_one(self, st: _ProfileState) -> bool:
         """One conditional GET (contract §11.3). Never raises and never exits: an error keeps the
@@ -772,6 +786,13 @@ def _diff_base(st: _ProfileState) -> Dict[str, Any]:
 def _edit_size(base: Dict[str, Any], new: Dict[str, Any]) -> int:
     sets, unsets = diff(base, new)
     return len(sets) + len(unsets)
+
+
+def _home_is_live(home: Path) -> bool:
+    """False once a named profile's home is deleted (tombstoned or gone); the default home always
+    counts as live. Identity markers are not required: a remote profile has no local config.yaml."""
+    from hermes_constants import named_profile_home, named_profile_is_deleted
+    return named_profile_home(home) is None or (home.is_dir() and not named_profile_is_deleted(home))
 
 
 def managed_config_file() -> Optional[Path]:
