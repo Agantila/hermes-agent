@@ -10,33 +10,12 @@ in-memory migrations.
 from __future__ import annotations
 
 import threading
-from pathlib import Path
 
 import pytest
 
+from hermes_cli.config_backend import ConfigLockedError, get_config_backend
 from plugins.config_backends import remote as remote_pkg
 from plugins.config_backends.remote import backend as backend_mod
-from plugins.config_backends.remote import credentials as cred_mod
-from hermes_cli.config_backend import ConfigLockedError, get_config_backend
-
-from .stub_plane import StubPlane, remote_env
-
-
-@pytest.fixture
-def plane(tmp_path, monkeypatch):
-    home = Path(tmp_path) / "home"
-    home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
-    with StubPlane() as p:
-        for k, v in remote_env(p).items():
-            monkeypatch.setenv(k, v)
-        monkeypatch.setattr(backend_mod, "BOOT_RETRY_DELAYS", (0.0, 0.0))
-        remote_pkg._reset_for_tests()
-        cred_mod._IDP_CACHE.clear()
-        p.home = home
-        yield p
-        remote_pkg._reset_for_tests()
-        cred_mod._IDP_CACHE.clear()
 
 
 def _tui_server(monkeypatch, home):

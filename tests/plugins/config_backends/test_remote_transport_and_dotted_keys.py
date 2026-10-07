@@ -6,15 +6,8 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-import pytest
-
 from hermes_cli.config_backend import write_config_key
-from plugins.config_backends import remote as remote_pkg
-from plugins.config_backends.remote import backend as backend_mod
 from plugins.config_backends.remote import client
-from plugins.config_backends.remote import credentials as cred_mod
-
-from .stub_plane import StubPlane, remote_env
 
 
 def _serve(handler) -> ThreadingHTTPServer:
@@ -58,22 +51,6 @@ def test_plane_bearer_is_not_forwarded_across_a_redirect(monkeypatch):
     assert "authorization" in seen  # the redirect was followed
     assert seen["authorization"] is None
 
-
-@pytest.fixture
-def plane(tmp_path, monkeypatch):
-    home = Path(tmp_path) / "home"
-    home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
-    with StubPlane() as p:
-        for k, v in remote_env(p).items():
-            monkeypatch.setenv(k, v)
-        monkeypatch.setattr(backend_mod, "BOOT_RETRY_DELAYS", (0.0, 0.0))
-        remote_pkg._reset_for_tests()
-        cred_mod._IDP_CACHE.clear()
-        p.home = home
-        yield p
-        remote_pkg._reset_for_tests()
-        cred_mod._IDP_CACHE.clear()
 
 
 def test_dotted_key_lands_on_the_existing_literal_key(plane):
