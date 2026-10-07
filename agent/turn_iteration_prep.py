@@ -9,7 +9,6 @@ imports ``agent.conversation_loop`` at module level (cycle)."""
 
 from __future__ import annotations
 
-from agent.agent_runtime_helpers_placeholders import _LEGACY_INTERRUPTED_PLACEHOLDER, hidden_interrupt_row
 import logging
 import random
 import sys
@@ -17,6 +16,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
+from agent.agent_runtime_helpers_placeholders import _LEGACY_INTERRUPTED_PLACEHOLDER, hidden_interrupt_row
 from agent.display import KawaiiSpinner
 from agent.interrupt_control import interrupt_issuer, interrupted_during_api_call_reason
 from agent.turn_context_compaction import _reanchor
@@ -130,7 +130,7 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
     # slack tolerates surrounding whitespace), so long replies are rejected before ``strip()`` copies
     # them, and the list is copied only once a row actually needs neutralising.
     max_len = max(map(len, hazards)) + 64
-    from agent.agent_runtime_helpers import _retire_leading_drops  # late: heavy facade
+    from agent.agent_runtime_helpers import _content_has_payload, _retire_leading_drops  # late: heavy facade
 
     out: List[Dict[str, Any]] | None = None
     dropped: List[Dict[str, Any]] = []
@@ -155,14 +155,18 @@ def _neutralise_replay_echo_ghosts(seq: List[Dict[str, Any]]) -> Tuple[List[Dict
             if out is None:
                 out = list(seq[:i])
             neutralised += 1
-            if isinstance(nxt, dict) and nxt.get("role") == "assistant":
+            # Only a follower that reaches the wire replaces it: a thinking-only one is dropped from the
+            # request copy, which would leave the ``tool -> user`` pair this row exists to prevent.
+            if (isinstance(nxt, dict) and nxt.get("role") == "assistant"
+                    and (nxt.get("tool_calls") or _content_has_payload(nxt.get("content")))):
                 dropped.append(m)
                 continue
             # The hidden placeholder shape, also for an echoed visible reply (content cleared, so it
-            # is not rendered as an empty bubble). Exact Responses message items would otherwise be
-            # replayed in place of the new content, legacy text included.
+            # is not rendered as an empty bubble). Provider-native text carriers (Responses message
+            # items, Bedrock blocks) replace content at request build and would replay the legacy text.
             row = {**m, **hidden_interrupt_row()}
             row.pop("codex_message_items", None)
+            row.pop("bedrock_content_blocks", None)
             out.append(row)
         elif out is not None:
             out.append(m)

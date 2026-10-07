@@ -141,7 +141,13 @@ def test_placeholder_before_a_reply_is_dropped_and_exact_items_retired(tmp_path,
     survivor = next(m for m in out if m.get("content") == "real answer")
     assert 11 in survivor.get("_absorbed_row_ids", []) and "_absorbed_row_ids" not in reply, out
 
-    echoed = {"role": "assistant", "content": LEGACY,
+    # A thinking-only follower never reaches the wire, so the placeholder stays as the tool tail's closer.
+    thinking = {"role": "assistant", "content": "", "reasoning_content": "hmm"}
+    out = _prepare(tmp_path, monkeypatch, [{"role": "user", "content": "hi"}, _hidden_row(LEGACY), thinking,
+                                           {"role": "user", "content": "continue"}])
+    assert any(m.get("display_kind") == "hidden" and m.get("role") == "assistant" for m in out), out
+
+    echoed = {"role": "assistant", "content": LEGACY, "bedrock_content_blocks": [{"text": LEGACY}],
               "codex_message_items": [{"type": "message", "content": [{"type": "output_text", "text": LEGACY}]}]}
     out = _prepare(tmp_path, monkeypatch, [{"role": "user", "content": "a"}, echoed, {"role": "user", "content": "b"}])
     assert "codex_message_items" not in out[1] and LEGACY not in repr(out), out
