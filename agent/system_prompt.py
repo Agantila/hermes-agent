@@ -307,7 +307,7 @@ def _skills_prompt(agent: Any) -> str:
     from agent.tool_executor import _tool_search_scoped_names
     # A tool deferred behind the tool_search bridge is still available to the session, so a skill that
     # requires it must stay listed; valid_tool_names holds only the model-facing (post-deferral) tools.
-    available_tools = agent.valid_tool_names | _tool_search_scoped_names(agent)
+    available_tools = set(agent.valid_tool_names) | _tool_search_scoped_names(agent)
     avail_toolsets = {model_tools.get_toolset_for_tool(tool_name) for tool_name in available_tools} - {None, ""}
     try:
         from agent.coding_context import coding_compact_skill_categories
